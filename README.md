@@ -4,99 +4,140 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Development Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/nakishiyaman/clauxton)
 
-Clauxton is a Claude Code plugin that solves the three major pain points of AI-assisted development:
+> ⚠️ **Alpha Status**: Clauxton is currently in Phase 0 development. Core features are being implemented. Not yet ready for production use.
 
-1. **Session Context Loss** → Persistent Knowledge Base via MCP
-2. **Manual Dependency Tracking** → Auto-inferred task dependencies
-3. **Post-hoc Conflict Detection** → Pre-merge conflict prediction
+Clauxton is a Claude Code plugin that provides **persistent project context** to solve AI-assisted development pain points.
+
+**Vision** (Roadmap):
+1. ✅ **Session Context Loss** → Persistent Knowledge Base (Phase 0 - In Progress)
+2. 🔄 **Manual Dependency Tracking** → Auto-inferred task dependencies (Phase 1 - Planned)
+3. 🔄 **Post-hoc Conflict Detection** → Pre-merge conflict prediction (Phase 2 - Planned)
 
 ---
 
 ## 🎯 Quick Start
 
+> **Note**: CLI installation only. Full Claude Code plugin integration coming in Phase 1.
+
 ```bash
-# Install from PyPI
-pip install clauxton
+# Install from source (PyPI release coming soon)
+git clone https://github.com/nakishiyaman/clauxton.git
+cd clauxton
+pip install -e .
 
 # Initialize in your project
 cd your-project
 clauxton init
 
-# Use with Claude Code
-# Plugin is auto-detected in .claude-plugin/
+# Add knowledge to your Knowledge Base
+clauxton kb add
+
+# Search your Knowledge Base
+clauxton kb search "architecture"
 ```
 
 ---
 
 ## ✨ Features
 
-### Knowledge Base Management
-- **Persistent Context**: Store architecture decisions, patterns, constraints
-- **Smart Search**: Keyword and category-based search
-- **Auto-Categorization**: AI-powered categorization
+### ✅ Phase 0: Foundation (In Progress)
 
-### Task Management
-- **Auto Dependency Inference**: Infer dependencies from code edits
-- **DAG Visualization**: Visualize task dependency graphs
-- **Next Task Suggestions**: AI recommends what to work on next
+#### Knowledge Base Management
+- ✅ **Persistent Context**: Store architecture decisions, patterns, constraints, conventions
+- ✅ **Category System**: Organize entries by type (architecture, constraint, decision, pattern, convention)
+- ✅ **YAML Storage**: Human-readable, Git-friendly YAML format
+- ✅ **Search**: Keyword, category, and tag-based search
+- ✅ **CRUD Operations**: Add, get, update, delete, list entries
+- ✅ **Atomic Writes**: Safe file operations with automatic backups
+- ✅ **Secure Permissions**: 700/600 permissions for privacy
 
-### Conflict Prevention
-- **Pre-merge Detection**: Detect file conflicts before they happen
-- **Risk Scoring**: Calculate conflict risk (0.0-1.0)
-- **Safe Execution Order**: Recommend optimal task order
+### 🔄 Phase 1: Core Engine (Planned)
+
+#### Task Management
+- 🔄 **Auto Dependency Inference**: Infer dependencies from code edits
+- 🔄 **DAG Validation**: Prevent circular dependencies
+- 🔄 **Next Task Suggestions**: AI recommends what to work on next
+- 🔄 **MCP Integration**: Knowledge Base & Task Management MCP servers
+
+### 🔄 Phase 2: Conflict Prevention (Planned)
+
+#### Pre-merge Conflict Detection
+- 🔄 **File Overlap Detection**: Detect potential merge conflicts
+- 🔄 **Risk Scoring**: Calculate conflict risk (0.0-1.0)
+- 🔄 **Safe Execution Order**: Recommend optimal task order
+- 🔄 **Drift Detection**: Detect scope expansion
 
 ---
 
 ## 📦 Installation
 
-### As a Claude Code Plugin (Recommended)
+### Development Installation (Current)
 
 ```bash
-pip install clauxton
-cd your-project
-clauxton init
-# Restart Claude Code
+# Clone repository
+git clone https://github.com/nakishiyaman/clauxton.git
+cd clauxton
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On macOS/Linux
+# or
+venv\Scripts\activate     # On Windows
+
+# Install in editable mode
+pip install -e .
+
+# Verify installation
+clauxton --version
 ```
 
-### As a Standalone CLI
+### PyPI Installation (Coming Soon)
 
 ```bash
 pip install clauxton
-clauxton --help
 ```
 
 ---
 
 ## 🚀 Usage
 
-### Knowledge Base Commands
+### Current Commands (Phase 0)
 
 ```bash
-# Add knowledge
-/kb-add
+# Initialize Clauxton in your project
+clauxton init
 
-# Search knowledge
-/kb-search <query>
+# Add knowledge entry (interactive)
+clauxton kb add
+
+# Search Knowledge Base
+clauxton kb search "architecture"
+clauxton kb search "API" --category architecture
+
+# List all entries
+clauxton kb list
+clauxton kb list --category decision
+
+# Get entry by ID
+clauxton kb get KB-20251019-001
 ```
 
-### Task Commands
+### Coming in Phase 1
 
 ```bash
-# Create task
+# Slash commands (via MCP)
+/kb-search <query>
 /task-add
-
-# Get next task
 /task-next
-
-# View dependency graph
 /deps-graph
 ```
 
-### Conflict Detection
+### Coming in Phase 2
 
 ```bash
-# Check for conflicts
+# Conflict detection
 /conflicts-check
 ```
 
@@ -104,23 +145,46 @@ clauxton --help
 
 ## 🏗️ Architecture
 
-Clauxton is built as a Claude Code Plugin with:
+### Current (Phase 0)
+
+```
+clauxton/
+├── core/
+│   ├── models.py          # Pydantic data models
+│   └── knowledge_base.py  # KB CRUD operations (in progress)
+├── utils/
+│   ├── yaml_utils.py      # Safe YAML I/O
+│   └── file_utils.py      # Secure file operations
+└── cli/
+    └── main.py            # CLI commands (in progress)
+```
+
+**Storage**: `.clauxton/knowledge-base.yml` (YAML format)
+
+### Planned (Phase 1-2)
 
 - **MCP Servers**: Knowledge Base & Task Management servers
 - **Subagents**: Dependency Analyzer, Conflict Detector
 - **Hooks**: Auto-update on file edits
 - **Slash Commands**: `/kb-*`, `/task-*`, `/deps-*`, `/conflicts-*`
 
-See [docs/architecture.md](docs/architecture.md) for details.
+See [docs/architecture.md](docs/architecture.md) for complete design.
 
 ---
 
 ## 📚 Documentation
 
-- [Quick Start Guide](docs/quick-start.md)
-- [Configuration](docs/configuration.md)
-- [API Reference](docs/api-reference.md)
-- [Architecture Overview](docs/architecture.md)
+### Available Now
+- [Architecture Overview](docs/architecture.md) - System design and data flow
+- [Development Guide](docs/development.md) - Setup and contribution guide
+- [Technical Design](docs/technical-design.md) - Implementation details
+- [Roadmap](docs/roadmap.md) - 16-week development plan
+- [Contributing](CONTRIBUTING.md) - Contribution guidelines
+
+### Coming Soon
+- Quick Start Guide (Phase 0 completion)
+- API Reference (Phase 0 completion)
+- Configuration Guide (Phase 1)
 
 ---
 
@@ -136,17 +200,42 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
+## 📊 Project Status
+
+| Phase | Status | Completion | Target Date |
+|-------|--------|------------|-------------|
+| **Phase 0: Foundation** | 🔄 In Progress | 60% | Week 2 (2025-11-02) |
+| Phase 1: Core Engine | 📋 Planned | 0% | Week 3-8 |
+| Phase 2: Conflict Prevention | 📋 Planned | 0% | Week 9-12 |
+| Beta Testing | 📋 Planned | 0% | Week 13-14 |
+| Public Launch | 📋 Planned | 0% | Week 15-16 |
+
+**Phase 0 Progress**:
+- ✅ Pydantic data models (100%)
+- ✅ YAML utilities (100%)
+- 🔄 Knowledge Base core (0%)
+- ⏳ CLI implementation (0%)
+- ⏳ Basic MCP Server (0%)
+- ⏳ Tests & Documentation (0%)
+
+See [docs/roadmap.md](docs/roadmap.md) for detailed timeline.
+
+---
+
 ## 🔗 Links
 
-- **Documentation**: [https://clauxton.dev](https://clauxton.dev) (coming soon)
 - **GitHub**: [https://github.com/nakishiyaman/clauxton](https://github.com/nakishiyaman/clauxton)
-- **PyPI**: [https://pypi.org/project/clauxton/](https://pypi.org/project/clauxton/)
+- **Issues**: [https://github.com/nakishiyaman/clauxton/issues](https://github.com/nakishiyaman/clauxton/issues)
+- **Discussions**: [https://github.com/nakishiyaman/clauxton/discussions](https://github.com/nakishiyaman/clauxton/discussions)
+- **PyPI**: Coming after Phase 0 completion
 
 ---
 
 ## 🙏 Acknowledgments
 
 This project was inspired by the need for persistent context in AI-assisted development. Special thanks to the Claude Code team for building an extensible platform.
+
+**Note**: Clauxton is an independent project and is not officially affiliated with Anthropic or Claude Code.
 
 ---
 
