@@ -678,4 +678,614 @@ clauxton kb add
 
 ---
 
-**Last Updated**: Phase 1 Week 9 (v0.8.0+)
+---
+
+## Platform-Specific Issues
+
+### Windows Issues
+
+#### PowerShell command not recognized
+
+**Problem**: `clauxton : The term 'clauxton' is not recognized`
+
+**Solutions**:
+
+1. **Add Python Scripts to PATH**:
+   ```powershell
+   # Find Python Scripts directory
+   python -m site --user-site
+   # Example: C:\Users\YourName\AppData\Local\Programs\Python\Python311\Scripts\
+
+   # Add to PATH (PowerShell)
+   $env:Path += ";C:\Users\YourName\AppData\Local\Programs\Python\Python311\Scripts\"
+   ```
+
+2. **Use full path**:
+   ```powershell
+   python -m clauxton.cli.main --help
+   ```
+
+3. **Use py launcher**:
+   ```powershell
+   py -m pip install clauxton
+   py -m clauxton.cli.main --version
+   ```
+
+#### File path issues with backslashes
+
+**Problem**: Paths with backslashes cause errors
+
+**Solution**: Use forward slashes or raw strings:
+```powershell
+# ✅ Good
+clauxton init
+cd C:/Projects/myproject
+
+# ❌ Avoid
+cd C:\Projects\myproject  # May cause issues in some contexts
+```
+
+#### `.clauxton` directory hidden by default
+
+**Problem**: Cannot see `.clauxton` directory in Explorer
+
+**Solution**: Show hidden files:
+1. Open File Explorer
+2. View → Options → Change folder and search options
+3. View tab → Show hidden files, folders, and drives
+4. Apply
+
+Or use PowerShell:
+```powershell
+ls -Force  # Shows hidden files
+```
+
+#### Line ending issues (CRLF vs LF)
+
+**Problem**: Git shows `.clauxton/*.yml` files as modified even though unchanged
+
+**Solution**: Configure Git line endings:
+```powershell
+# For entire project
+git config core.autocrlf true
+
+# For .clauxton files specifically (.gitattributes)
+echo ".clauxton/*.yml text eol=lf" >> .gitattributes
+```
+
+---
+
+### macOS Issues
+
+#### "python" command not found
+
+**Problem**: `python: command not found` (macOS comes with `python3` only)
+
+**Solutions**:
+
+1. **Use python3**:
+   ```bash
+   python3 -m pip install clauxton
+   python3 -m clauxton.cli.main --version
+   ```
+
+2. **Create alias** (in `~/.zshrc` or `~/.bash_profile`):
+   ```bash
+   alias python=python3
+   alias pip=pip3
+   ```
+
+3. **Install Python via Homebrew**:
+   ```bash
+   brew install python
+   # This creates python3 and python symlink
+   ```
+
+#### Permission denied on `.clauxton` files
+
+**Problem**: `Permission denied: .clauxton/knowledge-base.yml`
+
+**Cause**: macOS file permissions or SIP (System Integrity Protection)
+
+**Solution**:
+```bash
+# Fix permissions
+chmod 700 .clauxton/
+chmod 600 .clauxton/*.yml
+
+# Check ownership
+ls -la .clauxton/
+# Should be owned by your user, not root
+```
+
+#### Gatekeeper blocks Python scripts
+
+**Problem**: "Python can't be opened because it is from an unidentified developer"
+
+**Solution**:
+```bash
+# Allow Python in Security & Privacy settings
+# Or install via Homebrew (trusted source)
+brew install python
+```
+
+#### zsh command not found after pip install
+
+**Problem**: `clauxton` not found after `pip install` (zsh doesn't refresh PATH)
+
+**Solutions**:
+
+1. **Reload shell config**:
+   ```bash
+   source ~/.zshrc
+   ```
+
+2. **Or restart terminal**
+
+3. **Check PATH**:
+   ```bash
+   echo $PATH | tr ':' '\n' | grep -i python
+   ```
+
+---
+
+### Linux Issues
+
+#### Permission denied (SELinux/AppArmor)
+
+**Problem**: SELinux or AppArmor blocks `.clauxton` access
+
+**Solution**:
+
+1. **Check SELinux**:
+   ```bash
+   getenforce  # Should show "Disabled" or "Permissive"
+   ```
+
+2. **If Enforcing, add exception**:
+   ```bash
+   # Temporary (until reboot)
+   sudo setenforce 0
+
+   # Permanent (not recommended for production)
+   sudo vi /etc/selinux/config
+   # Set SELINUX=permissive
+   ```
+
+3. **Or fix SELinux context**:
+   ```bash
+   restorecon -Rv .clauxton/
+   ```
+
+#### pip install fails without sudo
+
+**Problem**: `Permission denied` when running `pip install`
+
+**Solutions**:
+
+1. **Use --user flag** (recommended):
+   ```bash
+   pip install --user clauxton
+   ```
+
+2. **Use virtual environment** (best practice):
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install clauxton
+   ```
+
+3. **Avoid sudo pip** (causes permission issues):
+   ```bash
+   # ❌ Don't do this
+   sudo pip install clauxton
+   ```
+
+#### Different Python versions per distro
+
+**Problem**: Ubuntu uses `python3`, others may differ
+
+**Solution**: Use python3 explicitly:
+```bash
+# Check version
+python3 --version
+
+# Install
+python3 -m pip install clauxton
+
+# Run
+python3 -m clauxton.cli.main --version
+```
+
+---
+
+## Common Error Messages Explained
+
+### "ValidationError: Invalid category"
+
+**Full Error**:
+```
+pydantic.ValidationError: Invalid category: 'my-category'
+Valid categories: architecture, constraint, decision, pattern, convention
+```
+
+**Cause**: Trying to use a category not in the allowed list
+
+**Solution**: Use one of the 5 valid categories:
+```bash
+clauxton kb add \
+  --category architecture  # ✅
+  # or: constraint, decision, pattern, convention
+```
+
+### "DependencyError: Circular dependency detected"
+
+**Full Error**:
+```
+DependencyError: Circular dependency detected: TASK-001 -> TASK-002 -> TASK-001
+```
+
+**Cause**: Task A depends on Task B, which depends on Task A
+
+**Solution**: Break the cycle by removing one dependency:
+```bash
+# Check dependencies
+clauxton task get TASK-001
+clauxton task get TASK-002
+
+# Manually edit .clauxton/tasks.yml to remove circular dependency
+```
+
+### "FileNotFoundError: .clauxton/knowledge-base.yml"
+
+**Full Error**:
+```
+FileNotFoundError: [Errno 2] No such file or directory: '.clauxton/knowledge-base.yml'
+```
+
+**Cause**: Not in an initialized Clauxton directory
+
+**Solution**:
+```bash
+# Initialize first
+clauxton init
+
+# Or cd to initialized directory
+cd /path/to/your/project
+```
+
+### "YAMLError: mapping values are not allowed here"
+
+**Full Error**:
+```
+yaml.scanner.ScannerError: mapping values are not allowed here
+  in ".clauxton/knowledge-base.yml", line 42, column 18
+```
+
+**Cause**: YAML syntax error (often colon `:` in unquoted string)
+
+**Solution**:
+```bash
+# Restore from backup
+cp .clauxton/knowledge-base.yml.bak .clauxton/knowledge-base.yml
+
+# Or manually fix line 42
+nano .clauxton/knowledge-base.yml
+```
+
+**Prevention**: Let Clauxton manage YAML files, avoid manual edits
+
+---
+
+## Advanced Troubleshooting
+
+### Enable Debug Logging
+
+For detailed error messages:
+
+```bash
+# Set debug mode
+export CLAUXTON_DEBUG=1
+
+# Run command
+clauxton kb add
+
+# For Python module debugging
+python -m clauxton.cli.main --help 2>&1 | less
+```
+
+### Inspect YAML Files
+
+When CLI commands fail, inspect files directly:
+
+```bash
+# Check knowledge-base.yml structure
+python -c "
+import yaml
+with open('.clauxton/knowledge-base.yml') as f:
+    data = yaml.safe_load(f)
+    print(f'Entries: {len(data.get(\"entries\", []))}')
+    print(f'Version: {data.get(\"version\")}')
+"
+
+# Check tasks.yml structure
+python -c "
+import yaml
+with open('.clauxton/tasks.yml') as f:
+    data = yaml.safe_load(f)
+    print(f'Tasks: {len(data.get(\"tasks\", []))}')
+"
+```
+
+### Validate File Integrity
+
+Check for corruption:
+
+```bash
+# Validate YAML syntax
+python -c "
+import yaml
+try:
+    yaml.safe_load(open('.clauxton/knowledge-base.yml'))
+    print('✅ knowledge-base.yml is valid YAML')
+except Exception as e:
+    print(f'❌ YAML error: {e}')
+"
+
+# Check file permissions
+ls -la .clauxton/
+# Should show:
+# drwx------ (700) for .clauxton/
+# -rw------- (600) for .yml files
+```
+
+### Reset to Clean State
+
+If all else fails:
+
+```bash
+# 1. Backup existing data
+cp -r .clauxton/ .clauxton-backup-$(date +%Y%m%d)/
+
+# 2. Remove corrupted directory
+rm -rf .clauxton/
+
+# 3. Re-initialize
+clauxton init
+
+# 4. Restore data manually (if salvageable)
+# Copy entries from backup YAML files
+```
+
+---
+
+## Performance Tuning
+
+### Large Knowledge Base Optimization
+
+For 200+ entries:
+
+1. **Use category filters**:
+   ```bash
+   # Faster (searches only one category)
+   clauxton kb search "API" --category architecture
+
+   # Slower (searches all categories)
+   clauxton kb search "API"
+   ```
+
+2. **Use specific queries**:
+   ```bash
+   # Better (specific terms)
+   clauxton kb search "FastAPI authentication JWT"
+
+   # Worse (generic term)
+   clauxton kb search "API"
+   ```
+
+3. **Limit results**:
+   ```bash
+   clauxton kb search "database" --limit 5
+   ```
+
+### Reduce File Size
+
+If .yml files become very large (> 1 MB):
+
+```bash
+# Archive old entries
+mkdir .clauxton/archive/
+mv .clauxton/knowledge-base.yml .clauxton/archive/kb-2025.yml
+
+# Start fresh
+clauxton init --force
+```
+
+### Speed Up CI/CD
+
+For projects with CI/CD that uses Clauxton:
+
+```bash
+# Cache .clauxton directory in CI
+# Example for GitHub Actions:
+- uses: actions/cache@v3
+  with:
+    path: .clauxton
+    key: clauxton-${{ hashFiles('.clauxton/**') }}
+```
+
+---
+
+## Frequently Asked Questions (Extended)
+
+### Can I use Clauxton offline?
+
+Yes! Clauxton works completely offline:
+- No internet connection required
+- All data stored locally in `.clauxton/`
+- No cloud services or APIs
+
+### How do I migrate Clauxton between projects?
+
+```bash
+# Export from Project A
+cd ~/project-a
+cp -r .clauxton/ ~/clauxton-export/
+
+# Import to Project B
+cd ~/project-b
+clauxton init
+cp ~/clauxton-export/*.yml .clauxton/
+
+# Verify
+clauxton kb list
+```
+
+### Can I use Clauxton with Git submodules?
+
+Yes, each submodule can have its own `.clauxton/`:
+
+```
+project/
+├── .clauxton/          # Main project KB
+└── submodules/
+    ├── module-a/
+    │   └── .clauxton/  # Module A KB
+    └── module-b/
+        └── .clauxton/  # Module B KB
+```
+
+Each is independent.
+
+### How do I share Knowledge Base with team?
+
+```bash
+# 1. Commit to Git
+git add .clauxton/
+git commit -m "docs: Add API decisions to KB"
+git push
+
+# 2. Team pulls changes
+git pull
+
+# 3. Everyone now has same KB
+clauxton kb list  # Shows shared entries
+```
+
+### Can I use Clauxton for personal notes outside code projects?
+
+Yes! Initialize Clauxton in any directory:
+
+```bash
+# Personal notes directory
+mkdir ~/notes
+cd ~/notes
+clauxton init
+
+# Add notes as KB entries
+clauxton kb add \
+  --title "Book Notes: Clean Code" \
+  --category decision \
+  --content "Key takeaways from Clean Code by Robert Martin..."
+```
+
+### What happens if two people add KB entries simultaneously?
+
+Git merge conflict in `.clauxton/knowledge-base.yml`:
+
+```bash
+# Solution 1: Accept both changes
+git checkout --ours .clauxton/knowledge-base.yml
+# Manually copy entries from --theirs
+
+# Solution 2: Use merge tool
+git mergetool
+
+# Prevention: Coordinate KB updates with team
+```
+
+### Can I use Clauxton with monorepos?
+
+Yes! Two approaches:
+
+**Approach 1: One KB per service**:
+```
+monorepo/
+├── service-a/
+│   └── .clauxton/
+├── service-b/
+│   └── .clauxton/
+└── service-c/
+    └── .clauxton/
+```
+
+**Approach 2: Shared KB at root**:
+```
+monorepo/
+├── .clauxton/  # Shared KB for all services
+├── service-a/
+├── service-b/
+└── service-c/
+```
+
+Choose based on whether services share context.
+
+### How do I search for multi-word phrases?
+
+TF-IDF search handles multi-word queries automatically:
+
+```bash
+# Searches for all these terms
+clauxton kb search "user authentication JWT token"
+
+# Results ranked by relevance:
+# - Entries with all 4 terms score highest
+# - Entries with 3 terms score lower
+# - Entries with 2 terms score lower still
+```
+
+No need for quotes around phrases.
+
+### Can I export to other formats (JSON, Markdown)?
+
+**JSON export**:
+```bash
+python -c "
+import yaml, json
+with open('.clauxton/knowledge-base.yml') as f:
+    data = yaml.safe_load(f)
+print(json.dumps(data, indent=2))
+" > knowledge-base.json
+```
+
+**Markdown export** (simple):
+```bash
+python -c "
+import yaml
+with open('.clauxton/knowledge-base.yml') as f:
+    kb = yaml.safe_load(f)
+    for entry in kb['entries']:
+        print(f'# {entry[\"title\"]}')
+        print(f'**Category**: {entry[\"category\"]}')
+        print(f'{entry[\"content\"]}\n')
+" > knowledge-base.md
+```
+
+### What's the difference between Clauxton and a wiki?
+
+| Feature | Clauxton | Wiki |
+|---------|----------|------|
+| Location | Local (.clauxton/) | Server/Cloud |
+| Search | TF-IDF relevance | Keyword only |
+| Integration | MCP (Claude Code) | Browser |
+| Version Control | Git-native | Wiki history |
+| Task Management | Built-in | Separate tool |
+| Offline | ✅ Works offline | ❌ Needs server |
+
+**Use Clauxton when**: Working in code projects, need AI integration, prefer local files
+
+**Use Wiki when**: Team needs web UI, documentation-heavy project
+
+---
+
+**Last Updated**: Phase 1 Week 11 (v0.8.0+)
