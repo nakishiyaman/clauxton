@@ -357,5 +357,14 @@ def search(query: str, category: Optional[str], tags: Optional[str], limit: int)
         click.echo()
 
 
+# ============================================================================
+# Task Management Commands (Phase 1)
+# ============================================================================
+
+from clauxton.cli.tasks import task  # noqa: E402
+
+cli.add_command(task)
+
+
 if __name__ == "__main__":
     cli()
