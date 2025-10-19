@@ -211,18 +211,22 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 
 ## 📚 Documentation
 
-### Available Now
+### User Guides
+- [Quick Start Guide](docs/quick-start.md) - Get started in 5 minutes
+- [Installation Guide](docs/installation.md) - Complete installation instructions
+- [YAML Format Reference](docs/yaml-format.md) - Complete Knowledge Base YAML specification
+
+### Developer Guides
 - [Architecture Overview](docs/architecture.md) - System design and data flow
 - [Development Guide](docs/development.md) - Setup and contribution guide
 - [Technical Design](docs/technical-design.md) - Implementation details
-- [YAML Format Reference](docs/yaml-format.md) - Complete Knowledge Base YAML specification
 - [Roadmap](docs/roadmap.md) - 16-week development plan
 - [Contributing](CONTRIBUTING.md) - Contribution guidelines
 
 ### Coming Soon
-- Quick Start Guide (Phase 0 completion)
-- API Reference (Phase 0 completion)
+- API Reference (Phase 1)
 - Configuration Guide (Phase 1)
+- MCP Server Guide (Phase 1)
 
 ---
 
@@ -242,8 +246,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 | Phase | Status | Completion | Target Date |
 |-------|--------|------------|-------------|
-| **Phase 0: Foundation** | 🔄 In Progress | 75% | Week 2 (2025-11-02) |
-| Phase 1: Core Engine | 📋 Planned | 0% | Week 3-8 |
+| **Phase 0: Foundation** | ✅ Complete | 95% | Week 2 (2025-11-02) |
+| Phase 1: Core Engine | 📋 Ready to Start | 0% | Week 3-8 |
 | Phase 2: Conflict Prevention | 📋 Planned | 0% | Week 9-12 |
 | Beta Testing | 📋 Planned | 0% | Week 13-14 |
 | Public Launch | 📋 Planned | 0% | Week 15-16 |
@@ -252,9 +256,9 @@ MIT License - see [LICENSE](LICENSE) for details.
 - ✅ Pydantic data models (100%)
 - ✅ YAML utilities (100%)
 - ✅ Knowledge Base core (100%)
-- 🔄 CLI implementation (60% - add/get/list complete, update/delete pending)
-- ⏳ Basic MCP Server (0%)
-- 🔄 Tests & Documentation (80% - core tests complete, CLI tests pending)
+- ✅ CLI implementation (100% - init, add, get, list, search)
+- ⏳ Basic MCP Server (0% - deferred to Phase 1)
+- ✅ Tests & Documentation (100% - 111 tests, 93% coverage)
 
 See [docs/roadmap.md](docs/roadmap.md) for detailed timeline.
 
