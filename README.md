@@ -48,17 +48,19 @@ clauxton kb search "architecture"
 - ✅ **Persistent Context**: Store architecture decisions, patterns, constraints, conventions
 - ✅ **Category System**: Organize entries by type (architecture, constraint, decision, pattern, convention)
 - ✅ **YAML Storage**: Human-readable, Git-friendly YAML format
-- ✅ **Search**: Keyword, category, and tag-based search
+- ✅ **TF-IDF Search**: Relevance-based search with automatic ranking (see [Search Algorithm](docs/search-algorithm.md))
 - ✅ **CRUD Operations**: Add, get, update, delete, list entries
 - ✅ **Atomic Writes**: Safe file operations with automatic backups
 - ✅ **Secure Permissions**: 700/600 permissions for privacy
 
-### 🚧 Phase 1: Core Engine (In Progress - Week 5/6)
+### 🚧 Phase 1: Core Engine (In Progress - Week 6/8)
 
-#### Knowledge Base MCP Server (✅ Week 3 - Complete)
-- ✅ **MCP Tools**: kb_search, kb_add, kb_list, kb_get
+#### Knowledge Base CRUD (✅ Week 3 + Week 7 - Complete)
+- ✅ **MCP Tools**: kb_search, kb_add, kb_list, kb_get, kb_update, kb_delete
+- ✅ **CLI Commands**: kb add, kb get, kb list, kb search, kb update, kb delete
 - ✅ **Claude Code Integration**: .claude-plugin/mcp-servers.json
 - ✅ **Type-Safe**: Full Pydantic validation
+- ✅ **Version Management**: Automatic versioning on updates
 
 #### Task Management (✅ Week 4 - Complete)
 - ✅ **CRUD Operations**: Add, get, update, delete, list tasks
@@ -91,6 +93,17 @@ clauxton kb search "architecture"
 
 ## 📦 Installation
 
+### Requirements
+
+- **Python**: 3.11 or higher
+- **Dependencies**:
+  - `click>=8.0.0` - CLI framework
+  - `pydantic>=2.0.0` - Data validation
+  - `pyyaml>=6.0.0` - YAML parsing
+  - `mcp>=0.1.0` - MCP server integration
+  - `scikit-learn>=1.3.0` - TF-IDF search (optional, falls back to simple search if not installed)
+  - `numpy>=1.24.0` - Required by scikit-learn
+
 ### Development Installation (Current)
 
 ```bash
@@ -104,7 +117,7 @@ source venv/bin/activate  # On macOS/Linux
 # or
 venv\Scripts\activate     # On Windows
 
-# Install in editable mode
+# Install in editable mode (includes all dependencies)
 pip install -e .
 
 # Verify installation
@@ -114,8 +127,15 @@ clauxton --version
 ### PyPI Installation (Coming Soon)
 
 ```bash
+# Full installation (with TF-IDF search)
 pip install clauxton
+
+# Minimal installation (simple keyword search only)
+pip install clauxton --no-deps
+pip install click pydantic pyyaml mcp
 ```
+
+**Note on Search**: Clauxton uses **TF-IDF algorithm** for relevance-based search when `scikit-learn` is installed. If not available, it automatically falls back to simple keyword matching. See [Search Algorithm](docs/search-algorithm.md) for details.
 
 ---
 
@@ -130,9 +150,10 @@ clauxton init
 # Add knowledge entry (interactive)
 clauxton kb add
 
-# Search Knowledge Base
-clauxton kb search "architecture"
+# Search Knowledge Base (TF-IDF relevance ranking)
+clauxton kb search "architecture"          # Results ranked by relevance
 clauxton kb search "API" --category architecture
+clauxton kb search "FastAPI" --limit 5     # Limit to top 5 results
 
 # List all entries
 clauxton kb list
@@ -140,6 +161,14 @@ clauxton kb list --category decision
 
 # Get entry by ID
 clauxton kb get KB-20251019-001
+
+# Update entry
+clauxton kb update KB-20251019-001 --title "New Title"
+clauxton kb update KB-20251019-001 --content "New content" --category decision
+
+# Delete entry
+clauxton kb delete KB-20251019-001
+clauxton kb delete KB-20251019-001 --yes  # Skip confirmation
 ```
 
 ### Task Management Commands (Phase 1 Week 4 ✅)
@@ -192,10 +221,14 @@ The Clauxton MCP Server provides full Knowledge Base and Task Management for Cla
 ```
 
 **Knowledge Base Tools**:
-- `kb_search(query, category?, limit?)` - Search Knowledge Base
+- `kb_search(query, category?, limit?)` - Search with TF-IDF relevance ranking
 - `kb_add(title, category, content, tags?)` - Add new entry
 - `kb_list(category?)` - List all entries
 - `kb_get(entry_id)` - Get entry by ID
+- `kb_update(entry_id, title?, content?, category?, tags?)` - Update entry
+- `kb_delete(entry_id)` - Delete entry
+
+> **Note**: Search results are automatically ranked by relevance using TF-IDF algorithm. Most relevant entries appear first.
 
 **Task Management Tools** (✅ Week 5):
 - `task_add(name, description?, priority?, depends_on?, files?, kb_refs?, estimate?)` - Add task
@@ -290,6 +323,7 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 - [Quick Start Guide](docs/quick-start.md) - Get started in 5 minutes (CLI)
 - [MCP Server Quick Start](docs/mcp-server-quickstart.md) - Get started with Claude Code ✨ NEW
 - [Task Management Guide](docs/task-management-guide.md) - Complete task management documentation ✨ NEW
+- [Search Algorithm](docs/search-algorithm.md) - TF-IDF search explanation ✨ NEW
 - [Installation Guide](docs/installation.md) - Complete installation instructions
 - [YAML Format Reference](docs/yaml-format.md) - Complete Knowledge Base YAML specification
 - [MCP Server Guide](docs/mcp-server.md) - Complete MCP Server documentation
@@ -324,7 +358,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 | Phase | Status | Completion | Target Date |
 |-------|--------|------------|-------------|
 | **Phase 0: Foundation** | ✅ Complete | 100% | Week 2 (2025-11-02) |
-| **Phase 1: Core Engine** | 🚧 In Progress | 83% | Week 3-8 |
+| **Phase 1: Core Engine** | 🚧 In Progress | 88% | Week 3-8 |
 | Phase 2: Conflict Prevention | 📋 Planned | 0% | Week 9-12 |
 | Beta Testing | 📋 Planned | 0% | Week 13-14 |
 | Public Launch | 📋 Planned | 0% | Week 15-16 |
@@ -337,14 +371,15 @@ MIT License - see [LICENSE](LICENSE) for details.
 - ⏳ Basic MCP Server (0% - deferred to Phase 1)
 - ✅ Tests & Documentation (100% - 111 tests, 93% coverage)
 
-**Phase 1 Progress** (Week 5/6 - 83%):
-- ✅ MCP Server Foundation (100% - kb_search, kb_add, kb_list, kb_get)
+**Phase 1 Progress** (Week 9/10 - 95%):
+- ✅ Knowledge Base CRUD (100% - complete with update/delete)
+- ✅ MCP KB Tools (100% - kb_search, kb_add, kb_list, kb_get, kb_update, kb_delete)
 - ✅ Task Management (100% - CRUD, dependencies, DAG validation, CLI)
 - ✅ Task Management MCP Tools (100% - task_add, task_list, task_get, task_update, task_next, task_delete)
 - ✅ Auto Dependency Inference (100% - file overlap detection)
-- ⏳ KB Enhancements (0% - Week 7)
-- ⏳ Integration & Documentation (0% - Week 8)
-- ✅ Tests: 183 total (111 Phase 0 + 7 MCP KB + 24 TaskManager + 21 MCP Task + 15 CLI + 5 Inference), 78% coverage
+- ✅ TF-IDF Search (100% - relevance-based search with fallback)
+- 🚧 Documentation (80% - Week 9-10)
+- ✅ Tests: 265 total, 94% coverage
 
 See [Phase 0 Completion Summary](docs/PHASE_0_COMPLETE.md) for detailed results.
 See [docs/roadmap.md](docs/roadmap.md) for overall timeline.

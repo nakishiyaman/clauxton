@@ -158,6 +158,87 @@ def kb_get(entry_id: str) -> dict[str, Any]:
 
 
 @mcp.tool()
+def kb_update(
+    entry_id: str,
+    title: Optional[str] = None,
+    content: Optional[str] = None,
+    category: Optional[str] = None,
+    tags: Optional[List[str]] = None,
+) -> dict[str, Any]:
+    """
+    Update an existing Knowledge Base entry.
+
+    Args:
+        entry_id: Entry ID to update (e.g., KB-20251019-001)
+        title: New title (optional)
+        content: New content (optional)
+        category: New category (optional)
+        tags: New tags list (optional)
+
+    Returns:
+        Updated entry details including new version number
+    """
+    kb = KnowledgeBase(Path.cwd())
+
+    # Prepare updates dictionary
+    updates: dict[str, Any] = {}
+    if title is not None:
+        updates["title"] = title
+    if content is not None:
+        updates["content"] = content
+    if category is not None:
+        updates["category"] = category
+    if tags is not None:
+        updates["tags"] = tags
+
+    if not updates:
+        return {
+            "error": "No fields to update",
+            "message": "Provide at least one field to update",
+        }
+
+    # Update entry
+    updated_entry = kb.update(entry_id, updates)
+
+    return {
+        "id": updated_entry.id,
+        "title": updated_entry.title,
+        "category": updated_entry.category,
+        "content": updated_entry.content,
+        "tags": updated_entry.tags,
+        "version": updated_entry.version,
+        "updated_at": updated_entry.updated_at.isoformat(),
+        "message": f"Successfully updated entry: {entry_id}",
+    }
+
+
+@mcp.tool()
+def kb_delete(entry_id: str) -> dict[str, str]:
+    """
+    Delete a Knowledge Base entry.
+
+    Args:
+        entry_id: Entry ID to delete (e.g., KB-20251019-001)
+
+    Returns:
+        Success message
+    """
+    kb = KnowledgeBase(Path.cwd())
+
+    # Get entry title for confirmation message
+    entry = kb.get(entry_id)
+    entry_title = entry.title
+
+    # Delete entry
+    kb.delete(entry_id)
+
+    return {
+        "id": entry_id,
+        "message": f"Successfully deleted entry: {entry_id} ({entry_title})",
+    }
+
+
+@mcp.tool()
 def task_add(
     name: str,
     description: Optional[str] = None,

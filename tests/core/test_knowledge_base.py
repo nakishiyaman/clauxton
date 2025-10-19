@@ -541,7 +541,10 @@ def test_search_special_characters(
 
 def test_search_long_content(kb: KnowledgeBase) -> None:
     """Test searching in entries with very long content (10000 chars)."""
-    long_content = "A" * 9000 + "needle" + "B" * 994  # Exactly 10000 chars
+    # Create more realistic long content with varied words (TF-IDF friendly)
+    repeated_text = ("This is a long content entry. " * 300)  # ~9000 chars
+    long_content = repeated_text + "The needle keyword appears here in the long content. " + ("More text. " * 10)
+
     entry = KnowledgeBaseEntry(
         id="KB-20251019-001",
         title="Long content entry",
@@ -555,8 +558,8 @@ def test_search_long_content(kb: KnowledgeBase) -> None:
 
     # Should find "needle" in long content
     results = kb.search("needle")
-    assert len(results) == 1
-    assert results[0].id == "KB-20251019-001"
+    assert len(results) >= 1  # Should find at least one result
+    assert any(r.id == "KB-20251019-001" for r in results)
 
 
 def test_yaml_file_human_readable(
@@ -579,3 +582,278 @@ def test_yaml_file_human_readable(
     # Should not contain Python object representations
     assert "KnowledgeBaseEntry" not in yaml_content
     assert "<" not in yaml_content or ">" not in yaml_content  # No <object> tags
+
+
+# ============================================================================
+# Simple Search Fallback Tests (for when TF-IDF unavailable)
+# ============================================================================
+
+
+def test_simple_search_keyword_matching(kb: KnowledgeBase) -> None:
+    """Test _simple_search method directly for keyword matching."""
+    # Add test entries with known content
+    entry1 = KnowledgeBaseEntry(
+        id="KB-20251019-001",
+        title="FastAPI framework guide",
+        category="architecture",
+        content="Use FastAPI for all backend APIs.",
+        tags=["backend", "api"],
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+    entry2 = KnowledgeBaseEntry(
+        id="KB-20251019-002",
+        title="PostgreSQL database",
+        category="decision",
+        content="Use PostgreSQL for production.",
+        tags=["database"],
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+    entry3 = KnowledgeBaseEntry(
+        id="KB-20251019-003",
+        title="API Gateway pattern",
+        category="pattern",
+        content="Use API Gateway for routing.",
+        tags=["api", "gateway"],
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+
+    kb.add(entry1)
+    kb.add(entry2)
+    kb.add(entry3)
+
+    # Test title match (weight 2.0)
+    results = kb._simple_search("FastAPI", limit=10)
+    assert len(results) >= 1
+    assert results[0].id == "KB-20251019-001"
+
+    # Test content match (weight 1.0)
+    results = kb._simple_search("PostgreSQL", limit=10)
+    assert len(results) >= 1
+    assert results[0].id == "KB-20251019-002"
+
+    # Test tag match (weight 1.5)
+    results = kb._simple_search("gateway", limit=10)
+    assert len(results) >= 1
+    assert results[0].id == "KB-20251019-003"
+
+
+def test_simple_search_relevance_scoring(kb: KnowledgeBase) -> None:
+    """Test _simple_search relevance scoring with multiple matches."""
+    # Entry with title match (score: 2.0)
+    entry1 = KnowledgeBaseEntry(
+        id="KB-20251019-001",
+        title="API documentation",
+        category="architecture",
+        content="Some content here.",
+        tags=["docs"],
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+    # Entry with content match only (score: 1.0)
+    entry2 = KnowledgeBaseEntry(
+        id="KB-20251019-002",
+        title="Other topic",
+        category="architecture",
+        content="API is mentioned in content.",
+        tags=["other"],
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+    # Entry with tag match (score: 1.5)
+    entry3 = KnowledgeBaseEntry(
+        id="KB-20251019-003",
+        title="Different topic",
+        category="architecture",
+        content="Different content.",
+        tags=["api"],
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+
+    kb.add(entry1)
+    kb.add(entry2)
+    kb.add(entry3)
+
+    results = kb._simple_search("API", limit=10)
+
+    # All should match
+    assert len(results) == 3
+
+    # Results should be sorted by relevance
+    # Entry 1 (title match, score 2.0) should be first
+    assert results[0].id == "KB-20251019-001"
+    # Entry 3 (tag match, score 1.5) should be second
+    assert results[1].id == "KB-20251019-003"
+    # Entry 2 (content match, score 1.0) should be third
+    assert results[2].id == "KB-20251019-002"
+
+
+def test_simple_search_with_category_filter(kb: KnowledgeBase) -> None:
+    """Test _simple_search with category filter."""
+    entry1 = KnowledgeBaseEntry(
+        id="KB-20251019-001",
+        title="Database decision",
+        category="decision",
+        content="Use PostgreSQL.",
+        tags=["database"],
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+    entry2 = KnowledgeBaseEntry(
+        id="KB-20251019-002",
+        title="Database pattern",
+        category="pattern",
+        content="Use Repository pattern.",
+        tags=["database"],
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+
+    kb.add(entry1)
+    kb.add(entry2)
+
+    # Filter by category
+    results = kb._simple_search("database", category="decision", limit=10)
+
+    assert len(results) == 1
+    assert results[0].id == "KB-20251019-001"
+
+
+def test_simple_search_with_tag_filter(kb: KnowledgeBase) -> None:
+    """Test _simple_search with tag filter."""
+    entry1 = KnowledgeBaseEntry(
+        id="KB-20251019-001",
+        title="Backend API",
+        category="architecture",
+        content="FastAPI framework.",
+        tags=["backend", "api"],
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+    entry2 = KnowledgeBaseEntry(
+        id="KB-20251019-002",
+        title="Frontend API",
+        category="architecture",
+        content="REST API calls.",
+        tags=["frontend", "api"],
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+
+    kb.add(entry1)
+    kb.add(entry2)
+
+    # Filter by tag
+    results = kb._simple_search("API", tags=["backend"], limit=10)
+
+    assert len(results) == 1
+    assert results[0].id == "KB-20251019-001"
+
+
+def test_simple_search_empty_query(kb: KnowledgeBase) -> None:
+    """Test _simple_search with empty query."""
+    entry = KnowledgeBaseEntry(
+        id="KB-20251019-001",
+        title="Test entry",
+        category="architecture",
+        content="Test content.",
+        tags=["test"],
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+    kb.add(entry)
+
+    # Empty query should return empty list
+    results = kb._simple_search("", limit=10)
+    assert len(results) == 0
+
+    # Whitespace-only query should also return empty
+    results = kb._simple_search("   ", limit=10)
+    assert len(results) == 0
+
+
+def test_simple_search_case_insensitive(kb: KnowledgeBase) -> None:
+    """Test that _simple_search is case-insensitive."""
+    entry = KnowledgeBaseEntry(
+        id="KB-20251019-001",
+        title="FastAPI Framework",
+        category="architecture",
+        content="Use FastAPI for APIs.",
+        tags=["FastAPI"],
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+    kb.add(entry)
+
+    # All case variations should find the entry
+    assert len(kb._simple_search("fastapi", limit=10)) >= 1
+    assert len(kb._simple_search("FASTAPI", limit=10)) >= 1
+    assert len(kb._simple_search("FastAPI", limit=10)) >= 1
+
+
+def test_simple_search_limit(kb: KnowledgeBase) -> None:
+    """Test _simple_search respects limit parameter."""
+    # Add 5 entries with same keyword
+    for i in range(5):
+        entry = KnowledgeBaseEntry(
+            id=f"KB-20251019-{i+1:03d}",
+            title=f"API entry {i+1}",
+            category="architecture",
+            content="API content.",
+            tags=["api"],
+            created_at=datetime.now(),
+            updated_at=datetime.now(),
+        )
+        kb.add(entry)
+
+    # Limit should work
+    results = kb._simple_search("API", limit=3)
+    assert len(results) == 3
+
+    results = kb._simple_search("API", limit=10)
+    assert len(results) == 5  # All 5 entries
+
+
+def test_fallback_to_simple_search_when_tfidf_unavailable(tmp_path: Path) -> None:
+    """Test that search falls back to _simple_search when TF-IDF unavailable."""
+    import sys
+    from unittest.mock import patch
+
+    # Create KB with mocked SEARCH_ENGINE_AVAILABLE = False
+    with patch.dict(sys.modules, {'clauxton.core.search': None}):
+        # Force reimport of knowledge_base module with SearchEngine unavailable
+        import importlib
+        from clauxton.core import knowledge_base as kb_module
+
+        # Temporarily set SEARCH_ENGINE_AVAILABLE to False
+        original_available = kb_module.SEARCH_ENGINE_AVAILABLE
+        kb_module.SEARCH_ENGINE_AVAILABLE = False
+
+        try:
+            # Create new KB instance (should not initialize SearchEngine)
+            kb = KnowledgeBase(tmp_path)
+            assert kb._search_engine is None
+
+            # Add entry
+            entry = KnowledgeBaseEntry(
+                id="KB-20251019-001",
+                title="Test entry",
+                category="architecture",
+                content="Test content with keyword.",
+                tags=["test"],
+                created_at=datetime.now(),
+                updated_at=datetime.now(),
+            )
+            kb.add(entry)
+
+            # Search should use _simple_search fallback
+            results = kb.search("keyword")
+            assert len(results) >= 1
+            assert results[0].id == "KB-20251019-001"
+
+        finally:
+            # Restore original value
+            kb_module.SEARCH_ENGINE_AVAILABLE = original_available

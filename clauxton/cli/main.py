@@ -14,7 +14,7 @@ Example:
 """
 
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import click
 
@@ -355,6 +355,110 @@ def search(query: str, category: Optional[str], tags: Optional[str], limit: int)
         )
         click.echo(f"    Preview: {content_preview}")
         click.echo()
+
+
+@kb.command()
+@click.argument("entry_id")
+@click.option("--title", help="New title")
+@click.option("--content", help="New content")
+@click.option(
+    "--category",
+    type=click.Choice(["architecture", "constraint", "decision", "pattern", "convention"]),
+    help="New category",
+)
+@click.option("--tags", help="New tags (comma-separated)")
+def update(
+    entry_id: str,
+    title: Optional[str],
+    content: Optional[str],
+    category: Optional[str],
+    tags: Optional[str],
+) -> None:
+    """
+    Update an existing Knowledge Base entry.
+
+    Example:
+        $ clauxton kb update KB-20251019-001 --title "New title"
+        $ clauxton kb update KB-20251019-001 --content "New content"
+        $ clauxton kb update KB-20251019-001 --tags "api,backend,updated"
+    """
+    from clauxton.core.knowledge_base import KnowledgeBase
+
+    root_dir = Path.cwd()
+
+    # Check if .clauxton exists
+    if not (root_dir / ".clauxton").exists():
+        click.echo(click.style("Error: .clauxton/ not found", fg="red"))
+        click.echo("Run 'clauxton init' first")
+        raise click.Abort()
+
+    kb_instance = KnowledgeBase(root_dir)
+
+    # Prepare updates
+    updates: dict[str, Any] = {}
+    if title:
+        updates["title"] = title
+    if content:
+        updates["content"] = content
+    if category:
+        updates["category"] = category
+    if tags:
+        updates["tags"] = [t.strip() for t in tags.split(",") if t.strip()]
+
+    if not updates:
+        click.echo(click.style("Error: No fields to update", fg="yellow"))
+        click.echo("Use --title, --content, --category, or --tags")
+        return
+
+    try:
+        updated_entry = kb_instance.update(entry_id, updates)
+        click.echo(click.style(f"✓ Updated entry: {entry_id}", fg="green"))
+        click.echo(f"  Title: {updated_entry.title}")
+        click.echo(f"  Version: {updated_entry.version}")
+        click.echo(f"  Updated: {updated_entry.updated_at.strftime('%Y-%m-%d %H:%M')}")
+    except Exception as e:
+        click.echo(click.style(f"Error: {e}", fg="red"))
+        raise click.Abort()
+
+
+@kb.command()
+@click.argument("entry_id")
+@click.option("--yes", is_flag=True, help="Skip confirmation")
+def delete(entry_id: str, yes: bool) -> None:
+    """
+    Delete a Knowledge Base entry.
+
+    Example:
+        $ clauxton kb delete KB-20251019-001
+        $ clauxton kb delete KB-20251019-001 --yes
+    """
+    from clauxton.core.knowledge_base import KnowledgeBase
+
+    root_dir = Path.cwd()
+
+    # Check if .clauxton exists
+    if not (root_dir / ".clauxton").exists():
+        click.echo(click.style("Error: .clauxton/ not found", fg="red"))
+        click.echo("Run 'clauxton init' first")
+        raise click.Abort()
+
+    kb_instance = KnowledgeBase(root_dir)
+
+    try:
+        entry = kb_instance.get(entry_id)
+
+        if not yes:
+            click.echo(f"Delete entry: {entry.title} ({entry_id})?")
+            if not click.confirm("Are you sure?"):
+                click.echo("Cancelled")
+                return
+
+        kb_instance.delete(entry_id)
+        click.echo(click.style(f"✓ Deleted entry: {entry_id}", fg="green"))
+
+    except Exception as e:
+        click.echo(click.style(f"Error: {e}", fg="red"))
+        raise click.Abort()
 
 
 # ============================================================================

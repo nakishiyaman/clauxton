@@ -5,6 +5,6 @@ A Claude Code plugin providing persistent knowledge base, task management,
 and conflict detection for AI-assisted development.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.8.0"
 
 __all__ = ["__version__"]

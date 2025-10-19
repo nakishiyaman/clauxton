@@ -27,6 +27,14 @@ from clauxton.core.models import (
 from clauxton.utils.file_utils import ensure_clauxton_dir, set_secure_permissions
 from clauxton.utils.yaml_utils import read_yaml, validate_kb_yaml, write_yaml
 
+# Optional TF-IDF search (falls back to simple search if scikit-learn not available)
+try:
+    from clauxton.core.search import SearchEngine
+    SEARCH_ENGINE_AVAILABLE = True
+except ImportError:
+    SEARCH_ENGINE_AVAILABLE = False
+    SearchEngine = None  # type: ignore
+
 
 class KnowledgeBase:
     """
@@ -62,7 +70,9 @@ class KnowledgeBase:
         clauxton_dir = ensure_clauxton_dir(root_dir)
         self.kb_file: Path = clauxton_dir / "knowledge-base.yml"
         self._entries_cache: Optional[List[KnowledgeBaseEntry]] = None
+        self._search_engine: Optional[Any] = None  # SearchEngine instance
         self._ensure_kb_exists()
+        self._rebuild_search_index()
 
     def add(self, entry: KnowledgeBaseEntry) -> str:
         """
@@ -101,6 +111,7 @@ class KnowledgeBase:
         # Add entry
         entries.append(entry)
         self._save_entries(entries)
+        self._rebuild_search_index()  # Rebuild before invalidating cache
         self._invalidate_cache()
 
         return entry.id
@@ -142,10 +153,10 @@ class KnowledgeBase:
         limit: int = 10,
     ) -> List[KnowledgeBaseEntry]:
         """
-        Search Knowledge Base with keyword matching.
+        Search Knowledge Base with TF-IDF relevance ranking.
 
-        Uses simple keyword matching (case-insensitive) in title and content.
-        Future: TF-IDF or vector search.
+        Uses TF-IDF algorithm for relevance-based search if scikit-learn is available.
+        Falls back to simple keyword matching if not.
 
         Args:
             query: Search query (keywords)
@@ -162,6 +173,43 @@ class KnowledgeBase:
             ...     print(entry.title)
             Use FastAPI
             API versioning strategy
+        """
+        # Use TF-IDF search if available
+        if SEARCH_ENGINE_AVAILABLE and self._search_engine is not None:
+            results = self._search_engine.search(query, category=category, limit=limit)
+            entries_with_scores = results
+
+            # Apply tag filter if specified
+            if tags:
+                filtered = []
+                for entry, score in entries_with_scores:
+                    if any(tag in entry.tags for tag in tags):
+                        filtered.append((entry, score))
+                entries_with_scores = filtered
+
+            return [entry for entry, _ in entries_with_scores[:limit]]
+
+        # Fallback to simple keyword search
+        return self._simple_search(query, category, tags, limit)
+
+    def _simple_search(
+        self,
+        query: str,
+        category: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        limit: int = 10,
+    ) -> List[KnowledgeBaseEntry]:
+        """
+        Simple keyword-based search (fallback when TF-IDF unavailable).
+
+        Args:
+            query: Search query
+            category: Optional category filter
+            tags: Optional tag filter
+            limit: Maximum results
+
+        Returns:
+            List of matching entries
         """
         entries = self._load_entries()
         query_lower = query.lower().strip()
@@ -259,6 +307,7 @@ class KnowledgeBase:
         # Replace in list
         entries[entry_index] = updated_entry
         self._save_entries(entries)
+        self._rebuild_search_index()  # Rebuild before invalidating cache
         self._invalidate_cache()
 
         return updated_entry
@@ -295,6 +344,7 @@ class KnowledgeBase:
         # Remove entry
         entries.pop(entry_index)
         self._save_entries(entries)
+        self._rebuild_search_index()  # Rebuild before invalidating cache
         self._invalidate_cache()
 
     def list_all(self, include_deleted: bool = False) -> List[KnowledgeBaseEntry]:
@@ -429,3 +479,19 @@ class KnowledgeBase:
     def _invalidate_cache(self) -> None:
         """Invalidate entries cache."""
         self._entries_cache = None
+
+    def _rebuild_search_index(self) -> None:
+        """Rebuild TF-IDF search index after data changes."""
+        if not SEARCH_ENGINE_AVAILABLE or SearchEngine is None:
+            return
+
+        # Use _load_entries directly to avoid cache issues
+        entries = self._load_entries()
+        if entries:
+            try:
+                self._search_engine = SearchEngine(entries)
+            except Exception:
+                # If search engine fails to initialize, fall back to simple search
+                self._search_engine = None
+        else:
+            self._search_engine = None

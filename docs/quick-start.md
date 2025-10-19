@@ -98,7 +98,7 @@ clauxton kb list --category architecture
 
 ### 4. Search Your Knowledge Base
 
-Search for entries by keyword:
+Clauxton uses **TF-IDF algorithm** for relevance-based search. Results are automatically ranked by how relevant they are to your query.
 
 ```bash
 clauxton kb search "FastAPI"
@@ -115,15 +115,28 @@ Search Results for 'FastAPI' (1):
     Preview: All backend APIs use FastAPI for consistency.
 ```
 
-Search with filters:
+**How relevance ranking works:**
+- More relevant entries appear first
+- Entries with multiple matches rank higher
+- Considers keyword frequency and rarity
+- Automatically filters common words ("the", "a", "is")
+
+**Search with filters:**
 
 ```bash
 # Search in specific category
 clauxton kb search "API" --category architecture
 
-# Limit results
+# Limit results (default: 10)
 clauxton kb search "API" --limit 5
 ```
+
+**Fallback behavior:**
+If `scikit-learn` is not installed, Clauxton automatically falls back to simple keyword matching. The search will still work, just with less sophisticated ranking.
+
+> 💡 **Tip**: For better search results, use specific technical terms rather than common words. For example, "FastAPI" will give better results than just "API".
+
+Learn more: [Search Algorithm Documentation](search-algorithm.md)
 
 ### 5. Get Entry Details
 
@@ -144,6 +157,49 @@ Created: 2025-10-19 10:30:00
 Updated: 2025-10-19 10:30:00
 
 All backend APIs use FastAPI for consistency.
+```
+
+### 6. Update Entries
+
+Update existing entries to keep them current:
+
+```bash
+# Update title
+clauxton kb update KB-20251019-001 --title "Use FastAPI 0.100+"
+
+# Update content and category
+clauxton kb update KB-20251019-001 \
+  --content "All backend APIs use FastAPI 0.100+ for async support." \
+  --category decision
+
+# Update tags
+clauxton kb update KB-20251019-001 --tags "backend,api,fastapi,async"
+```
+
+**Output:**
+```
+✓ Updated entry: KB-20251019-001
+  Version: 2
+  Updated: 2025-10-19 11:00
+```
+
+**Note**: Version number increments automatically on each update.
+
+### 7. Delete Entries
+
+Remove outdated entries:
+
+```bash
+# Delete with confirmation
+clauxton kb delete KB-20251019-001
+
+# Skip confirmation
+clauxton kb delete KB-20251019-001 --yes
+```
+
+**Output:**
+```
+✓ Deleted entry: KB-20251019-001
 ```
 
 ---

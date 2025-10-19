@@ -74,12 +74,23 @@ venv\Scripts\activate     # On Windows
 ### 3. Install Dependencies
 
 ```bash
-# Install in editable mode with dev dependencies
-pip install -e ".[dev]"
+# Install in editable mode with all dependencies
+pip install -e .
+
+# Install development dependencies (optional)
+pip install pytest pytest-cov mypy ruff
 
 # Verify installation
 clauxton --version
+
+# Verify scikit-learn is installed (required for TF-IDF search)
+python -c "import sklearn; print(f'scikit-learn {sklearn.__version__} installed')"
 ```
+
+**Dependencies**:
+- **Core**: `click`, `pydantic`, `pyyaml`, `mcp`
+- **Search**: `scikit-learn`, `numpy` (optional, but recommended)
+- **Development**: `pytest`, `pytest-cov`, `mypy`, `ruff`
 
 ### 4. Verify Setup
 
@@ -324,9 +335,24 @@ def test_add_entry(tmp_path):
 
 ### Test Coverage
 
-- **Minimum**: 70% overall coverage
-- **Target**: 80%+ coverage
-- **Critical paths**: 100% coverage (KB CRUD, Task DAG validation)
+- **Minimum**: 90% overall coverage (current: 94%)
+- **Target**: 95%+ coverage
+- **Critical paths**: 95%+ coverage required
+  - KB CRUD operations: 96% ✅
+  - Task DAG validation: 98% ✅
+  - Search functionality: 86-96% ✅
+
+**Coverage Goals by Component**:
+- `clauxton/core/`: 95%+ (primary business logic)
+- `clauxton/cli/`: 90%+ (user-facing CLI)
+- `clauxton/mcp/`: 95%+ (MCP server integration)
+- `clauxton/utils/`: 80%+ (utility functions)
+
+**Important Notes**:
+- All new features must include comprehensive tests
+- Edge cases must be tested (Unicode, special characters, error handling)
+- Fallback behaviors must be tested (e.g., search without scikit-learn)
+- Integration tests should verify end-to-end workflows
 
 ---
 

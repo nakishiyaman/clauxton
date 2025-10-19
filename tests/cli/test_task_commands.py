@@ -368,6 +368,66 @@ def test_task_delete_nonexistent(runner: CliRunner, initialized_project: Path) -
 
 
 # ============================================================================
+# Optional Fields Tests
+# ============================================================================
+
+
+def test_task_with_kb_refs(runner: CliRunner, initialized_project: Path) -> None:
+    """Test task with KB references."""
+    result = runner.invoke(
+        cli,
+        [
+            "task",
+            "add",
+            "--name",
+            "Test with KB refs",
+            "--kb-refs",
+            "KB-20251019-001,KB-20251019-002",
+        ],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    assert "TASK-001" in result.output
+
+    # Verify KB refs are stored
+    get_result = runner.invoke(cli, ["task", "get", "TASK-001"])
+    assert "KB-20251019-001" in get_result.output
+    assert "KB-20251019-002" in get_result.output
+
+
+def test_task_with_estimate(runner: CliRunner, initialized_project: Path) -> None:
+    """Test task with estimated hours."""
+    result = runner.invoke(
+        cli,
+        ["task", "add", "--name", "Task with estimate", "--estimate", "5.5"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+
+    # Verify estimate is stored
+    get_result = runner.invoke(cli, ["task", "get", "TASK-001"])
+    assert "5.5" in get_result.output or "Estimated" in get_result.output
+
+
+def test_task_timestamps(runner: CliRunner, initialized_project: Path) -> None:
+    """Test task timestamps (started_at, completed_at)."""
+    # Add task
+    runner.invoke(cli, ["task", "add", "--name", "Test timestamps"])
+
+    # Start task
+    runner.invoke(cli, ["task", "update", "TASK-001", "--status", "in_progress"])
+    get_result1 = runner.invoke(cli, ["task", "get", "TASK-001"])
+    assert "Started:" in get_result1.output
+
+    # Complete task
+    runner.invoke(cli, ["task", "update", "TASK-001", "--status", "completed"])
+    get_result2 = runner.invoke(cli, ["task", "get", "TASK-001"])
+    assert "Completed:" in get_result2.output
+
+
+# ============================================================================
 # Integration Tests
 # ============================================================================
 
@@ -428,3 +488,195 @@ def test_full_task_workflow(runner: CliRunner, initialized_project: Path) -> Non
     # 10. List completed tasks
     completed_result = runner.invoke(cli, ["task", "list", "--status", "completed"])
     assert "Tasks (2)" in completed_result.output
+
+
+# ============================================================================
+# Error Handling Tests
+# ============================================================================
+
+
+def test_task_add_exception_handling(
+    runner: CliRunner, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test exception handling in task add command."""
+    from clauxton.core.task_manager import TaskManager
+    from unittest.mock import patch
+
+    project_dir = tmp_path / "project"
+    project_dir.mkdir()
+    monkeypatch.chdir(project_dir)
+
+    # Initialize project
+    runner.invoke(cli, ["init"])
+
+    # Mock TaskManager.add to raise exception
+    with patch.object(TaskManager, "add", side_effect=Exception("Simulated error")):
+        result = runner.invoke(
+            cli,
+            ["task", "add", "--name", "Test task"],
+            catch_exceptions=False,
+        )
+
+        assert result.exit_code != 0
+        assert "Error: Simulated error" in result.output
+
+
+def test_task_get_exception_handling(
+    runner: CliRunner, initialized_project: Path
+) -> None:
+    """Test exception handling in task get command."""
+    from clauxton.core.task_manager import TaskManager
+    from unittest.mock import patch
+
+    # Mock TaskManager.get to raise exception
+    with patch.object(TaskManager, "get", side_effect=Exception("Task data corrupted")):
+        result = runner.invoke(cli, ["task", "get", "TASK-001"], catch_exceptions=False)
+
+        assert result.exit_code != 0
+        assert "Error: Task data corrupted" in result.output
+
+
+def test_task_update_exception_handling(
+    runner: CliRunner, initialized_project: Path
+) -> None:
+    """Test exception handling in task update command."""
+    from clauxton.core.task_manager import TaskManager
+    from unittest.mock import patch
+
+    # Add a task first
+    runner.invoke(cli, ["task", "add", "--name", "Test task"])
+
+    # Mock TaskManager.update to raise exception
+    with patch.object(
+        TaskManager, "update", side_effect=Exception("Update failed")
+    ):
+        result = runner.invoke(
+            cli,
+            ["task", "update", "TASK-001", "--status", "in_progress"],
+            catch_exceptions=False,
+        )
+
+        assert result.exit_code != 0
+        assert "Error: Update failed" in result.output
+
+
+def test_task_update_no_fields(runner: CliRunner, initialized_project: Path) -> None:
+    """Test task update with no fields specified."""
+    # Add a task first
+    runner.invoke(cli, ["task", "add", "--name", "Test task"])
+
+    # Try to update without any fields
+    result = runner.invoke(
+        cli, ["task", "update", "TASK-001"], catch_exceptions=False
+    )
+
+    assert result.exit_code == 0
+    assert "No fields to update" in result.output
+
+
+def test_task_delete_exception_handling(
+    runner: CliRunner, initialized_project: Path
+) -> None:
+    """Test exception handling in task delete command."""
+    from clauxton.core.task_manager import TaskManager
+    from unittest.mock import patch
+
+    # Add a task first
+    runner.invoke(cli, ["task", "add", "--name", "Test task"])
+
+    # Mock TaskManager.delete to raise exception
+    with patch.object(
+        TaskManager, "delete", side_effect=Exception("Cannot delete task")
+    ):
+        result = runner.invoke(
+            cli, ["task", "delete", "TASK-001", "--yes"], catch_exceptions=False
+        )
+
+        assert result.exit_code != 0
+        assert "Error: Cannot delete task" in result.output
+
+
+def test_task_delete_with_confirmation(runner: CliRunner, initialized_project: Path) -> None:
+    """Test task delete with interactive confirmation."""
+    # Add a task first
+    runner.invoke(cli, ["task", "add", "--name", "Test task"])
+
+    # Test cancellation
+    result = runner.invoke(
+        cli, ["task", "delete", "TASK-001"], input="n\n", catch_exceptions=False
+    )
+
+    assert result.exit_code == 0
+    assert "Cancelled" in result.output
+
+    # Verify task still exists
+    get_result = runner.invoke(cli, ["task", "get", "TASK-001"])
+    assert "TASK-001" in get_result.output
+
+
+def test_task_with_actual_hours(runner: CliRunner, initialized_project: Path) -> None:
+    """Test task display with actual_hours field."""
+    from clauxton.core.task_manager import TaskManager
+    from clauxton.core.models import Task
+
+    # Add a task
+    runner.invoke(cli, ["task", "add", "--name", "Test task"])
+
+    # Manually set actual_hours in the task
+    tm = TaskManager(Path.cwd())
+    task_obj = tm.get("TASK-001")
+    tm.update("TASK-001", {"actual_hours": 3.5})
+
+    # Get task and verify actual_hours is displayed
+    result = runner.invoke(cli, ["task", "get", "TASK-001"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert "3.5" in result.output or "Actual" in result.output
+
+
+def test_task_update_description(runner: CliRunner, initialized_project: Path) -> None:
+    """Test updating task description."""
+    # Add a task
+    runner.invoke(cli, ["task", "add", "--name", "Test task"])
+
+    # Update description
+    result = runner.invoke(
+        cli,
+        ["task", "update", "TASK-001", "--description", "Updated description"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    assert "Updated task" in result.output
+
+    # Verify description was updated
+    get_result = runner.invoke(cli, ["task", "get", "TASK-001"])
+    assert "Updated description" in get_result.output
+
+
+def test_task_next_with_description_and_estimate(
+    runner: CliRunner, initialized_project: Path
+) -> None:
+    """Test task next displays description and estimated hours."""
+    # Add task with description and estimate
+    runner.invoke(
+        cli,
+        [
+            "task",
+            "add",
+            "--name",
+            "Complex task",
+            "--description",
+            "This is a detailed description",
+            "--estimate",
+            "8.0",
+        ],
+    )
+
+    # Get next task
+    result = runner.invoke(cli, ["task", "next"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert "Next Task to Work On" in result.output
+    assert "This is a detailed description" in result.output
+    assert "8.0" in result.output or "Estimated" in result.output

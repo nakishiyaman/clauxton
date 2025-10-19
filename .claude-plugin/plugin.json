@@ -1,6 +1,6 @@
 {
   "name": "clauxton",
-  "version": "0.1.0",
+  "version": "0.8.0",
   "description": "Context that persists for Claude Code - Knowledge Base, Task Management, and Conflict Detection",
   "author": "Clauxton Team",
   "homepage": "https://github.com/nakishiyaman/clauxton",

@@ -3,7 +3,7 @@ Tests for CLI commands.
 
 Tests cover:
 - init command
-- kb add/get/list/search commands
+- kb add/get/list/search/update/delete commands
 - Error handling
 - Invalid inputs
 """
@@ -116,6 +116,25 @@ def test_kb_add_fails_without_init(runner: CliRunner, temp_project: Path) -> Non
 
         assert result.exit_code != 0
         assert ".clauxton/ not found" in result.output
+
+
+def test_kb_add_exception_handling(runner: CliRunner, temp_project: Path) -> None:
+    """Test kb add exception handling with invalid data."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        # Try to add entry with title that's too long (>50 chars)
+        # This should trigger Pydantic validation error
+        result = runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="This is a very long title that exceeds the maximum allowed length of fifty characters\narchitecture\nContent\n\n",
+        )
+
+        # Should fail (validation error is raised, caught by Click)
+        assert result.exit_code != 0
+        # Exception should be raised
+        assert result.exception is not None
 
 
 # ============================================================================
@@ -331,3 +350,413 @@ def test_kb_help_command(runner: CliRunner) -> None:
     assert "get" in result.output
     assert "list" in result.output
     assert "search" in result.output
+
+
+# ============================================================================
+# kb update command tests
+# ============================================================================
+
+
+def test_kb_update_title(runner: CliRunner, temp_project: Path) -> None:
+    """Test updating entry title."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        # Initialize and add entry
+        runner.invoke(cli, ["init"])
+        add_result = runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Original Title\narchitecture\nOriginal content\n\n",
+        )
+
+        # Extract entry ID
+        import re
+
+        match = re.search(r"KB-\d{8}-\d{3}", add_result.output)
+        assert match is not None
+        entry_id = match.group(0)
+
+        # Update title
+        result = runner.invoke(
+            cli, ["kb", "update", entry_id, "--title", "Updated Title"]
+        )
+
+        assert result.exit_code == 0
+        assert "✓ Updated entry" in result.output
+        assert entry_id in result.output
+
+        # Verify update
+        get_result = runner.invoke(cli, ["kb", "get", entry_id])
+        assert "Updated Title" in get_result.output
+        assert "Version: 2" in get_result.output
+
+
+def test_kb_update_content(runner: CliRunner, temp_project: Path) -> None:
+    """Test updating entry content."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+        add_result = runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Title\narchitecture\nOriginal content\n\n",
+        )
+
+        import re
+
+        match = re.search(r"KB-\d{8}-\d{3}", add_result.output)
+        assert match is not None
+        entry_id = match.group(0)
+
+        # Update content
+        result = runner.invoke(
+            cli, ["kb", "update", entry_id, "--content", "Updated content"]
+        )
+
+        assert result.exit_code == 0
+        assert "✓ Updated entry" in result.output
+
+        # Verify
+        get_result = runner.invoke(cli, ["kb", "get", entry_id])
+        assert "Updated content" in get_result.output
+
+
+def test_kb_update_category(runner: CliRunner, temp_project: Path) -> None:
+    """Test updating entry category."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+        add_result = runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Title\narchitecture\nContent\n\n",
+        )
+
+        import re
+
+        match = re.search(r"KB-\d{8}-\d{3}", add_result.output)
+        assert match is not None
+        entry_id = match.group(0)
+
+        # Update category
+        result = runner.invoke(
+            cli, ["kb", "update", entry_id, "--category", "decision"]
+        )
+
+        assert result.exit_code == 0
+
+        # Verify
+        get_result = runner.invoke(cli, ["kb", "get", entry_id])
+        assert "decision" in get_result.output
+
+
+def test_kb_update_tags(runner: CliRunner, temp_project: Path) -> None:
+    """Test updating entry tags."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+        add_result = runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Title\narchitecture\nContent\nold,tags\n",
+        )
+
+        import re
+
+        match = re.search(r"KB-\d{8}-\d{3}", add_result.output)
+        assert match is not None
+        entry_id = match.group(0)
+
+        # Update tags
+        result = runner.invoke(
+            cli, ["kb", "update", entry_id, "--tags", "new,updated,tags"]
+        )
+
+        assert result.exit_code == 0
+
+        # Verify
+        get_result = runner.invoke(cli, ["kb", "get", entry_id])
+        assert "new" in get_result.output
+        assert "updated" in get_result.output
+
+
+def test_kb_update_multiple_fields(runner: CliRunner, temp_project: Path) -> None:
+    """Test updating multiple fields at once."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+        add_result = runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Title\narchitecture\nContent\n\n",
+        )
+
+        import re
+
+        match = re.search(r"KB-\d{8}-\d{3}", add_result.output)
+        assert match is not None
+        entry_id = match.group(0)
+
+        # Update multiple fields
+        result = runner.invoke(
+            cli,
+            [
+                "kb",
+                "update",
+                entry_id,
+                "--title",
+                "New Title",
+                "--content",
+                "New Content",
+                "--category",
+                "decision",
+            ],
+        )
+
+        assert result.exit_code == 0
+
+        # Verify all updates
+        get_result = runner.invoke(cli, ["kb", "get", entry_id])
+        assert "New Title" in get_result.output
+        assert "New Content" in get_result.output
+        assert "decision" in get_result.output
+
+
+def test_kb_update_no_fields(runner: CliRunner, temp_project: Path) -> None:
+    """Test update with no fields shows error."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+        add_result = runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Title\narchitecture\nContent\n\n",
+        )
+
+        import re
+
+        match = re.search(r"KB-\d{8}-\d{3}", add_result.output)
+        assert match is not None
+        entry_id = match.group(0)
+
+        # Update with no fields
+        result = runner.invoke(cli, ["kb", "update", entry_id])
+
+        assert result.exit_code == 0
+        assert "No fields to update" in result.output
+
+
+def test_kb_update_nonexistent(runner: CliRunner, temp_project: Path) -> None:
+    """Test updating non-existent entry fails."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(
+            cli, ["kb", "update", "KB-20251019-999", "--title", "New Title"]
+        )
+
+        assert result.exit_code != 0
+        assert "Error" in result.output
+
+
+def test_kb_update_without_init(runner: CliRunner, temp_project: Path) -> None:
+    """Test kb update fails without initialization."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        result = runner.invoke(
+            cli, ["kb", "update", "KB-20251019-001", "--title", "New Title"]
+        )
+
+        assert result.exit_code != 0
+        assert ".clauxton/ not found" in result.output
+
+
+# ============================================================================
+# kb delete command tests
+# ============================================================================
+
+
+def test_kb_delete_with_yes_flag(runner: CliRunner, temp_project: Path) -> None:
+    """Test deleting entry with --yes flag."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+        add_result = runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Title\narchitecture\nContent\n\n",
+        )
+
+        import re
+
+        match = re.search(r"KB-\d{8}-\d{3}", add_result.output)
+        assert match is not None
+        entry_id = match.group(0)
+
+        # Delete with --yes
+        result = runner.invoke(cli, ["kb", "delete", entry_id, "--yes"])
+
+        assert result.exit_code == 0
+        assert "✓ Deleted entry" in result.output
+        assert entry_id in result.output
+
+        # Verify deletion
+        get_result = runner.invoke(cli, ["kb", "get", entry_id])
+        assert get_result.exit_code != 0
+
+
+def test_kb_delete_with_confirmation(runner: CliRunner, temp_project: Path) -> None:
+    """Test deleting entry with confirmation prompt."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+        add_result = runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Title\narchitecture\nContent\n\n",
+        )
+
+        import re
+
+        match = re.search(r"KB-\d{8}-\d{3}", add_result.output)
+        assert match is not None
+        entry_id = match.group(0)
+
+        # Delete with confirmation (answer yes)
+        result = runner.invoke(cli, ["kb", "delete", entry_id], input="y\n")
+
+        assert result.exit_code == 0
+        assert "✓ Deleted entry" in result.output
+
+
+def test_kb_delete_cancel_confirmation(runner: CliRunner, temp_project: Path) -> None:
+    """Test canceling delete confirmation."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+        add_result = runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Title\narchitecture\nContent\n\n",
+        )
+
+        import re
+
+        match = re.search(r"KB-\d{8}-\d{3}", add_result.output)
+        assert match is not None
+        entry_id = match.group(0)
+
+        # Cancel confirmation
+        result = runner.invoke(cli, ["kb", "delete", entry_id], input="n\n")
+
+        assert result.exit_code == 0
+        assert "Cancelled" in result.output
+
+        # Verify entry still exists
+        get_result = runner.invoke(cli, ["kb", "get", entry_id])
+        assert get_result.exit_code == 0
+
+
+def test_kb_delete_nonexistent(runner: CliRunner, temp_project: Path) -> None:
+    """Test deleting non-existent entry fails."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["kb", "delete", "KB-20251019-999", "--yes"])
+
+        assert result.exit_code != 0
+        assert "Error" in result.output
+
+
+# ============================================================================
+# Integration Tests for KB Update/Delete
+# ============================================================================
+
+
+def test_kb_update_delete_workflow(runner: CliRunner, temp_project: Path) -> None:
+    """Test complete update and delete workflow."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        # 1. Initialize
+        runner.invoke(cli, ["init"])
+
+        # 2. Add entry
+        add_result = runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Original Entry\narchitecture\nOriginal content\noriginal,tags\n",
+        )
+        assert add_result.exit_code == 0
+
+        import re
+
+        match = re.search(r"KB-\d{8}-\d{3}", add_result.output)
+        assert match is not None
+        entry_id = match.group(0)
+
+        # 3. Get and verify
+        get_result = runner.invoke(cli, ["kb", "get", entry_id])
+        assert "Original Entry" in get_result.output
+        assert "Version: 1" in get_result.output
+
+        # 4. Update title
+        update1 = runner.invoke(cli, ["kb", "update", entry_id, "--title", "Updated Entry"])
+        assert update1.exit_code == 0
+        assert "Version: 2" in update1.output
+
+        # 5. Update content and category
+        update2 = runner.invoke(
+            cli,
+            [
+                "kb",
+                "update",
+                entry_id,
+                "--content",
+                "New content",
+                "--category",
+                "decision",
+            ],
+        )
+        assert update2.exit_code == 0
+        assert "Version: 3" in update2.output
+
+        # 6. Verify all updates
+        get_result2 = runner.invoke(cli, ["kb", "get", entry_id])
+        assert "Updated Entry" in get_result2.output
+        assert "New content" in get_result2.output
+        assert "decision" in get_result2.output
+        assert "Version: 3" in get_result2.output
+
+        # 7. Search for updated entry
+        search_result = runner.invoke(cli, ["kb", "search", "Updated"])
+        assert entry_id in search_result.output
+
+        # 8. Delete entry
+        delete_result = runner.invoke(cli, ["kb", "delete", entry_id, "--yes"])
+        assert delete_result.exit_code == 0
+        assert "Deleted" in delete_result.output
+
+        # 9. Verify deletion
+        get_result3 = runner.invoke(cli, ["kb", "get", entry_id])
+        assert get_result3.exit_code != 0
+
+
+def test_kb_version_increments_correctly(runner: CliRunner, temp_project: Path) -> None:
+    """Test that version increments correctly with multiple updates."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        # Add entry
+        add_result = runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Test\narchitecture\nContent\n\n",
+        )
+
+        import re
+
+        match = re.search(r"KB-\d{8}-\d{3}", add_result.output)
+        assert match is not None
+        entry_id = match.group(0)
+
+        # Multiple updates
+        for i in range(1, 6):
+            update_result = runner.invoke(
+                cli, ["kb", "update", entry_id, "--title", f"Version {i + 1}"]
+            )
+            assert update_result.exit_code == 0
+            assert f"Version: {i + 1}" in update_result.output
+
+        # Final verification
+        get_result = runner.invoke(cli, ["kb", "get", entry_id])
+        assert "Version: 6" in get_result.output
+        assert "Version 6" in get_result.output  # Latest title

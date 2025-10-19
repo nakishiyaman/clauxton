@@ -75,29 +75,54 @@ clauxton init
 
 ## Available Tools
 
-The MCP Server exposes 4 tools that Claude Code can use:
+The MCP Server exposes 6 Knowledge Base tools and 6 Task Management tools:
 
 ### 1. kb_search
 
-Search the Knowledge Base for entries matching a query.
+Search the Knowledge Base for entries matching a query using **TF-IDF relevance ranking**.
+
+**Search Algorithm**: TF-IDF (Term Frequency-Inverse Document Frequency)
+- Results are automatically ranked by **relevance score** (0.0-1.0)
+- More relevant entries appear first
+- Considers keyword frequency and rarity across all entries
+- Filters common words ("the", "a", "is") automatically
 
 **Parameters**:
 - `query` (string, required): Search query
 - `category` (string, optional): Filter by category (architecture, constraint, decision, pattern, convention)
 - `limit` (integer, optional): Max results (default: 10)
 
-**Returns**: List of matching entries with id, title, category, content, tags, timestamps
+**Returns**: List of matching entries **ranked by relevance**, with:
+- `id` - Entry ID (e.g., "KB-20251019-001")
+- `title` - Entry title
+- `category` - Category type
+- `content` - Full entry content
+- `tags` - Associated tags
+- `created_at`, `updated_at` - Timestamps
+- Results ordered by relevance (most relevant first)
 
 **Example**:
 ```python
 # Claude Code uses this internally
 kb_search(query="FastAPI", category="architecture", limit=5)
+
+# Returns entries ranked by relevance:
+# [
+#   {"id": "KB-001", "title": "FastAPI framework", ...},  # Most relevant
+#   {"id": "KB-003", "title": "API design patterns", ...},  # Less relevant
+#   ...
+# ]
 ```
 
 **Use Cases**:
-- "Find all architecture decisions about APIs"
-- "Search for database-related constraints"
-- "Show recent decisions about testing"
+- "Find all architecture decisions about APIs" - Gets most relevant API decisions first
+- "Search for database-related constraints" - Ranks by database relevance
+- "Show recent decisions about testing" - Finds testing-related entries
+
+**Fallback Behavior**:
+If `scikit-learn` is not installed, search automatically falls back to simple keyword matching (still functional but less sophisticated ranking).
+
+See [Search Algorithm Documentation](search-algorithm.md) for technical details.
 
 ---
 
@@ -173,6 +198,64 @@ kb_get(entry_id="KB-20251019-001")
 **Use Cases**:
 - "Show me details of entry KB-20251019-001"
 - "What does KB-20251019-005 say?"
+
+---
+
+### 5. kb_update
+
+Update an existing Knowledge Base entry.
+
+**Parameters**:
+- `entry_id` (string, required): Entry ID to update
+- `title` (string, optional): New title
+- `content` (string, optional): New content
+- `category` (string, optional): New category
+- `tags` (list[string], optional): New tags
+
+**Returns**: Updated entry with incremented version number
+
+**Example**:
+```python
+kb_update(
+    entry_id="KB-20251019-001",
+    title="Updated Title",
+    content="Updated content with new information"
+)
+```
+
+**Use Cases**:
+- "Update entry KB-20251019-001 with new requirements"
+- "Change the category of KB-20251019-005 to decision"
+- "Add tags to this Knowledge Base entry"
+
+**Notes**:
+- Version number automatically increments
+- At least one field must be updated
+- Original created_at is preserved, updated_at is set to now
+
+---
+
+### 6. kb_delete
+
+Delete a Knowledge Base entry.
+
+**Parameters**:
+- `entry_id` (string, required): Entry ID to delete
+
+**Returns**: Success message with deleted entry ID and title
+
+**Example**:
+```python
+kb_delete(entry_id="KB-20251019-001")
+```
+
+**Use Cases**:
+- "Delete the outdated entry KB-20251019-003"
+- "Remove KB-20251019-007 from the Knowledge Base"
+
+**Notes**:
+- This is a hard delete (entry is permanently removed)
+- No confirmation prompt in MCP (CLI has confirmation)
 
 ---
 

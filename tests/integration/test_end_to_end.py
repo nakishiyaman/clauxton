@@ -3,10 +3,11 @@ Integration tests for end-to-end workflows.
 
 Tests cover complete user workflows:
 - Initialize project
-- Add multiple entries
-- Search and retrieve entries
+- KB: Add, update, delete, search entries
+- Tasks: Add, update, dependencies, get next task
+- MCP: Knowledge Base and Task Management tools
 - Verify YAML persistence
-- Complete CLI workflow
+- Complete CLI workflows
 """
 
 from pathlib import Path
@@ -17,6 +18,7 @@ from click.testing import CliRunner
 
 from clauxton.cli.main import cli
 from clauxton.core.knowledge_base import KnowledgeBase
+from clauxton.core.task_manager import TaskManager
 
 
 @pytest.fixture
@@ -334,3 +336,134 @@ def test_backup_creation(runner: CliRunner, temp_project: Path) -> None:
             backup_data = yaml.safe_load(f)
         assert backup_data is not None
         assert "entries" in backup_data
+
+
+# ============================================================================
+# KB + Task Integration Tests
+# ============================================================================
+
+
+def test_kb_task_integration_workflow(runner: CliRunner, temp_project: Path) -> None:
+    """
+    Test KB and Task Management integration.
+    
+    Workflow:
+    1. Create KB entries for architecture decisions
+    2. Create tasks referencing KB entries
+    3. Complete tasks
+    4. Verify KB-Task relationships
+    """
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        # Step 1: Initialize
+        runner.invoke(cli, ["init"])
+        
+        # Step 2: Add KB entries
+        kb_result1 = runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Use PostgreSQL\narchitecture\nDatabase decision.\ndatabase,postgresql\n",
+        )
+        assert kb_result1.exit_code == 0
+        
+        kb_result2 = runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="FastAPI framework\narchitecture\nAPI framework.\napi,fastapi\n",
+        )
+        assert kb_result2.exit_code == 0
+        
+        # Extract KB IDs
+        import re
+        
+        kb_id1 = re.search(r"KB-\d{8}-\d{3}", kb_result1.output).group(0)
+        kb_id2 = re.search(r"KB-\d{8}-\d{3}", kb_result2.output).group(0)
+        
+        # Step 3: Create tasks with KB references
+        task_result = runner.invoke(
+            cli,
+            [
+                "task",
+                "add",
+                "--name",
+                "Setup database schema",
+                "--kb-refs",
+                kb_id1,
+                "--files",
+                "schema.sql",
+                "--priority",
+                "high",
+            ],
+        )
+        assert task_result.exit_code == 0
+        assert "TASK-001" in task_result.output
+        
+        # Step 4: Verify task shows KB reference
+        task_get = runner.invoke(cli, ["task", "get", "TASK-001"])
+        assert kb_id1 in task_get.output
+        assert "Related KB" in task_get.output
+        
+        # Step 5: Complete task workflow
+        runner.invoke(cli, ["task", "update", "TASK-001", "--status", "in_progress"])
+        runner.invoke(cli, ["task", "update", "TASK-001", "--status", "completed"])
+        
+        # Step 6: Verify task completion
+        final_get = runner.invoke(cli, ["task", "get", "TASK-001"])
+        assert "completed" in final_get.output
+        assert "Completed:" in final_get.output
+
+
+def test_task_dependency_with_kb_references(runner: CliRunner, temp_project: Path) -> None:
+    """Test tasks with dependencies and KB references."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+        
+        # Add KB entry
+        kb_result = runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="API Design\narchitecture\nREST API design.\napi\n",
+        )
+        import re
+        
+        kb_id = re.search(r"KB-\d{8}-\d{3}", kb_result.output).group(0)
+        
+        # Create dependent tasks with KB refs
+        runner.invoke(
+            cli,
+            [
+                "task",
+                "add",
+                "--name",
+                "Define API spec",
+                "--kb-refs",
+                kb_id,
+                "--priority",
+                "high",
+            ],
+        )
+        
+        runner.invoke(
+            cli,
+            [
+                "task",
+                "add",
+                "--name",
+                "Implement API",
+                "--depends-on",
+                "TASK-001",
+                "--kb-refs",
+                kb_id,
+            ],
+        )
+        
+        # Verify dependency chain
+        task1_get = runner.invoke(cli, ["task", "get", "TASK-001"])
+        assert kb_id in task1_get.output
+        
+        task2_get = runner.invoke(cli, ["task", "get", "TASK-002"])
+        assert "TASK-001" in task2_get.output
+        assert kb_id in task2_get.output
+        
+        # Get next task (should be TASK-001 due to dependencies)
+        next_result = runner.invoke(cli, ["task", "next"])
+        assert "TASK-001" in next_result.output
