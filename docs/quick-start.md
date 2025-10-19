@@ -12,18 +12,22 @@ Clauxton provides **persistent project context** for Claude Code through a Knowl
 
 ## Installation
 
-### From Source (Current)
+### From PyPI (Recommended)
+
+```bash
+# Install latest stable version
+pip install clauxton
+
+# Verify installation
+clauxton --version  # Should show: clauxton, version 0.8.0
+```
+
+### From Source (Development)
 
 ```bash
 git clone https://github.com/nakishiyaman/clauxton.git
 cd clauxton
 pip install -e .
-```
-
-### From PyPI (Coming Soon)
-
-```bash
-pip install clauxton
 ```
 
 ---

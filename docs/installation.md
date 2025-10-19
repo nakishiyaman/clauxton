@@ -26,9 +26,49 @@ Complete installation instructions for Clauxton.
 
 ## Installation Methods
 
-### Method 1: Install from Source (Current)
+### Method 1: Install from PyPI (Recommended)
 
-**Recommended for Phase 0 (Development)**
+**Production-ready v0.8.0 - Stable Release**
+
+#### Quick Install
+
+```bash
+# Install latest stable version
+pip install clauxton
+```
+
+#### Verify Installation
+
+```bash
+clauxton --version
+```
+
+Expected output:
+```
+clauxton, version 0.8.0
+```
+
+#### Install Specific Version
+
+```bash
+# Install specific version
+pip install clauxton==0.8.0
+
+# Upgrade to latest
+pip install --upgrade clauxton
+```
+
+**What's Included**:
+- ✅ Knowledge Base management (CRUD + TF-IDF search)
+- ✅ Task Management with auto-dependencies
+- ✅ MCP Server (12 tools for Claude Code)
+- ✅ All dependencies (scikit-learn, numpy, pydantic, click, pyyaml, mcp, gitpython)
+
+---
+
+### Method 2: Install from Source (Development)
+
+**For contributors and development purposes**
 
 #### Step 1: Clone Repository
 
@@ -71,22 +111,7 @@ clauxton --version
 
 Expected output:
 ```
-clauxton, version 0.1.0
-```
-
----
-
-### Method 2: Install from PyPI (Coming Soon)
-
-**Available after Phase 0 completion**
-
-```bash
-pip install clauxton
-```
-
-Verify:
-```bash
-clauxton --version
+clauxton, version 0.8.0
 ```
 
 ---
@@ -167,13 +192,16 @@ open htmlcov/index.html  # View coverage report
 
 ### Core Dependencies
 
-Clauxton requires these packages:
+Clauxton requires these packages (auto-installed with pip):
 
 ```
 pydantic>=2.0       # Data validation
 click>=8.1          # CLI framework
 pyyaml>=6.0         # YAML processing
-gitpython>=3.1      # Git integration (Phase 1+)
+gitpython>=3.1      # Git integration
+mcp>=1.0            # MCP server framework
+scikit-learn>=1.3   # TF-IDF search algorithm
+numpy>=1.24         # Required by scikit-learn
 ```
 
 ### Optional Dependencies
@@ -410,6 +438,19 @@ rm -rf .clauxton/
 
 ## Upgrading
 
+### Upgrade from PyPI (Recommended)
+
+```bash
+# Upgrade to latest version
+pip install --upgrade clauxton
+
+# Check current version
+clauxton --version
+
+# Upgrade to specific version
+pip install --upgrade clauxton==0.8.0
+```
+
 ### Upgrade from Source
 
 ```bash
@@ -418,17 +459,17 @@ git pull origin main
 pip install -e . --upgrade
 ```
 
-### Upgrade from PyPI (Coming Soon)
-
-```bash
-pip install --upgrade clauxton
-```
-
 ### Check Current Version
 
 ```bash
 clauxton --version
 ```
+
+### Version History
+
+- **v0.8.0** (2025-10-19): TF-IDF search, Phase 1 complete
+- **v0.7.0**: Task management with auto-dependencies
+- **v0.1.0**: Initial release with Knowledge Base
 
 ---
 
