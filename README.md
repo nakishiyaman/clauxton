@@ -42,7 +42,7 @@ clauxton kb search "architecture"
 
 ## ✨ Features
 
-### ✅ Phase 0: Foundation (In Progress)
+### ✅ Phase 0: Foundation (Complete)
 
 #### Knowledge Base Management
 - ✅ **Persistent Context**: Store architecture decisions, patterns, constraints, conventions
@@ -53,13 +53,26 @@ clauxton kb search "architecture"
 - ✅ **Atomic Writes**: Safe file operations with automatic backups
 - ✅ **Secure Permissions**: 700/600 permissions for privacy
 
-### 🔄 Phase 1: Core Engine (Planned)
+### 🚧 Phase 1: Core Engine (In Progress - Week 4/6)
 
-#### Task Management
-- 🔄 **Auto Dependency Inference**: Infer dependencies from code edits
-- 🔄 **DAG Validation**: Prevent circular dependencies
-- 🔄 **Next Task Suggestions**: AI recommends what to work on next
-- 🔄 **MCP Integration**: Knowledge Base & Task Management MCP servers
+#### Knowledge Base MCP Server (✅ Week 3 - Complete)
+- ✅ **MCP Tools**: kb_search, kb_add, kb_list, kb_get
+- ✅ **Claude Code Integration**: .claude-plugin/mcp-servers.json
+- ✅ **Type-Safe**: Full Pydantic validation
+
+#### Task Management (✅ Week 4 - Complete)
+- ✅ **CRUD Operations**: Add, get, update, delete, list tasks
+- ✅ **Dependency Tracking**: Define task dependencies (DAG structure)
+- ✅ **Cycle Detection**: Prevent circular dependencies with DFS algorithm
+- ✅ **Priority Management**: Critical > High > Medium > Low
+- ✅ **AI Recommendations**: get_next_task() based on priority and dependencies
+- ✅ **CLI Commands**: task add, task list, task get, task update, task delete, task next
+- ✅ **YAML Persistence**: tasks.yml with automatic backups
+
+#### Dependency Analysis (⏳ Week 5-6 - Planned)
+- 🔄 **Auto Dependency Inference**: Infer dependencies from file overlap
+- 🔄 **DAG Validation**: Real-time cycle prevention
+- 🔄 **MCP Integration**: Task Management MCP tools
 
 ### 🔄 Phase 2: Conflict Prevention (Planned)
 
@@ -103,7 +116,7 @@ pip install clauxton
 
 ## 🚀 Usage
 
-### Current Commands (Phase 0)
+### Knowledge Base Commands (Phase 0 ✅)
 
 ```bash
 # Initialize Clauxton in your project
@@ -122,6 +135,38 @@ clauxton kb list --category decision
 
 # Get entry by ID
 clauxton kb get KB-20251019-001
+```
+
+### Task Management Commands (Phase 1 Week 4 ✅)
+
+```bash
+# Add a new task
+clauxton task add --name "Setup database" --priority high
+
+# Add task with dependencies
+clauxton task add \
+  --name "Add API endpoint" \
+  --depends-on TASK-001 \
+  --files "src/api/users.py" \
+  --estimate 3.5
+
+# List all tasks
+clauxton task list
+clauxton task list --status pending
+clauxton task list --priority high
+
+# Get task details
+clauxton task get TASK-001
+
+# Update task
+clauxton task update TASK-001 --status in_progress
+clauxton task update TASK-001 --priority critical
+
+# Get next recommended task (AI-powered)
+clauxton task next
+
+# Delete task
+clauxton task delete TASK-001
 ```
 
 ### MCP Server (Phase 1 - Available Now!)
@@ -241,6 +286,7 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 ### User Guides
 - [Quick Start Guide](docs/quick-start.md) - Get started in 5 minutes (CLI)
 - [MCP Server Quick Start](docs/mcp-server-quickstart.md) - Get started with Claude Code ✨ NEW
+- [Task Management Guide](docs/task-management-guide.md) - Complete task management documentation ✨ NEW
 - [Installation Guide](docs/installation.md) - Complete installation instructions
 - [YAML Format Reference](docs/yaml-format.md) - Complete Knowledge Base YAML specification
 - [MCP Server Guide](docs/mcp-server.md) - Complete MCP Server documentation
@@ -255,7 +301,6 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 ### Coming Soon
 - API Reference (Phase 1)
 - Configuration Guide (Phase 1)
-- MCP Server Guide (Phase 1)
 
 ---
 
@@ -275,8 +320,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 | Phase | Status | Completion | Target Date |
 |-------|--------|------------|-------------|
-| **Phase 0: Foundation** | ✅ Complete | 95% | Week 2 (2025-11-02) |
-| **Phase 1: Core Engine** | 🚧 In Progress | 17% | Week 3-8 |
+| **Phase 0: Foundation** | ✅ Complete | 100% | Week 2 (2025-11-02) |
+| **Phase 1: Core Engine** | 🚧 In Progress | 67% | Week 3-8 |
 | Phase 2: Conflict Prevention | 📋 Planned | 0% | Week 9-12 |
 | Beta Testing | 📋 Planned | 0% | Week 13-14 |
 | Public Launch | 📋 Planned | 0% | Week 15-16 |
@@ -289,13 +334,13 @@ MIT License - see [LICENSE](LICENSE) for details.
 - ⏳ Basic MCP Server (0% - deferred to Phase 1)
 - ✅ Tests & Documentation (100% - 111 tests, 93% coverage)
 
-**Phase 1 Progress** (Week 3/6 - 17%):
+**Phase 1 Progress** (Week 4/6 - 67%):
 - ✅ MCP Server Foundation (100% - kb_search, kb_add, kb_list, kb_get)
-- ⏳ Task Management (0% - Week 4)
+- ✅ Task Management (100% - CRUD, dependencies, DAG validation, CLI)
 - ⏳ Dependency Analysis (0% - Week 5-6)
 - ⏳ KB Enhancements (0% - Week 7)
 - ⏳ Integration & Documentation (0% - Week 8)
-- ✅ Tests: 118 total (111 Phase 0 + 7 MCP), 93% coverage
+- ✅ Tests: 157 total (111 Phase 0 + 7 MCP + 24 TaskManager + 15 CLI), 76% coverage
 
 See [Phase 0 Completion Summary](docs/PHASE_0_COMPLETE.md) for detailed results.
 See [docs/roadmap.md](docs/roadmap.md) for overall timeline.
