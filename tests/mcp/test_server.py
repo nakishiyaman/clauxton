@@ -10,7 +10,19 @@ Tests cover:
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from clauxton.mcp.server import kb_add, kb_get, kb_list, kb_search, mcp
+from clauxton.mcp.server import (
+    kb_add,
+    kb_get,
+    kb_list,
+    kb_search,
+    mcp,
+    task_add,
+    task_delete,
+    task_get,
+    task_list,
+    task_next,
+    task_update,
+)
 
 # ============================================================================
 # Server Instantiation Tests
@@ -20,17 +32,25 @@ from clauxton.mcp.server import kb_add, kb_get, kb_list, kb_search, mcp
 def test_mcp_server_created() -> None:
     """Test that MCP server instance is created."""
     assert mcp is not None
-    assert mcp.name == "Clauxton Knowledge Base"
+    assert mcp.name == "Clauxton"
 
 
 def test_mcp_server_has_tools() -> None:
     """Test that MCP server has tools registered."""
     # FastMCP should have registered our tools
     # We can verify by checking that our functions are decorated
+    # Knowledge Base tools
     assert callable(kb_search)
     assert callable(kb_add)
     assert callable(kb_list)
     assert callable(kb_get)
+    # Task Management tools
+    assert callable(task_add)
+    assert callable(task_list)
+    assert callable(task_get)
+    assert callable(task_update)
+    assert callable(task_next)
+    assert callable(task_delete)
 
 
 # ============================================================================

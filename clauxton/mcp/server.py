@@ -12,10 +12,11 @@ from typing import Any, List, Optional
 from mcp.server.fastmcp import FastMCP
 
 from clauxton.core.knowledge_base import KnowledgeBase
-from clauxton.core.models import KnowledgeBaseEntry
+from clauxton.core.models import KnowledgeBaseEntry, Task
+from clauxton.core.task_manager import TaskManager
 
 # Create MCP server instance
-mcp = FastMCP("Clauxton Knowledge Base")
+mcp = FastMCP("Clauxton")
 
 
 @mcp.tool()
@@ -153,6 +154,226 @@ def kb_get(entry_id: str) -> dict[str, Any]:
         "created_at": entry.created_at.isoformat(),
         "updated_at": entry.updated_at.isoformat(),
         "version": entry.version,
+    }
+
+
+@mcp.tool()
+def task_add(
+    name: str,
+    description: Optional[str] = None,
+    priority: str = "medium",
+    depends_on: Optional[List[str]] = None,
+    files: Optional[List[str]] = None,
+    kb_refs: Optional[List[str]] = None,
+    estimate: Optional[float] = None,
+) -> dict[str, Any]:
+    """
+    Add a new task to the task list.
+
+    Args:
+        name: Task name (required)
+        description: Detailed task description
+        priority: Task priority (low, medium, high, critical) - default: medium
+        depends_on: List of task IDs this task depends on
+        files: List of files this task will modify
+        kb_refs: List of related Knowledge Base entry IDs
+        estimate: Estimated hours to complete
+
+    Returns:
+        Dictionary with task_id and success message
+    """
+    tm = TaskManager(Path.cwd())
+
+    # Generate task ID
+    task_id = tm.generate_task_id()
+
+    # Create task object
+    task = Task(
+        id=task_id,
+        name=name,
+        description=description,
+        status="pending",
+        priority=priority,  # type: ignore[arg-type]
+        depends_on=depends_on or [],
+        files_to_edit=files or [],
+        related_kb=kb_refs or [],
+        estimated_hours=estimate,
+        actual_hours=None,
+        created_at=datetime.now(),
+        started_at=None,
+        completed_at=None,
+    )
+
+    tm.add(task)
+    return {
+        "task_id": task_id,
+        "message": f"Successfully added task: {task_id}",
+        "name": name,
+        "priority": priority,
+    }
+
+
+@mcp.tool()
+def task_list(
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+) -> List[dict[str, Any]]:
+    """
+    List all tasks with optional filters.
+
+    Args:
+        status: Filter by status (pending, in_progress, completed, blocked)
+        priority: Filter by priority (low, medium, high, critical)
+
+    Returns:
+        List of tasks with details
+    """
+    tm = TaskManager(Path.cwd())
+    tasks = tm.list_all(
+        status=status,  # type: ignore[arg-type]
+        priority=priority,  # type: ignore[arg-type]
+    )
+
+    return [
+        {
+            "id": task.id,
+            "name": task.name,
+            "description": task.description,
+            "status": task.status,
+            "priority": task.priority,
+            "depends_on": task.depends_on,
+            "files_to_edit": task.files_to_edit,
+            "related_kb": task.related_kb,
+            "estimated_hours": task.estimated_hours,
+            "actual_hours": task.actual_hours,
+            "created_at": task.created_at.isoformat(),
+            "started_at": task.started_at.isoformat() if task.started_at else None,
+            "completed_at": task.completed_at.isoformat() if task.completed_at else None,
+        }
+        for task in tasks
+    ]
+
+
+@mcp.tool()
+def task_get(task_id: str) -> dict[str, Any]:
+    """
+    Get detailed information about a specific task.
+
+    Args:
+        task_id: Task ID (e.g., TASK-001)
+
+    Returns:
+        Task details
+    """
+    tm = TaskManager(Path.cwd())
+    task = tm.get(task_id)
+
+    return {
+        "id": task.id,
+        "name": task.name,
+        "description": task.description,
+        "status": task.status,
+        "priority": task.priority,
+        "depends_on": task.depends_on,
+        "files_to_edit": task.files_to_edit,
+        "related_kb": task.related_kb,
+        "estimated_hours": task.estimated_hours,
+        "actual_hours": task.actual_hours,
+        "created_at": task.created_at.isoformat(),
+        "started_at": task.started_at.isoformat() if task.started_at else None,
+        "completed_at": task.completed_at.isoformat() if task.completed_at else None,
+    }
+
+
+@mcp.tool()
+def task_update(
+    task_id: str,
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    name: Optional[str] = None,
+    description: Optional[str] = None,
+) -> dict[str, str]:
+    """
+    Update a task's fields.
+
+    Args:
+        task_id: Task ID to update
+        status: New status (pending, in_progress, completed, blocked)
+        priority: New priority (low, medium, high, critical)
+        name: New task name
+        description: New task description
+
+    Returns:
+        Dictionary with success message and updated fields
+    """
+    tm = TaskManager(Path.cwd())
+
+    updates: dict[str, Any] = {}
+    if status:
+        updates["status"] = status
+        # Auto-set timestamps
+        if status == "in_progress":
+            updates["started_at"] = datetime.now()
+        elif status == "completed":
+            updates["completed_at"] = datetime.now()
+    if priority:
+        updates["priority"] = priority
+    if name:
+        updates["name"] = name
+    if description:
+        updates["description"] = description
+
+    tm.update(task_id, updates)
+    return {
+        "task_id": task_id,
+        "message": f"Successfully updated task: {task_id}",
+        "updates": str(updates),
+    }
+
+
+@mcp.tool()
+def task_next() -> Optional[dict[str, Any]]:
+    """
+    Get the next recommended task to work on.
+
+    Returns highest priority task whose dependencies are completed.
+
+    Returns:
+        Next task details, or None if no tasks are available
+    """
+    tm = TaskManager(Path.cwd())
+    next_task = tm.get_next_task()
+
+    if not next_task:
+        return None
+
+    return {
+        "id": next_task.id,
+        "name": next_task.name,
+        "description": next_task.description,
+        "priority": next_task.priority,
+        "files_to_edit": next_task.files_to_edit,
+        "estimated_hours": next_task.estimated_hours,
+        "related_kb": next_task.related_kb,
+    }
+
+
+@mcp.tool()
+def task_delete(task_id: str) -> dict[str, str]:
+    """
+    Delete a task.
+
+    Args:
+        task_id: Task ID to delete
+
+    Returns:
+        Dictionary with success message
+    """
+    tm = TaskManager(Path.cwd())
+    tm.delete(task_id)
+    return {
+        "task_id": task_id,
+        "message": f"Successfully deleted task: {task_id}",
     }
 
 
