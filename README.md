@@ -2,12 +2,14 @@
 
 **Context that persists for Claude Code**
 
+[![CI](https://github.com/nakishiyaman/clauxton/workflows/CI/badge.svg)](https://github.com/nakishiyaman/clauxton/actions)
 [![Python Version](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![PyPI Version](https://img.shields.io/pypi/v/clauxton)](https://pypi.org/project/clauxton/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/clauxton)](https://pypi.org/project/clauxton/)
 [![Development Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/nakishiyaman/clauxton)
 [![Test Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen.svg)](https://github.com/nakishiyaman/clauxton)
+[![codecov](https://codecov.io/gh/nakishiyaman/clauxton/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/clauxton)
 
 > ✅ **Production Ready**: Clauxton v0.8.0 is stable and ready for production use. Phase 1 complete with TF-IDF search, task management, and MCP integration.
 
