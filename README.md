@@ -364,9 +364,11 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 
 ### User Guides
 - [Quick Start Guide](docs/quick-start.md) - Get started in 5 minutes (CLI)
-- [MCP Server Quick Start](docs/mcp-server-quickstart.md) - Get started with Claude Code ✨ NEW
-- [Task Management Guide](docs/task-management-guide.md) - Complete task management documentation ✨ NEW
-- [Search Algorithm](docs/search-algorithm.md) - TF-IDF search explanation ✨ NEW
+- [Tutorial: Your First Knowledge Base](docs/tutorial-first-kb.md) - 30-minute beginner guide ✨ NEW
+- [Use Cases & Examples](docs/use-cases.md) - Real-world scenarios and implementations ✨ NEW
+- [MCP Server Quick Start](docs/mcp-server-quickstart.md) - Get started with Claude Code
+- [Task Management Guide](docs/task-management-guide.md) - Complete task management documentation
+- [Search Algorithm](docs/search-algorithm.md) - TF-IDF search explanation
 - [Installation Guide](docs/installation.md) - Complete installation instructions
 - [YAML Format Reference](docs/yaml-format.md) - Complete Knowledge Base YAML specification
 - [MCP Server Guide](docs/mcp-server.md) - Complete MCP Server documentation
