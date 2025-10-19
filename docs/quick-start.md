@@ -405,4 +405,265 @@ clauxton kb --help
 
 ---
 
+## Advanced Usage
+
+### Task Management Workflow
+
+Clauxton provides AI-powered task management with automatic dependency inference.
+
+#### Create Tasks with File Association
+
+```bash
+# Add task with file tracking
+clauxton task add \
+  --name "Implement user authentication" \
+  --files "src/auth/login.py,src/auth/session.py" \
+  --priority high
+
+# Add dependent task
+clauxton task add \
+  --name "Add user profile API" \
+  --files "src/api/users.py,src/auth/session.py" \
+  --priority medium
+```
+
+**Auto-dependency inference**: Clauxton detects both tasks touch `src/auth/session.py` and automatically creates dependency.
+
+####Get Next Recommended Task
+
+```bash
+clauxton task next
+```
+
+**Output**:
+```
+Recommended next task:
+
+  TASK-001 [pending] (high)
+    Name: Implement user authentication
+    Files: src/auth/login.py, src/auth/session.py
+
+Reason: High priority, no dependencies, blocks 1 other task
+```
+
+**AI recommendation considers**:
+- Task priorities (critical > high > medium > low)
+- Dependencies (won't suggest blocked tasks)
+- Tasks that unblock others (maximize parallel work)
+
+#### Track Progress
+
+```bash
+# Start working
+clauxton task update TASK-001 --status in_progress
+
+# Complete task
+clauxton task update TASK-001 --status completed
+
+# List all tasks
+clauxton task list
+
+# Filter by status
+clauxton task list --status pending
+clauxton task list --priority high
+```
+
+**Learn more**: [Task Management Guide](task-management-guide.md)
+
+---
+
+### MCP Integration with Claude Code
+
+Clauxton provides 12 MCP tools for seamless Claude Code integration.
+
+#### Setup
+
+Create `.claude-plugin/mcp-servers.json`:
+
+```json
+{
+  "mcpServers": {
+    "clauxton": {
+      "command": "python",
+      "args": ["-m", "clauxton.mcp.server"],
+      "cwd": "${workspaceFolder}"
+    }
+  }
+}
+```
+
+Restart Claude Code to activate.
+
+#### Example: Ask Claude about Architecture
+
+```
+You: "How do we handle authentication?"
+
+Claude: [Uses kb_search("authentication")]
+Based on KB-20251019-002, we use OAuth 2.0 with JWT tokens...
+```
+
+#### Example: Get Task Recommendation
+
+```
+You: "What should I work on next?"
+
+Claude: [Uses task_next()]
+I recommend TASK-001: "Implement user authentication" (high priority)...
+```
+
+**Available MCP Tools**:
+- **Knowledge Base**: kb_search, kb_add, kb_list, kb_get, kb_update, kb_delete
+- **Task Management**: task_add, task_list, task_get, task_update, task_next, task_delete
+
+**Learn more**: [MCP Server Guide](mcp-server.md)
+
+---
+
+### Real-World Example: Feature Development
+
+**Scenario**: Implementing a new user authentication feature
+
+#### Step 1: Document Decision
+
+```bash
+clauxton kb add
+# Title: Use OAuth 2.0 with JWT for authentication
+# Category: decision
+# Content: [Detailed reasoning, alternatives, trade-offs]
+# Tags: authentication, oauth, jwt, security
+```
+
+#### Step 2: Break Down Tasks
+
+```bash
+# Task 1: OAuth flow
+clauxton task add \
+  --name "Implement OAuth 2.0 flow" \
+  --files "src/auth/oauth.py" \
+  --priority high \
+  --kb-refs KB-20251019-002
+
+# Task 2: JWT handling
+clauxton task add \
+  --name "Implement JWT token generation" \
+  --files "src/auth/jwt.py,src/auth/oauth.py" \
+  --priority high
+
+# Task 3: API endpoints
+clauxton task add \
+  --name "Add authentication API endpoints" \
+  --files "src/api/auth.py,src/auth/oauth.py" \
+  --priority medium
+```
+
+**Result**: Clauxton automatically infers:
+- TASK-2 depends on TASK-1 (both touch oauth.py)
+- TASK-3 depends on TASK-1 (both touch oauth.py)
+
+#### Step 3: Execute in Order
+
+```bash
+# Get recommendation
+clauxton task next
+# → Suggests TASK-001 (no dependencies, high priority)
+
+# Work on Task 1, update status
+clauxton task update TASK-001 --status completed
+
+# Get next
+clauxton task next
+# → Suggests TASK-002 (dependency met, high priority)
+```
+
+#### Step 4: Ask Claude for Help
+
+```
+You: "Help me implement the OAuth flow according to our architecture"
+
+Claude: [Uses kb_search("OAuth")]
+Based on KB-20251019-002, here's the implementation...
+[Generates code following your documented decisions]
+```
+
+**Benefits**:
+- Architecture decisions preserved
+- Tasks executed in safe order
+- No merge conflicts from file overlap
+- Claude has full project context
+
+---
+
+### Performance Tips
+
+#### Large Knowledge Bases (100+ entries)
+
+TF-IDF search remains fast with 200+ entries. For optimal performance:
+
+```bash
+# Use specific queries
+clauxton kb search "FastAPI OAuth implementation"  # Good
+clauxton kb search "authentication"                 # May return many results
+
+# Use category filters
+clauxton kb search "database" --category architecture
+
+# Limit results
+clauxton kb search "API" --limit 5
+```
+
+#### Task Management at Scale (50+ tasks)
+
+```bash
+# Filter by status to see active work
+clauxton task list --status in_progress
+
+# Filter by priority for focus
+clauxton task list --priority critical --status pending
+
+# Use task next for optimal ordering
+clauxton task next  # AI considers all factors
+```
+
+---
+
+### Integration Patterns
+
+#### Pre-commit Hook: Sync Knowledge Base
+
+```bash
+# .git/hooks/pre-commit
+#!/bin/bash
+# Auto-add KB entries before commit
+if [ -d ".clauxton" ]; then
+    git add .clauxton/
+fi
+```
+
+#### CI/CD: Validate Knowledge Base
+
+```yaml
+# .github/workflows/validate-kb.yml
+name: Validate Knowledge Base
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check KB format
+        run: |
+          pip install clauxton
+          clauxton kb list  # Validates YAML format
+```
+
+---
+
+## Complete Tutorial
+
+For a comprehensive step-by-step guide, see:
+- [Tutorial: Building Your First Knowledge Base](tutorial-first-kb.md) (30 minutes)
+
+---
+
 **Ready to preserve your project context?** Start with `clauxton init`!

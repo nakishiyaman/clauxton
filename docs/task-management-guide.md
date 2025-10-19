@@ -591,21 +591,309 @@ clauxton task list --status in_progress
 
 ---
 
-## Next Steps
+## Real-World Workflows
 
-- [MCP Server Guide](mcp-server.md) - Use tasks with Claude Code
-- [Phase 1 Plan](phase-1-plan.md) - Upcoming features (Week 5-8)
-- [YAML Format Reference](yaml-format.md) - Understanding the data structure
+### Workflow 1: Feature Development
+
+**Scenario**: Implementing user authentication feature
+
+#### Step 1: Break Down Feature
+
+```bash
+# Main implementation
+clauxton task add \
+  --name "Implement OAuth 2.0 flow" \
+  --files "src/auth/oauth.py" \
+  --priority high \
+  --estimate 4.0
+
+# JWT token handling
+clauxton task add \
+  --name "Implement JWT token generation and validation" \
+  --files "src/auth/jwt.py,src/auth/oauth.py" \
+  --priority high \
+  --estimate 3.0
+
+# API endpoints
+clauxton task add \
+  --name "Add authentication API endpoints" \
+  --files "src/api/auth.py,src/auth/oauth.py" \
+  --priority medium \
+  --estimate 2.5
+
+# Frontend integration
+clauxton task add \
+  --name "Integrate auth with frontend" \
+  --files "src/frontend/auth.ts,src/api/auth.py" \
+  --priority medium \
+  --estimate 3.0
+```
+
+#### Step 2: Review Dependencies
+
+```bash
+clauxton task list
+```
+
+**Auto-inferred dependencies**:
+- TASK-002 depends on TASK-001 (both touch `oauth.py`)
+- TASK-003 depends on TASK-001 (both touch `oauth.py`)
+- TASK-004 depends on TASK-003 (both touch `auth.py`)
+
+#### Step 3: Execute in Optimal Order
+
+```bash
+# Get recommendation
+clauxton task next
+# → TASK-001: "Implement OAuth 2.0 flow" (high priority, no deps, blocks 3 tasks)
+
+# Complete Task 1
+clauxton task update TASK-001 --status completed
+
+# Get next
+clauxton task next
+# → TASK-002: "Implement JWT..." (high priority, TASK-001 done, blocks 1 task)
+
+# Work on Task 2
+clauxton task update TASK-002 --status in_progress
+```
+
+**Benefits**:
+- ✅ No manual dependency management
+- ✅ Safe execution order (no file conflicts)
+- ✅ Time estimates for planning
+- ✅ Always know what to work on next
 
 ---
 
-## Coming Soon (Phase 1, Week 5-6)
+### Workflow 2: Refactoring Project
 
-**Auto-Dependency Inference**:
-Claude Code will automatically detect dependencies based on file overlap:
-```
-TASK-001: Edit src/api/users.py
-TASK-002: Edit src/api/users.py  ← Auto-detected dependency on TASK-001
+**Scenario**: Refactoring legacy codebase module by module
+
+#### Step 1: Identify Modules
+
+```bash
+# Module 1: User service
+clauxton task add \
+  --name "Refactor user service to use repository pattern" \
+  --files "src/services/user_service.py,src/repositories/user_repository.py" \
+  --priority high \
+  --kb-refs KB-20251019-005  # Reference to "Use Repository pattern" KB entry
+
+# Module 2: Auth service (depends on user)
+clauxton task add \
+  --name "Refactor auth service" \
+  --files "src/services/auth_service.py,src/services/user_service.py" \
+  --priority high
+
+# Module 3: API layer
+clauxton task add \
+  --name "Update API layer for refactored services" \
+  --files "src/api/users.py,src/api/auth.py,src/services/user_service.py,src/services/auth_service.py" \
+  --priority medium
+
+# Module 4: Tests
+clauxton task add \
+  --name "Update integration tests" \
+  --files "tests/test_api.py,src/api/users.py,src/api/auth.py" \
+  --priority medium
 ```
 
-**Status**: ✅ Week 4 Complete | Task Management with CLI | 157 tests passing
+#### Step 2: Verify Safe Order
+
+```bash
+clauxton task list
+```
+
+**Clauxton infers**:
+1. TASK-002 depends on TASK-001 (both touch `user_service.py`)
+2. TASK-003 depends on TASK-001, TASK-002 (touches both services)
+3. TASK-004 depends on TASK-003 (both touch API files)
+
+**Result**: Refactor services → Update API → Update tests (safe order!)
+
+#### Step 3: Track Progress
+
+```bash
+# Check overall progress
+clauxton task list --status completed  # See what's done
+clauxton task list --status pending    # See what's remaining
+
+# Estimate remaining work
+clauxton task list --status pending | grep "Estimate"
+# Total: 8.5 hours remaining
+```
+
+---
+
+### Workflow 3: Bug Fixing Sprint
+
+**Scenario**: Critical bugs need immediate attention
+
+#### Step 1: Add High-Priority Bugs
+
+```bash
+# Critical: Data loss bug
+clauxton task add \
+  --name "Fix: User data loss on concurrent updates" \
+  --files "src/services/user_service.py" \
+  --priority critical \
+  --description "Users report data loss when multiple devices update profile simultaneously"
+
+# High: Authentication failure
+clauxton task add \
+  --name "Fix: OAuth token refresh fails intermittently" \
+  --files "src/auth/oauth.py,src/auth/jwt.py" \
+  --priority high \
+  --description "Token refresh endpoint returns 500 error randomly"
+
+# Medium: UI issue
+clauxton task add \
+  --name "Fix: Dashboard charts not loading" \
+  --files "src/frontend/dashboard.ts" \
+  --priority medium
+```
+
+#### Step 2: Focus on Critical Issues
+
+```bash
+# Get next task
+clauxton task next
+# → TASK-001: "Fix: User data loss..." (CRITICAL priority)
+
+# Work on critical bug
+clauxton task update TASK-001 --status in_progress
+
+# Add blocker if needed
+clauxton task update TASK-002 --status blocked \
+  --description "Blocked: Waiting for TASK-001 fix (same service)"
+```
+
+#### Step 3: Track Resolution
+
+```bash
+# Complete critical fix
+clauxton task update TASK-001 --status completed
+
+# Unblock related task
+clauxton task update TASK-002 --status pending
+
+# Get next
+clauxton task next
+# → TASK-002: "Fix: OAuth token refresh..." (HIGH, now unblocked)
+```
+
+**Benefits**:
+- ✅ Priority-driven execution (critical first)
+- ✅ Blockers tracked explicitly
+- ✅ Related bugs handled in safe order
+
+---
+
+### Workflow 4: Parallel Team Work
+
+**Scenario**: 3 developers working on different features
+
+#### Developer A: Authentication
+
+```bash
+clauxton task add \
+  --name "Implement OAuth flow" \
+  --files "src/auth/oauth.py" \
+  --priority high
+
+clauxton task next
+# → Assigned: TASK-001
+```
+
+#### Developer B: User Management
+
+```bash
+clauxton task add \
+  --name "Add user CRUD API" \
+  --files "src/api/users.py" \
+  --priority high
+
+clauxton task next
+# → Assigned: TASK-002 (no file overlap with TASK-001)
+```
+
+#### Developer C: Dashboard
+
+```bash
+clauxton task add \
+  --name "Build analytics dashboard" \
+  --files "src/frontend/dashboard.ts" \
+  --priority medium
+
+clauxton task next
+# → Assigned: TASK-003 (no file overlap)
+```
+
+**Result**: All 3 developers work in parallel with no file conflicts! 🎉
+
+#### Later: Integration Task
+
+```bash
+# Developer A completes OAuth
+clauxton task update TASK-001 --status completed
+
+# Add integration task
+clauxton task add \
+  --name "Integrate OAuth with user API" \
+  --files "src/api/users.py,src/auth/oauth.py" \
+  --priority high
+
+# Clauxton auto-infers:
+# TASK-004 depends on TASK-001 (OAuth done) ✅
+# TASK-004 depends on TASK-002 (User API done) ✅
+```
+
+---
+
+## Best Practices Summary
+
+### Task Naming
+- ✅ Use action verbs: "Implement", "Refactor", "Fix", "Add"
+- ✅ Be specific: "Fix OAuth token refresh" not "Fix auth"
+- ✅ Include context: "Add user CRUD API endpoints"
+
+### File Association
+- ✅ Always include files (enables auto-dependency)
+- ✅ List all files the task will touch
+- ✅ Use relative paths from project root
+
+### Priority Management
+- **Critical**: Production down, data loss, security
+- **High**: Blocking work, user-facing bugs, core features
+- **Medium**: Regular features, improvements
+- **Low**: Nice-to-haves, tech debt, refactoring
+
+### Status Updates
+- Update to `in_progress` when starting work
+- Update to `completed` immediately after finishing
+- Use `blocked` for dependency issues
+- Use `pending` for ready-to-start tasks
+
+### Time Estimation
+- Use `--estimate` for planning (hours)
+- Be conservative (add buffer)
+- Update estimates if needed
+
+### KB Integration
+- Link to related KB entries (`--kb-refs`)
+- Document decisions before implementation
+- Search KB when starting tasks
+
+---
+
+## Next Steps
+
+- [Tutorial: Building Your First Knowledge Base](tutorial-first-kb.md) - Complete 30-min guide
+- [MCP Server Guide](mcp-server.md) - Use tasks with Claude Code
+- [YAML Format Reference](yaml-format.md) - Understanding the data structure
+- [Use Cases](use-cases.md) - More real-world examples
+
+---
+
+**Status**: ✅ Phase 1 Complete | Task Management with Auto-Dependency Inference | 267 tests passing
