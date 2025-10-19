@@ -18,7 +18,6 @@ import pytest
 from clauxton.core.knowledge_base import KnowledgeBase
 from clauxton.core.models import DuplicateError, KnowledgeBaseEntry, NotFoundError
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================
