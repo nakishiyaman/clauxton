@@ -58,15 +58,24 @@ def test_complete_workflow(runner: CliRunner, temp_project: Path) -> None:
         # Step 2: Add 3 entries
         entries_data = [
             {
-                "input": "Use FastAPI\narchitecture\nAll APIs use FastAPI framework.\nbackend,api\n",
+                "input": (
+                    "Use FastAPI\narchitecture\n"
+                    "All APIs use FastAPI framework.\nbackend,api\n"
+                ),
                 "title": "Use FastAPI",
             },
             {
-                "input": "PostgreSQL for production\ndecision\nUse PostgreSQL 15+ for production.\ndatabase,postgresql\n",
+                "input": (
+                    "PostgreSQL for production\ndecision\n"
+                    "Use PostgreSQL 15+ for production.\ndatabase,postgresql\n"
+                ),
                 "title": "PostgreSQL for production",
             },
             {
-                "input": "TDD workflow\nconvention\nWrite tests before implementation.\ntesting,tdd\n",
+                "input": (
+                    "TDD workflow\nconvention\n"
+                    "Write tests before implementation.\ntesting,tdd\n"
+                ),
                 "title": "TDD workflow",
             },
         ]

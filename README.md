@@ -239,10 +239,11 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 ## 📚 Documentation
 
 ### User Guides
-- [Quick Start Guide](docs/quick-start.md) - Get started in 5 minutes
+- [Quick Start Guide](docs/quick-start.md) - Get started in 5 minutes (CLI)
+- [MCP Server Quick Start](docs/mcp-server-quickstart.md) - Get started with Claude Code ✨ NEW
 - [Installation Guide](docs/installation.md) - Complete installation instructions
 - [YAML Format Reference](docs/yaml-format.md) - Complete Knowledge Base YAML specification
-- [MCP Server Guide](docs/mcp-server.md) - Using Clauxton with Claude Code ✨ NEW
+- [MCP Server Guide](docs/mcp-server.md) - Complete MCP Server documentation
 
 ### Developer Guides
 - [Architecture Overview](docs/architecture.md) - System design and data flow

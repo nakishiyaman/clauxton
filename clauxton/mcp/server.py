@@ -14,7 +14,6 @@ from mcp.server.fastmcp import FastMCP
 from clauxton.core.knowledge_base import KnowledgeBase
 from clauxton.core.models import KnowledgeBaseEntry
 
-
 # Create MCP server instance
 mcp = FastMCP("Clauxton Knowledge Base")
 

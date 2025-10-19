@@ -10,10 +10,7 @@ Tests cover:
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from clauxton.mcp.server import kb_add, kb_get, kb_list, kb_search, mcp
-
 
 # ============================================================================
 # Server Instantiation Tests
