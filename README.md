@@ -4,82 +4,114 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Development Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/nakishiyaman/clauxton)
+[![PyPI Version](https://img.shields.io/pypi/v/clauxton)](https://pypi.org/project/clauxton/)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/clauxton)](https://pypi.org/project/clauxton/)
+[![Development Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/nakishiyaman/clauxton)
+[![Test Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen.svg)](https://github.com/nakishiyaman/clauxton)
 
-> ⚠️ **Alpha Status**: Clauxton is currently in Phase 0 development. Core features are being implemented. Not yet ready for production use.
+> ✅ **Production Ready**: Clauxton v0.8.0 is stable and ready for production use. Phase 1 complete with TF-IDF search, task management, and MCP integration.
 
 Clauxton is a Claude Code plugin that provides **persistent project context** to solve AI-assisted development pain points.
 
 **Vision** (Roadmap):
-1. ✅ **Session Context Loss** → Persistent Knowledge Base (Phase 0 - In Progress)
-2. 🔄 **Manual Dependency Tracking** → Auto-inferred task dependencies (Phase 1 - Planned)
+1. ✅ **Session Context Loss** → Persistent Knowledge Base with TF-IDF Search (Phase 0-1 - **Complete**)
+2. ✅ **Manual Dependency Tracking** → Auto-inferred task dependencies (Phase 1 - **Complete**)
 3. 🔄 **Post-hoc Conflict Detection** → Pre-merge conflict prediction (Phase 2 - Planned)
 
 ---
 
 ## 🎯 Quick Start
 
-> **Note**: CLI installation only. Full Claude Code plugin integration coming in Phase 1.
+### Install from PyPI (Recommended)
 
 ```bash
-# Install from source (PyPI release coming soon)
-git clone https://github.com/nakishiyaman/clauxton.git
-cd clauxton
-pip install -e .
+# Install Clauxton with all features (TF-IDF search)
+pip install clauxton
 
+# Verify installation
+clauxton --version  # Should show: clauxton, version 0.8.0
+```
+
+### Basic Usage
+
+```bash
 # Initialize in your project
 cd your-project
 clauxton init
 
 # Add knowledge to your Knowledge Base
 clauxton kb add
+# Enter: Title, Category, Content, Tags
 
-# Search your Knowledge Base
-clauxton kb search "architecture"
+# Search with TF-IDF relevance ranking
+clauxton kb search "FastAPI authentication"
+# Results are ranked by relevance - most relevant first!
+
+# Get next recommended task (AI-powered)
+clauxton task next
+```
+
+### Install from Source (Development)
+
+```bash
+git clone https://github.com/nakishiyaman/clauxton.git
+cd clauxton
+pip install -e .
 ```
 
 ---
 
 ## ✨ Features
 
-### ✅ Phase 0: Foundation (Complete)
+### ✅ Phase 1: Complete (v0.8.0)
 
-#### Knowledge Base Management
+#### 🔍 TF-IDF Relevance Search
+- ✅ **Intelligent Ranking**: TF-IDF algorithm ranks results by relevance (powered by scikit-learn)
+- ✅ **Automatic Fallback**: Gracefully falls back to keyword search if scikit-learn unavailable
+- ✅ **Fast Performance**: Validated with 200+ knowledge base entries
+- ✅ **Query Understanding**: Understands multi-word queries and technical terms
+- ✅ **See**: [Search Algorithm Documentation](docs/search-algorithm.md)
+
+#### 📚 Knowledge Base Management
 - ✅ **Persistent Context**: Store architecture decisions, patterns, constraints, conventions
-- ✅ **Category System**: Organize entries by type (architecture, constraint, decision, pattern, convention)
-- ✅ **YAML Storage**: Human-readable, Git-friendly YAML format
-- ✅ **TF-IDF Search**: Relevance-based search with automatic ranking (see [Search Algorithm](docs/search-algorithm.md))
+- ✅ **Category System**: 5 categories (architecture, constraint, decision, pattern, convention)
+- ✅ **YAML Storage**: Human-readable, Git-friendly format
 - ✅ **CRUD Operations**: Add, get, update, delete, list entries
+- ✅ **Version Management**: Automatic versioning on updates
 - ✅ **Atomic Writes**: Safe file operations with automatic backups
 - ✅ **Secure Permissions**: 700/600 permissions for privacy
 
-### 🚧 Phase 1: Core Engine (In Progress - Week 6/8)
+#### ✅ Task Management System
+- ✅ **Full CRUD**: Add, get, update, delete, list tasks
+- ✅ **Smart Dependencies**: Auto-inferred from file overlap + manual dependencies
+- ✅ **DAG Validation**: Cycle detection prevents circular dependencies
+- ✅ **Priority Management**: 4 levels (Critical > High > Medium > Low)
+- ✅ **AI Recommendations**: `task next` suggests optimal next task
+- ✅ **Progress Tracking**: Track status (pending, in_progress, completed, blocked)
+- ✅ **Time Estimates**: Optional hour estimates for planning
 
-#### Knowledge Base CRUD (✅ Week 3 + Week 7 - Complete)
-- ✅ **MCP Tools**: kb_search, kb_add, kb_list, kb_get, kb_update, kb_delete
-- ✅ **CLI Commands**: kb add, kb get, kb list, kb search, kb update, kb delete
-- ✅ **Claude Code Integration**: .claude-plugin/mcp-servers.json
-- ✅ **Type-Safe**: Full Pydantic validation
-- ✅ **Version Management**: Automatic versioning on updates
+#### 🔌 MCP Server Integration (12 Tools)
+**Knowledge Base Tools** (6):
+- ✅ `kb_search` - TF-IDF relevance-ranked search
+- ✅ `kb_add` - Add new knowledge entry
+- ✅ `kb_list` - List all entries (filterable by category)
+- ✅ `kb_get` - Get entry by ID
+- ✅ `kb_update` - Update existing entry
+- ✅ `kb_delete` - Delete entry
 
-#### Task Management (✅ Week 4 - Complete)
-- ✅ **CRUD Operations**: Add, get, update, delete, list tasks
-- ✅ **Dependency Tracking**: Define task dependencies (DAG structure)
-- ✅ **Cycle Detection**: Prevent circular dependencies with DFS algorithm
-- ✅ **Priority Management**: Critical > High > Medium > Low
-- ✅ **AI Recommendations**: get_next_task() based on priority and dependencies
-- ✅ **CLI Commands**: task add, task list, task get, task update, task delete, task next
-- ✅ **YAML Persistence**: tasks.yml with automatic backups
+**Task Management Tools** (6):
+- ✅ `task_add` - Create task with auto-dependency inference
+- ✅ `task_list` - List tasks (filterable by status/priority)
+- ✅ `task_get` - Get task details
+- ✅ `task_update` - Update task fields
+- ✅ `task_next` - Get AI-recommended next task
+- ✅ `task_delete` - Delete task
 
-#### Task Management MCP Tools (✅ Week 5 - Complete)
-- ✅ **MCP Tools**: task_add, task_list, task_get, task_update, task_next, task_delete
-- ✅ **Auto Dependency Inference**: Infer dependencies from file overlap
-- ✅ **Claude Code Integration**: Full task management via MCP
-- ✅ **AI-Powered Recommendations**: get_next_task() via MCP
-
-#### Dependency Analysis (⏳ Week 6 - Planned)
-- 🔄 **Task Graph Visualization**: ASCII/Mermaid dependency graphs
-- 🔄 **Enhanced Inference**: Multi-file pattern analysis
+#### 📊 Quality Metrics
+- ✅ **267 Tests** - Comprehensive test coverage
+- ✅ **94% Coverage** - High code quality
+- ✅ **Type Safe** - Full Pydantic validation
+- ✅ **Production Ready** - Stable v0.8.0 release
 
 ### 🔄 Phase 2: Conflict Prevention (Planned)
 
@@ -93,18 +125,26 @@ clauxton kb search "architecture"
 
 ## 📦 Installation
 
-### Requirements
+### PyPI Installation (Recommended)
 
-- **Python**: 3.11 or higher
-- **Dependencies**:
-  - `click>=8.0.0` - CLI framework
-  - `pydantic>=2.0.0` - Data validation
-  - `pyyaml>=6.0.0` - YAML parsing
-  - `mcp>=0.1.0` - MCP server integration
-  - `scikit-learn>=1.3.0` - TF-IDF search (optional, falls back to simple search if not installed)
-  - `numpy>=1.24.0` - Required by scikit-learn
+```bash
+# Install latest stable version (includes all features)
+pip install clauxton
 
-### Development Installation (Current)
+# Verify installation
+clauxton --version  # Should show: clauxton, version 0.8.0
+
+# Install specific version
+pip install clauxton==0.8.0
+```
+
+**What's Included**:
+- ✅ Knowledge Base management (CRUD + TF-IDF search)
+- ✅ Task Management system with auto-dependencies
+- ✅ MCP Server (12 tools for Claude Code)
+- ✅ All dependencies (scikit-learn, numpy, pydantic, click, pyyaml, mcp)
+
+### Development Installation
 
 ```bash
 # Clone repository
@@ -117,25 +157,26 @@ source venv/bin/activate  # On macOS/Linux
 # or
 venv\Scripts\activate     # On Windows
 
-# Install in editable mode (includes all dependencies)
+# Install in editable mode
 pip install -e .
 
-# Verify installation
-clauxton --version
+# Run tests
+pytest
 ```
 
-### PyPI Installation (Coming Soon)
+### Requirements
 
-```bash
-# Full installation (with TF-IDF search)
-pip install clauxton
+- **Python**: 3.11 or higher
+- **Dependencies** (auto-installed with pip):
+  - `pydantic>=2.0` - Data validation
+  - `click>=8.1` - CLI framework
+  - `pyyaml>=6.0` - YAML parsing
+  - `gitpython>=3.1` - Git integration
+  - `mcp>=1.0` - MCP server
+  - `scikit-learn>=1.3` - TF-IDF search
+  - `numpy>=1.24` - Required by scikit-learn
 
-# Minimal installation (simple keyword search only)
-pip install clauxton --no-deps
-pip install click pydantic pyyaml mcp
-```
-
-**Note on Search**: Clauxton uses **TF-IDF algorithm** for relevance-based search when `scikit-learn` is installed. If not available, it automatically falls back to simple keyword matching. See [Search Algorithm](docs/search-algorithm.md) for details.
+**Note on Search**: Clauxton uses **TF-IDF algorithm** for intelligent relevance ranking. If scikit-learn is unavailable, it automatically falls back to keyword matching. See [Search Algorithm](docs/search-algorithm.md) for details.
 
 ---
 
@@ -355,44 +396,43 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## 📊 Project Status
 
-| Phase | Status | Completion | Target Date |
-|-------|--------|------------|-------------|
-| **Phase 0: Foundation** | ✅ Complete | 100% | Week 2 (2025-11-02) |
-| **Phase 1: Core Engine** | 🚧 In Progress | 88% | Week 3-8 |
-| Phase 2: Conflict Prevention | 📋 Planned | 0% | Week 9-12 |
-| Beta Testing | 📋 Planned | 0% | Week 13-14 |
-| Public Launch | 📋 Planned | 0% | Week 15-16 |
+| Phase | Status | Completion | Release |
+|-------|--------|------------|---------|
+| **Phase 0: Foundation** | ✅ Complete | 100% | v0.1.0 |
+| **Phase 1: Core Engine** | ✅ Complete | 100% | **v0.8.0** |
+| Phase 2: Conflict Prevention | 📋 Planned | 0% | v0.9.0 (target) |
+| Beta Testing | 📋 Planned | 0% | - |
+| v1.0 Public Launch | 📋 Planned | 0% | v1.0.0 (target) |
 
-**Phase 0 Progress** (Complete ✅):
-- ✅ Pydantic data models (100%)
-- ✅ YAML utilities (100%)
-- ✅ Knowledge Base core (100%)
-- ✅ CLI implementation (100%)
-- ⏳ Basic MCP Server (0% - deferred to Phase 1)
-- ✅ Tests & Documentation (100% - 111 tests, 93% coverage)
+**Phase 1 Complete** (v0.8.0 - Released 2025-10-19) ✅:
+- ✅ Knowledge Base CRUD (6 MCP tools + CLI)
+- ✅ TF-IDF Relevance Search (scikit-learn powered)
+- ✅ Task Management (6 MCP tools + CLI)
+- ✅ Auto Dependency Inference (file overlap detection)
+- ✅ DAG Validation (cycle detection)
+- ✅ Full Documentation (20 guides)
+- ✅ **267 tests, 94% coverage**
+- ✅ **Production ready, stable release**
 
-**Phase 1 Progress** (Week 9/10 - 95%):
-- ✅ Knowledge Base CRUD (100% - complete with update/delete)
-- ✅ MCP KB Tools (100% - kb_search, kb_add, kb_list, kb_get, kb_update, kb_delete)
-- ✅ Task Management (100% - CRUD, dependencies, DAG validation, CLI)
-- ✅ Task Management MCP Tools (100% - task_add, task_list, task_get, task_update, task_next, task_delete)
-- ✅ Auto Dependency Inference (100% - file overlap detection)
-- ✅ TF-IDF Search (100% - relevance-based search with fallback)
-- 🚧 Documentation (80% - Week 9-10)
-- ✅ Tests: 265 total, 94% coverage
+**What's New in v0.8.0**:
+- 🆕 TF-IDF relevance-based search
+- 🆕 Comprehensive documentation (search-algorithm.md, troubleshooting.md)
+- 🆕 Performance validated (200+ KB entries)
+- 🆕 PyPI distribution (pip install clauxton)
 
-See [Phase 0 Completion Summary](docs/PHASE_0_COMPLETE.md) for detailed results.
-See [docs/roadmap.md](docs/roadmap.md) for overall timeline.
-See [docs/phase-1-plan.md](docs/phase-1-plan.md) for next steps.
+See [docs/PHASE_1_COMPLETE.md](docs/PHASE_1_COMPLETE.md) for full Phase 1 summary.
+See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
+See [docs/roadmap.md](docs/roadmap.md) for Phase 2 plans.
 
 ---
 
 ## 🔗 Links
 
+- **PyPI**: [https://pypi.org/project/clauxton/](https://pypi.org/project/clauxton/)
 - **GitHub**: [https://github.com/nakishiyaman/clauxton](https://github.com/nakishiyaman/clauxton)
+- **GitHub Releases**: [https://github.com/nakishiyaman/clauxton/releases](https://github.com/nakishiyaman/clauxton/releases)
 - **Issues**: [https://github.com/nakishiyaman/clauxton/issues](https://github.com/nakishiyaman/clauxton/issues)
 - **Discussions**: [https://github.com/nakishiyaman/clauxton/discussions](https://github.com/nakishiyaman/clauxton/discussions)
-- **PyPI**: Coming after Phase 0 completion
 
 ---
 
