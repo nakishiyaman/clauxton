@@ -4,7 +4,6 @@ Task Manager for Clauxton.
 Provides CRUD operations for task management with YAML persistence.
 """
 
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 

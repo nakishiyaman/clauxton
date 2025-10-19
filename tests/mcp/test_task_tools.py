@@ -11,12 +11,10 @@ Tests cover:
 - Error handling
 """
 
-from datetime import datetime
 from pathlib import Path
 
 import pytest
 
-from clauxton.core.models import Task
 from clauxton.core.task_manager import TaskManager
 from clauxton.mcp.server import (
     task_add,

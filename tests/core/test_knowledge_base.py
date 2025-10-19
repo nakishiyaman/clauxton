@@ -543,7 +543,8 @@ def test_search_long_content(kb: KnowledgeBase) -> None:
     """Test searching in entries with very long content (10000 chars)."""
     # Create more realistic long content with varied words (TF-IDF friendly)
     repeated_text = ("This is a long content entry. " * 300)  # ~9000 chars
-    long_content = repeated_text + "The needle keyword appears here in the long content. " + ("More text. " * 10)
+    needle_phrase = "The needle keyword appears here in the long content. "
+    long_content = repeated_text + needle_phrase + ("More text. " * 10)
 
     entry = KnowledgeBaseEntry(
         id="KB-20251019-001",
@@ -825,7 +826,6 @@ def test_fallback_to_simple_search_when_tfidf_unavailable(tmp_path: Path) -> Non
     # Create KB with mocked SEARCH_ENGINE_AVAILABLE = False
     with patch.dict(sys.modules, {'clauxton.core.search': None}):
         # Force reimport of knowledge_base module with SearchEngine unavailable
-        import importlib
         from clauxton.core import knowledge_base as kb_module
 
         # Temporarily set SEARCH_ENGINE_AVAILABLE to False

@@ -1,6 +1,7 @@
 """Tests for TF-IDF search engine."""
-import pytest
 from datetime import datetime
+
+import pytest
 
 from clauxton.core.models import KnowledgeBaseEntry
 

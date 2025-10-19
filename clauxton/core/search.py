@@ -3,12 +3,11 @@ Enhanced search engine with TF-IDF.
 
 Provides relevance-based search for Knowledge Base entries.
 """
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
 try:
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.metrics.pairwise import cosine_similarity
-    import numpy as np
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False

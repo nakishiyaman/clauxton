@@ -125,10 +125,14 @@ def test_kb_add_exception_handling(runner: CliRunner, temp_project: Path) -> Non
 
         # Try to add entry with title that's too long (>50 chars)
         # This should trigger Pydantic validation error
+        long_title = (
+            "This is a very long title that exceeds the maximum allowed "
+            "length of fifty characters"
+        )
         result = runner.invoke(
             cli,
             ["kb", "add"],
-            input="This is a very long title that exceeds the maximum allowed length of fifty characters\narchitecture\nContent\n\n",
+            input=f"{long_title}\narchitecture\nContent\n\n",
         )
 
         # Should fail (validation error is raised, caught by Click)

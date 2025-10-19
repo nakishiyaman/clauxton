@@ -115,7 +115,9 @@ def test_task_add_with_all_options(runner: CliRunner, initialized_project: Path)
     assert "TASK-001" in result.output
 
 
-def test_task_add_without_init(runner: CliRunner, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_task_add_without_init(
+    runner: CliRunner, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test task add fails without initialization."""
     project_dir = tmp_path / "uninit"
     project_dir.mkdir()
@@ -499,8 +501,9 @@ def test_task_add_exception_handling(
     runner: CliRunner, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test exception handling in task add command."""
-    from clauxton.core.task_manager import TaskManager
     from unittest.mock import patch
+
+    from clauxton.core.task_manager import TaskManager
 
     project_dir = tmp_path / "project"
     project_dir.mkdir()
@@ -525,8 +528,9 @@ def test_task_get_exception_handling(
     runner: CliRunner, initialized_project: Path
 ) -> None:
     """Test exception handling in task get command."""
-    from clauxton.core.task_manager import TaskManager
     from unittest.mock import patch
+
+    from clauxton.core.task_manager import TaskManager
 
     # Mock TaskManager.get to raise exception
     with patch.object(TaskManager, "get", side_effect=Exception("Task data corrupted")):
@@ -540,8 +544,9 @@ def test_task_update_exception_handling(
     runner: CliRunner, initialized_project: Path
 ) -> None:
     """Test exception handling in task update command."""
-    from clauxton.core.task_manager import TaskManager
     from unittest.mock import patch
+
+    from clauxton.core.task_manager import TaskManager
 
     # Add a task first
     runner.invoke(cli, ["task", "add", "--name", "Test task"])
@@ -578,8 +583,9 @@ def test_task_delete_exception_handling(
     runner: CliRunner, initialized_project: Path
 ) -> None:
     """Test exception handling in task delete command."""
-    from clauxton.core.task_manager import TaskManager
     from unittest.mock import patch
+
+    from clauxton.core.task_manager import TaskManager
 
     # Add a task first
     runner.invoke(cli, ["task", "add", "--name", "Test task"])
@@ -617,14 +623,13 @@ def test_task_delete_with_confirmation(runner: CliRunner, initialized_project: P
 def test_task_with_actual_hours(runner: CliRunner, initialized_project: Path) -> None:
     """Test task display with actual_hours field."""
     from clauxton.core.task_manager import TaskManager
-    from clauxton.core.models import Task
 
     # Add a task
     runner.invoke(cli, ["task", "add", "--name", "Test task"])
 
     # Manually set actual_hours in the task
     tm = TaskManager(Path.cwd())
-    task_obj = tm.get("TASK-001")
+    tm.get("TASK-001")  # Verify task exists
     tm.update("TASK-001", {"actual_hours": 3.5})
 
     # Get task and verify actual_hours is displayed
