@@ -53,7 +53,7 @@ clauxton kb search "architecture"
 - ✅ **Atomic Writes**: Safe file operations with automatic backups
 - ✅ **Secure Permissions**: 700/600 permissions for privacy
 
-### 🚧 Phase 1: Core Engine (In Progress - Week 4/6)
+### 🚧 Phase 1: Core Engine (In Progress - Week 5/6)
 
 #### Knowledge Base MCP Server (✅ Week 3 - Complete)
 - ✅ **MCP Tools**: kb_search, kb_add, kb_list, kb_get
@@ -69,10 +69,15 @@ clauxton kb search "architecture"
 - ✅ **CLI Commands**: task add, task list, task get, task update, task delete, task next
 - ✅ **YAML Persistence**: tasks.yml with automatic backups
 
-#### Dependency Analysis (⏳ Week 5-6 - Planned)
-- 🔄 **Auto Dependency Inference**: Infer dependencies from file overlap
-- 🔄 **DAG Validation**: Real-time cycle prevention
-- 🔄 **MCP Integration**: Task Management MCP tools
+#### Task Management MCP Tools (✅ Week 5 - Complete)
+- ✅ **MCP Tools**: task_add, task_list, task_get, task_update, task_next, task_delete
+- ✅ **Auto Dependency Inference**: Infer dependencies from file overlap
+- ✅ **Claude Code Integration**: Full task management via MCP
+- ✅ **AI-Powered Recommendations**: get_next_task() via MCP
+
+#### Dependency Analysis (⏳ Week 6 - Planned)
+- 🔄 **Task Graph Visualization**: ASCII/Mermaid dependency graphs
+- 🔄 **Enhanced Inference**: Multi-file pattern analysis
 
 ### 🔄 Phase 2: Conflict Prevention (Planned)
 
@@ -171,13 +176,13 @@ clauxton task delete TASK-001
 
 ### MCP Server (Phase 1 - Available Now!)
 
-The Clauxton MCP Server provides Knowledge Base tools for Claude Code:
+The Clauxton MCP Server provides full Knowledge Base and Task Management for Claude Code:
 
 ```json
 // .claude-plugin/mcp-servers.json
 {
   "mcpServers": {
-    "clauxton-kb": {
+    "clauxton": {
       "command": "python",
       "args": ["-m", "clauxton.mcp.server"],
       "cwd": "${workspaceFolder}"
@@ -186,23 +191,21 @@ The Clauxton MCP Server provides Knowledge Base tools for Claude Code:
 }
 ```
 
-**Available Tools**:
+**Knowledge Base Tools**:
 - `kb_search(query, category?, limit?)` - Search Knowledge Base
 - `kb_add(title, category, content, tags?)` - Add new entry
 - `kb_list(category?)` - List all entries
 - `kb_get(entry_id)` - Get entry by ID
 
+**Task Management Tools** (✅ Week 5):
+- `task_add(name, description?, priority?, depends_on?, files?, kb_refs?, estimate?)` - Add task
+- `task_list(status?, priority?)` - List tasks with filters
+- `task_get(task_id)` - Get task details
+- `task_update(task_id, status?, priority?, name?, description?)` - Update task
+- `task_next()` - Get AI-recommended next task
+- `task_delete(task_id)` - Delete task
+
 See [MCP Server Guide](docs/mcp-server.md) for complete documentation.
-
-### Coming in Phase 1
-
-```bash
-# Task Management tools (Week 4)
-task_add, task_list, task_next
-
-# Dependency Analysis (Week 5-6)
-deps_infer, deps_validate
-```
 
 ### Coming in Phase 2
 
@@ -321,7 +324,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 | Phase | Status | Completion | Target Date |
 |-------|--------|------------|-------------|
 | **Phase 0: Foundation** | ✅ Complete | 100% | Week 2 (2025-11-02) |
-| **Phase 1: Core Engine** | 🚧 In Progress | 67% | Week 3-8 |
+| **Phase 1: Core Engine** | 🚧 In Progress | 83% | Week 3-8 |
 | Phase 2: Conflict Prevention | 📋 Planned | 0% | Week 9-12 |
 | Beta Testing | 📋 Planned | 0% | Week 13-14 |
 | Public Launch | 📋 Planned | 0% | Week 15-16 |
@@ -334,13 +337,14 @@ MIT License - see [LICENSE](LICENSE) for details.
 - ⏳ Basic MCP Server (0% - deferred to Phase 1)
 - ✅ Tests & Documentation (100% - 111 tests, 93% coverage)
 
-**Phase 1 Progress** (Week 4/6 - 67%):
+**Phase 1 Progress** (Week 5/6 - 83%):
 - ✅ MCP Server Foundation (100% - kb_search, kb_add, kb_list, kb_get)
 - ✅ Task Management (100% - CRUD, dependencies, DAG validation, CLI)
-- ⏳ Dependency Analysis (0% - Week 5-6)
+- ✅ Task Management MCP Tools (100% - task_add, task_list, task_get, task_update, task_next, task_delete)
+- ✅ Auto Dependency Inference (100% - file overlap detection)
 - ⏳ KB Enhancements (0% - Week 7)
 - ⏳ Integration & Documentation (0% - Week 8)
-- ✅ Tests: 157 total (111 Phase 0 + 7 MCP + 24 TaskManager + 15 CLI), 76% coverage
+- ✅ Tests: 183 total (111 Phase 0 + 7 MCP KB + 24 TaskManager + 21 MCP Task + 15 CLI + 5 Inference), 78% coverage
 
 See [Phase 0 Completion Summary](docs/PHASE_0_COMPLETE.md) for detailed results.
 See [docs/roadmap.md](docs/roadmap.md) for overall timeline.
