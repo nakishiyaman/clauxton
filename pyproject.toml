@@ -37,6 +37,7 @@ dependencies = [
     "click>=8.1",
     "pyyaml>=6.0",
     "gitpython>=3.1",
+    "mcp>=1.0",
 ]
 
 [project.optional-dependencies]
@@ -57,6 +58,7 @@ Issues = "https://github.com/nakishiyaman/clauxton/issues"
 
 [project.scripts]
 clauxton = "clauxton.cli.main:cli"
+clauxton-mcp = "clauxton.mcp.server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["clauxton"]

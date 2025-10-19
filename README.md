@@ -124,14 +124,39 @@ clauxton kb list --category decision
 clauxton kb get KB-20251019-001
 ```
 
+### MCP Server (Phase 1 - Available Now!)
+
+The Clauxton MCP Server provides Knowledge Base tools for Claude Code:
+
+```json
+// .claude-plugin/mcp-servers.json
+{
+  "mcpServers": {
+    "clauxton-kb": {
+      "command": "python",
+      "args": ["-m", "clauxton.mcp.server"],
+      "cwd": "${workspaceFolder}"
+    }
+  }
+}
+```
+
+**Available Tools**:
+- `kb_search(query, category?, limit?)` - Search Knowledge Base
+- `kb_add(title, category, content, tags?)` - Add new entry
+- `kb_list(category?)` - List all entries
+- `kb_get(entry_id)` - Get entry by ID
+
+See [MCP Server Guide](docs/mcp-server.md) for complete documentation.
+
 ### Coming in Phase 1
 
 ```bash
-# Slash commands (via MCP)
-/kb-search <query>
-/task-add
-/task-next
-/deps-graph
+# Task Management tools (Week 4)
+task_add, task_list, task_next
+
+# Dependency Analysis (Week 5-6)
+deps_infer, deps_validate
 ```
 
 ### Coming in Phase 2
@@ -182,7 +207,7 @@ See [YAML Format Reference](docs/yaml-format.md) for complete schema documentati
 
 ## 🏗️ Architecture
 
-### Current (Phase 0)
+### Current (Phase 0-1)
 
 ```
 clauxton/
@@ -192,18 +217,20 @@ clauxton/
 ├── utils/
 │   ├── yaml_utils.py      # Safe YAML I/O ✅
 │   └── file_utils.py      # Secure file operations ✅
-└── cli/
-    └── main.py            # CLI commands 🔄
+├── cli/
+│   └── main.py            # CLI commands ✅
+└── mcp/
+    └── server.py          # MCP Server ✅ (Phase 1, Week 3)
 ```
 
 **Storage**: `.clauxton/knowledge-base.yml` (YAML format)
 
 ### Planned (Phase 1-2)
 
-- **MCP Servers**: Knowledge Base & Task Management servers
-- **Subagents**: Dependency Analyzer, Conflict Detector
-- **Hooks**: Auto-update on file edits
-- **Slash Commands**: `/kb-*`, `/task-*`, `/deps-*`, `/conflicts-*`
+- **Task Management MCP Tools**: task_add, task_list, task_next (Week 4)
+- **Dependency Analysis**: Auto-inference, DAG validation (Week 5-6)
+- **Enhanced Search**: TF-IDF relevance (Week 7)
+- **Conflict Detection**: Pre-merge conflict analysis (Phase 2)
 
 See [docs/architecture.md](docs/architecture.md) for complete design.
 
@@ -215,6 +242,7 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 - [Quick Start Guide](docs/quick-start.md) - Get started in 5 minutes
 - [Installation Guide](docs/installation.md) - Complete installation instructions
 - [YAML Format Reference](docs/yaml-format.md) - Complete Knowledge Base YAML specification
+- [MCP Server Guide](docs/mcp-server.md) - Using Clauxton with Claude Code ✨ NEW
 
 ### Developer Guides
 - [Architecture Overview](docs/architecture.md) - System design and data flow
@@ -247,18 +275,26 @@ MIT License - see [LICENSE](LICENSE) for details.
 | Phase | Status | Completion | Target Date |
 |-------|--------|------------|-------------|
 | **Phase 0: Foundation** | ✅ Complete | 95% | Week 2 (2025-11-02) |
-| Phase 1: Core Engine | 📋 Ready to Start | 0% | Week 3-8 |
+| **Phase 1: Core Engine** | 🚧 In Progress | 17% | Week 3-8 |
 | Phase 2: Conflict Prevention | 📋 Planned | 0% | Week 9-12 |
 | Beta Testing | 📋 Planned | 0% | Week 13-14 |
 | Public Launch | 📋 Planned | 0% | Week 15-16 |
 
-**Phase 0 Progress**:
+**Phase 0 Progress** (Complete ✅):
 - ✅ Pydantic data models (100%)
 - ✅ YAML utilities (100%)
 - ✅ Knowledge Base core (100%)
-- ✅ CLI implementation (100% - init, add, get, list, search)
+- ✅ CLI implementation (100%)
 - ⏳ Basic MCP Server (0% - deferred to Phase 1)
 - ✅ Tests & Documentation (100% - 111 tests, 93% coverage)
+
+**Phase 1 Progress** (Week 3/6 - 17%):
+- ✅ MCP Server Foundation (100% - kb_search, kb_add, kb_list, kb_get)
+- ⏳ Task Management (0% - Week 4)
+- ⏳ Dependency Analysis (0% - Week 5-6)
+- ⏳ KB Enhancements (0% - Week 7)
+- ⏳ Integration & Documentation (0% - Week 8)
+- ✅ Tests: 118 total (111 Phase 0 + 7 MCP), 93% coverage
 
 See [Phase 0 Completion Summary](docs/PHASE_0_COMPLETE.md) for detailed results.
 See [docs/roadmap.md](docs/roadmap.md) for overall timeline.
