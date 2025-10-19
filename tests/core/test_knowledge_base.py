@@ -509,3 +509,74 @@ def test_cache_invalidation_on_delete(
 
     kb.delete("KB-20251019-001")
     assert kb._entries_cache is None
+
+
+# ============================================================================
+# Additional Edge Case Tests
+# ============================================================================
+
+
+def test_search_empty_query(
+    kb: KnowledgeBase, sample_entries: list[KnowledgeBaseEntry]
+) -> None:
+    """Test searching with empty query returns empty results."""
+    for entry in sample_entries:
+        kb.add(entry)
+
+    # Empty query should return no results
+    results = kb.search("")
+    assert results == []
+
+
+def test_search_special_characters(
+    kb: KnowledgeBase, sample_entry: KnowledgeBaseEntry
+) -> None:
+    """Test searching with special characters in query."""
+    kb.add(sample_entry)
+
+    # Special characters in query should be handled safely
+    results = kb.search("API+")
+    # Should not crash, may or may not find results
+    assert isinstance(results, list)
+
+
+def test_search_long_content(kb: KnowledgeBase) -> None:
+    """Test searching in entries with very long content (10000 chars)."""
+    long_content = "A" * 9000 + "needle" + "B" * 994  # Exactly 10000 chars
+    entry = KnowledgeBaseEntry(
+        id="KB-20251019-001",
+        title="Long content entry",
+        category="architecture",
+        content=long_content,
+        tags=["test"],
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+    kb.add(entry)
+
+    # Should find "needle" in long content
+    results = kb.search("needle")
+    assert len(results) == 1
+    assert results[0].id == "KB-20251019-001"
+
+
+def test_yaml_file_human_readable(
+    tmp_path: Path, sample_entry: KnowledgeBaseEntry
+) -> None:
+    """Test that YAML file is human-readable and properly formatted."""
+    kb = KnowledgeBase(tmp_path)
+    kb.add(sample_entry)
+
+    # Read YAML file as text
+    yaml_content = kb.kb_file.read_text()
+
+    # Should contain human-readable fields
+    assert "version:" in yaml_content
+    assert "project_name:" in yaml_content
+    assert "entries:" in yaml_content
+    assert "KB-20251019-001" in yaml_content
+    assert "Use FastAPI framework" in yaml_content
+
+    # Should not contain Python object representations
+    assert "KnowledgeBaseEntry" not in yaml_content
+    assert "<" not in yaml_content or ">" not in yaml_content  # No <object> tags

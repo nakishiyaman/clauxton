@@ -164,7 +164,12 @@ class KnowledgeBase:
             API versioning strategy
         """
         entries = self._load_entries()
-        query_lower = query.lower()
+        query_lower = query.lower().strip()
+
+        # If query is empty after stripping, return empty results
+        if not query_lower:
+            return []
+
         matches: List[tuple[KnowledgeBaseEntry, float]] = []
 
         for entry in entries:

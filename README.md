@@ -141,6 +141,43 @@ clauxton kb get KB-20251019-001
 /conflicts-check
 ```
 
+### Knowledge Base YAML Structure
+
+After running `clauxton kb add`, your entries are stored in `.clauxton/knowledge-base.yml`:
+
+```yaml
+version: '1.0'
+project_name: my-project
+
+entries:
+  - id: KB-20251019-001
+    title: Use FastAPI framework
+    category: architecture
+    content: |
+      All backend APIs use FastAPI framework.
+
+      Reasons:
+      - Async/await support
+      - Automatic OpenAPI docs
+      - Excellent performance
+    tags:
+      - backend
+      - api
+      - fastapi
+    created_at: '2025-10-19T10:30:00'
+    updated_at: '2025-10-19T10:30:00'
+    version: 1
+```
+
+**Categories**:
+- `architecture`: System design decisions
+- `constraint`: Technical/business constraints
+- `decision`: Important project decisions with rationale
+- `pattern`: Coding patterns and best practices
+- `convention`: Team conventions and code style
+
+See [YAML Format Reference](docs/yaml-format.md) for complete schema documentation.
+
 ---
 
 ## 🏗️ Architecture
@@ -150,13 +187,13 @@ clauxton kb get KB-20251019-001
 ```
 clauxton/
 ├── core/
-│   ├── models.py          # Pydantic data models
-│   └── knowledge_base.py  # KB CRUD operations (in progress)
+│   ├── models.py          # Pydantic data models ✅
+│   └── knowledge_base.py  # KB CRUD operations ✅
 ├── utils/
-│   ├── yaml_utils.py      # Safe YAML I/O
-│   └── file_utils.py      # Secure file operations
+│   ├── yaml_utils.py      # Safe YAML I/O ✅
+│   └── file_utils.py      # Secure file operations ✅
 └── cli/
-    └── main.py            # CLI commands (in progress)
+    └── main.py            # CLI commands 🔄
 ```
 
 **Storage**: `.clauxton/knowledge-base.yml` (YAML format)
@@ -178,6 +215,7 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 - [Architecture Overview](docs/architecture.md) - System design and data flow
 - [Development Guide](docs/development.md) - Setup and contribution guide
 - [Technical Design](docs/technical-design.md) - Implementation details
+- [YAML Format Reference](docs/yaml-format.md) - Complete Knowledge Base YAML specification
 - [Roadmap](docs/roadmap.md) - 16-week development plan
 - [Contributing](CONTRIBUTING.md) - Contribution guidelines
 
@@ -204,7 +242,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 | Phase | Status | Completion | Target Date |
 |-------|--------|------------|-------------|
-| **Phase 0: Foundation** | 🔄 In Progress | 60% | Week 2 (2025-11-02) |
+| **Phase 0: Foundation** | 🔄 In Progress | 75% | Week 2 (2025-11-02) |
 | Phase 1: Core Engine | 📋 Planned | 0% | Week 3-8 |
 | Phase 2: Conflict Prevention | 📋 Planned | 0% | Week 9-12 |
 | Beta Testing | 📋 Planned | 0% | Week 13-14 |
@@ -213,10 +251,10 @@ MIT License - see [LICENSE](LICENSE) for details.
 **Phase 0 Progress**:
 - ✅ Pydantic data models (100%)
 - ✅ YAML utilities (100%)
-- 🔄 Knowledge Base core (0%)
-- ⏳ CLI implementation (0%)
+- ✅ Knowledge Base core (100%)
+- 🔄 CLI implementation (60% - add/get/list complete, update/delete pending)
 - ⏳ Basic MCP Server (0%)
-- ⏳ Tests & Documentation (0%)
+- 🔄 Tests & Documentation (80% - core tests complete, CLI tests pending)
 
 See [docs/roadmap.md](docs/roadmap.md) for detailed timeline.
 
