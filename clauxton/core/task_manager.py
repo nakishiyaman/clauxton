@@ -434,3 +434,77 @@ class TaskManager:
         """Ensure tasks.yml file exists with proper structure."""
         if not self.tasks_file.exists():
             self._save_tasks([])
+
+    def infer_dependencies(self, task_id: str) -> List[str]:
+        """
+        Infer task dependencies based on file overlap.
+
+        Finds all tasks that edit the same files as the given task
+        and have been created earlier (potential dependencies).
+
+        Args:
+            task_id: Task ID to infer dependencies for
+
+        Returns:
+            List of task IDs that this task likely depends on
+
+        Raises:
+            NotFoundError: If task does not exist
+        """
+        task = self.get(task_id)
+        task_files = set(task.files_to_edit)
+
+        if not task_files:
+            return []
+
+        tasks = self._load_tasks()
+        dependencies: List[str] = []
+
+        for other_task in tasks:
+            # Skip self
+            if other_task.id == task_id:
+                continue
+
+            # Only consider earlier tasks as dependencies
+            if other_task.created_at >= task.created_at:
+                continue
+
+            # Check for file overlap
+            other_files = set(other_task.files_to_edit)
+            if task_files & other_files:  # Intersection
+                dependencies.append(other_task.id)
+
+        return dependencies
+
+    def apply_inferred_dependencies(
+        self,
+        task_id: str,
+        auto_inferred: Optional[List[str]] = None,
+    ) -> Task:
+        """
+        Apply inferred dependencies to a task.
+
+        Args:
+            task_id: Task ID to update
+            auto_inferred: Optional list of inferred dependencies
+                (if None, will infer automatically)
+
+        Returns:
+            Updated Task object
+
+        Raises:
+            NotFoundError: If task does not exist
+            CycleDetectedError: If applying dependencies would create a cycle
+        """
+        if auto_inferred is None:
+            auto_inferred = self.infer_dependencies(task_id)
+
+        if not auto_inferred:
+            return self.get(task_id)
+
+        # Merge with existing dependencies (avoid duplicates)
+        task = self.get(task_id)
+        combined_deps = list(set(task.depends_on + auto_inferred))
+
+        # Update with combined dependencies
+        return self.update(task_id, {"depends_on": combined_deps})

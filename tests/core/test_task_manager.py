@@ -513,6 +513,209 @@ def test_get_next_task_no_tasks_available(task_manager: TaskManager) -> None:
 
 
 # ============================================================================
+# Dependency Inference Tests
+# ============================================================================
+
+
+def test_infer_dependencies_with_file_overlap(task_manager: TaskManager) -> None:
+    """Test inferring dependencies based on file overlap."""
+    # Add three tasks with overlapping files
+    task1 = Task(
+        id="TASK-001",
+        name="Task 1",
+        files_to_edit=["src/main.py", "src/utils.py"],
+        status="pending",
+        priority="high",
+        created_at=datetime.now(),
+        started_at=None,
+        completed_at=None,
+        actual_hours=None,
+    )
+    task2 = Task(
+        id="TASK-002",
+        name="Task 2",
+        files_to_edit=["src/main.py"],  # Overlaps with TASK-001
+        status="pending",
+        priority="high",
+        created_at=datetime.now(),
+        started_at=None,
+        completed_at=None,
+        actual_hours=None,
+    )
+    task3 = Task(
+        id="TASK-003",
+        name="Task 3",
+        files_to_edit=["src/other.py"],  # No overlap
+        status="pending",
+        priority="high",
+        created_at=datetime.now(),
+        started_at=None,
+        completed_at=None,
+        actual_hours=None,
+    )
+
+    task_manager.add(task1)
+    task_manager.add(task2)
+    task_manager.add(task3)
+
+    # TASK-002 should infer dependency on TASK-001 (file overlap)
+    inferred = task_manager.infer_dependencies("TASK-002")
+    assert "TASK-001" in inferred
+
+    # TASK-003 should not infer any dependencies (no overlap)
+    inferred3 = task_manager.infer_dependencies("TASK-003")
+    assert len(inferred3) == 0
+
+
+def test_infer_dependencies_no_files(task_manager: TaskManager) -> None:
+    """Test that tasks with no files have no inferred dependencies."""
+    task = Task(
+        id="TASK-001",
+        name="Task without files",
+        files_to_edit=[],
+        status="pending",
+        priority="high",
+        created_at=datetime.now(),
+        started_at=None,
+        completed_at=None,
+        actual_hours=None,
+    )
+    task_manager.add(task)
+
+    inferred = task_manager.infer_dependencies("TASK-001")
+    assert len(inferred) == 0
+
+
+def test_infer_dependencies_only_earlier_tasks(task_manager: TaskManager) -> None:
+    """Test that only earlier tasks are considered as dependencies."""
+    import time
+
+    # Add task 1
+    task1 = Task(
+        id="TASK-001",
+        name="Task 1",
+        files_to_edit=["src/main.py"],
+        status="pending",
+        priority="high",
+        created_at=datetime.now(),
+        started_at=None,
+        completed_at=None,
+        actual_hours=None,
+    )
+    task_manager.add(task1)
+
+    # Wait a bit to ensure different timestamps
+    time.sleep(0.01)
+
+    # Add task 2 (later)
+    task2 = Task(
+        id="TASK-002",
+        name="Task 2",
+        files_to_edit=["src/main.py"],
+        status="pending",
+        priority="high",
+        created_at=datetime.now(),
+        started_at=None,
+        completed_at=None,
+        actual_hours=None,
+    )
+    task_manager.add(task2)
+
+    # TASK-002 should infer dependency on TASK-001
+    inferred = task_manager.infer_dependencies("TASK-002")
+    assert "TASK-001" in inferred
+
+    # TASK-001 should NOT infer dependency on TASK-002 (later task)
+    inferred1 = task_manager.infer_dependencies("TASK-001")
+    assert "TASK-002" not in inferred1
+
+
+def test_apply_inferred_dependencies(task_manager: TaskManager) -> None:
+    """Test applying inferred dependencies to a task."""
+    task1 = Task(
+        id="TASK-001",
+        name="Task 1",
+        files_to_edit=["src/main.py"],
+        status="pending",
+        priority="high",
+        created_at=datetime.now(),
+        started_at=None,
+        completed_at=None,
+        actual_hours=None,
+    )
+    task2 = Task(
+        id="TASK-002",
+        name="Task 2",
+        files_to_edit=["src/main.py"],
+        status="pending",
+        priority="high",
+        created_at=datetime.now(),
+        started_at=None,
+        completed_at=None,
+        actual_hours=None,
+    )
+
+    task_manager.add(task1)
+    task_manager.add(task2)
+
+    # Apply inferred dependencies to TASK-002
+    updated = task_manager.apply_inferred_dependencies("TASK-002")
+
+    assert "TASK-001" in updated.depends_on
+
+
+def test_apply_inferred_dependencies_merge_with_existing(
+    task_manager: TaskManager,
+) -> None:
+    """Test that inferred dependencies merge with existing ones."""
+    task1 = Task(
+        id="TASK-001",
+        name="Task 1",
+        files_to_edit=["src/main.py"],
+        status="pending",
+        priority="high",
+        created_at=datetime.now(),
+        started_at=None,
+        completed_at=None,
+        actual_hours=None,
+    )
+    task2 = Task(
+        id="TASK-002",
+        name="Task 2",
+        files_to_edit=["src/utils.py"],
+        status="pending",
+        priority="high",
+        created_at=datetime.now(),
+        started_at=None,
+        completed_at=None,
+        actual_hours=None,
+    )
+    task3 = Task(
+        id="TASK-003",
+        name="Task 3",
+        files_to_edit=["src/main.py", "src/utils.py"],
+        depends_on=["TASK-001"],  # Manually added dependency
+        status="pending",
+        priority="high",
+        created_at=datetime.now(),
+        started_at=None,
+        completed_at=None,
+        actual_hours=None,
+    )
+
+    task_manager.add(task1)
+    task_manager.add(task2)
+    task_manager.add(task3)
+
+    # Apply inferred dependencies to TASK-003
+    updated = task_manager.apply_inferred_dependencies("TASK-003")
+
+    # Should have both manual and inferred dependencies
+    assert "TASK-001" in updated.depends_on  # Manual
+    assert "TASK-002" in updated.depends_on  # Inferred (file overlap)
+
+
+# ============================================================================
 # YAML Persistence Tests
 # ============================================================================
 
