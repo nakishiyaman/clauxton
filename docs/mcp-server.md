@@ -1,21 +1,29 @@
 # MCP Server Guide
 
-**Model Context Protocol (MCP) Server for Clauxton Knowledge Base**
+**Model Context Protocol (MCP) Server for Clauxton**
 
-This guide explains how to use the Clauxton MCP Server to integrate Knowledge Base with Claude Code.
+This guide explains how to use the Clauxton MCP Server to integrate Knowledge Base and Task Management with Claude Code.
 
 ---
 
 ## Overview
 
-The Clauxton MCP Server provides tools for Claude Code to interact with your Knowledge Base through the Model Context Protocol. This allows Claude to:
+The Clauxton MCP Server provides comprehensive tools for Claude Code through the Model Context Protocol. This allows Claude to:
 
+**Knowledge Base**:
 - Search your Knowledge Base for relevant context
 - Add new entries during conversations
 - List and retrieve existing entries
 - Filter by category and tags
 
-**Status**: ✅ Available (Phase 1, Week 3)
+**Task Management** (✅ Week 5):
+- Create and manage tasks with dependencies
+- Track task status and priority
+- Get AI-recommended next task to work on
+- Auto-infer dependencies from file overlap
+- Update and delete tasks
+
+**Status**: ✅ Available (Phase 1, Week 3-5)
 
 ---
 
@@ -41,7 +49,7 @@ Add the Clauxton MCP Server to your Claude Code configuration:
 ```json
 {
   "mcpServers": {
-    "clauxton-kb": {
+    "clauxton": {
       "command": "python",
       "args": [
         "-m",
@@ -359,11 +367,171 @@ Send a test request (JSON-RPC format):
 
 ---
 
+## Task Management Tools (✅ Week 5)
+
+The MCP Server provides 6 tools for complete task management:
+
+### `task_add`
+
+Create a new task with dependencies, files, and Knowledge Base references.
+
+**Parameters**:
+- `name` (string, required): Task name
+- `description` (string, optional): Detailed description
+- `priority` (string, optional): low | medium | high | critical (default: medium)
+- `depends_on` (array, optional): List of task IDs this depends on
+- `files` (array, optional): List of files this task will modify
+- `kb_refs` (array, optional): Related Knowledge Base entry IDs
+- `estimate` (float, optional): Estimated hours to complete
+
+**Returns**: Task ID and success message
+
+**Example**:
+```json
+{
+  "name": "task_add",
+  "arguments": {
+    "name": "Add user authentication",
+    "description": "Implement JWT-based authentication",
+    "priority": "high",
+    "depends_on": ["TASK-001"],
+    "files": ["src/auth.py", "tests/test_auth.py"],
+    "kb_refs": ["KB-20251019-005"],
+    "estimate": 4.5
+  }
+}
+```
+
+### `task_list`
+
+List all tasks with optional filters.
+
+**Parameters**:
+- `status` (string, optional): pending | in_progress | completed | blocked
+- `priority` (string, optional): low | medium | high | critical
+
+**Returns**: List of tasks with details
+
+**Example**:
+```json
+{
+  "name": "task_list",
+  "arguments": {
+    "status": "pending",
+    "priority": "high"
+  }
+}
+```
+
+### `task_get`
+
+Get detailed information about a specific task.
+
+**Parameters**:
+- `task_id` (string, required): Task ID (e.g., TASK-001)
+
+**Returns**: Complete task details
+
+**Example**:
+```json
+{
+  "name": "task_get",
+  "arguments": {
+    "task_id": "TASK-001"
+  }
+}
+```
+
+### `task_update`
+
+Update task fields (status, priority, name, description).
+
+**Parameters**:
+- `task_id` (string, required): Task ID to update
+- `status` (string, optional): New status
+- `priority` (string, optional): New priority
+- `name` (string, optional): New task name
+- `description` (string, optional): New description
+
+**Note**: Timestamps (`started_at`, `completed_at`) are set automatically when status changes.
+
+**Example**:
+```json
+{
+  "name": "task_update",
+  "arguments": {
+    "task_id": "TASK-001",
+    "status": "in_progress"
+  }
+}
+```
+
+### `task_next`
+
+Get AI-recommended next task to work on.
+
+Returns the highest priority task whose dependencies are completed.
+
+**Parameters**: None
+
+**Returns**: Next task details or null if no tasks available
+
+**Example**:
+```json
+{
+  "name": "task_next",
+  "arguments": {}
+}
+```
+
+### `task_delete`
+
+Delete a task.
+
+**Parameters**:
+- `task_id` (string, required): Task ID to delete
+
+**Returns**: Success message
+
+**Note**: Cannot delete tasks that have dependents. Delete dependent tasks first.
+
+**Example**:
+```json
+{
+  "name": "task_delete",
+  "arguments": {
+    "task_id": "TASK-001"
+  }
+}
+```
+
+---
+
+## Auto-Dependency Inference (✅ Week 5)
+
+Clauxton automatically infers task dependencies based on file overlap:
+
+1. When multiple tasks edit the same files
+2. Earlier tasks (by `created_at`) become dependencies
+3. Inferred dependencies merge with manual dependencies
+4. No duplicates in the final dependency list
+
+**Example**:
+```
+TASK-001: Edit src/main.py, src/utils.py
+TASK-002: Edit src/main.py
+→ TASK-002 automatically depends on TASK-001 (file overlap)
+```
+
+This ensures tasks that modify the same files are executed in the correct order, preventing conflicts.
+
+---
+
 ## Next Steps
 
-- **Phase 1, Week 4**: Add Task Management tools
-- **Phase 1, Week 5**: Add Dependency Analysis tools
 - **Phase 1, Week 7**: Enhanced search with TF-IDF
+- **Phase 1, Week 8**: Integration & Documentation
+- **Phase 2**: Pre-merge conflict detection
 
 See [Phase 1 Plan](phase-1-plan.md) for roadmap.
 
@@ -378,4 +546,4 @@ See [Phase 1 Plan](phase-1-plan.md) for roadmap.
 
 ---
 
-**Status**: ✅ Week 3 Complete - MCP Server with Knowledge Base tools functional
+**Status**: ✅ Week 3-5 Complete - MCP Server with Knowledge Base + Task Management tools functional
