@@ -11,6 +11,7 @@ Thank you for your interest in contributing to Clauxton! This document provides 
 - [Development Setup](#development-setup)
 - [Development Workflow](#development-workflow)
 - [Coding Standards](#coding-standards)
+- [CI/CD Workflow](#cicd-workflow)
 - [Testing](#testing)
 - [Documentation](#documentation)
 - [Submitting Changes](#submitting-changes)
@@ -277,6 +278,118 @@ if not entry.title.strip():
 if not entry.title.strip():
     raise Exception("Invalid title")
 ```
+
+---
+
+## CI/CD Workflow
+
+### Automated Checks
+
+Every push and pull request triggers automated testing via GitHub Actions:
+
+**Jobs Run**:
+- **Test Job** (Python 3.11 & 3.12): Runs all 267 tests with coverage (~42-44s)
+- **Lint Job**: Runs ruff (code formatting) + mypy (type checking) (~18s)
+- **Build Job**: Validates package build with twine (~17s)
+
+**Total CI Time**: ~44 seconds (parallel execution)
+
+All checks must pass before a PR can be merged. View details in the [Actions tab](https://github.com/nakishiyaman/clauxton/actions).
+
+### Running CI Checks Locally
+
+Before pushing, run these checks locally to catch issues early:
+
+```bash
+# 1. Run all tests with coverage
+pytest --cov=clauxton --cov-report=term-missing
+
+# 2. Check code formatting and style
+ruff check clauxton tests
+
+# 3. Run type checking
+mypy clauxton
+
+# 4. Build and validate package
+python -m build
+twine check dist/*
+```
+
+**Quick check script**:
+```bash
+# Run all checks at once
+pytest --cov=clauxton && ruff check clauxton tests && mypy clauxton
+```
+
+### CI Configuration Files
+
+- **Workflow**: `.github/workflows/ci.yml` - GitHub Actions configuration
+- **mypy config**: `mypy.ini` - Type checking rules
+- **ruff config**: `pyproject.toml` (under `[tool.ruff]`)
+
+### CI Failure Troubleshooting
+
+#### Lint Failures
+
+**Error**: `ruff check` failed
+```bash
+# Auto-fix most issues
+ruff check --fix clauxton tests
+
+# Common issues:
+# - Line too long (>100 chars) - Break into multiple lines
+# - Unused imports - Remove them
+# - Import order - Will be auto-fixed
+```
+
+**Error**: `mypy` type checking failed
+```bash
+# Run mypy locally to see errors
+mypy clauxton
+
+# Common issues:
+# - Missing type hints - Add them to functions
+# - Incorrect types - Fix type annotations
+# - Missing return type - Add -> ReturnType
+```
+
+#### Test Failures
+
+**Error**: Tests failed
+```bash
+# Run tests with verbose output
+pytest -v
+
+# Run specific failing test
+pytest tests/path/to/test.py::test_name -v
+
+# Common issues:
+# - Test works locally but fails in CI - Check Python version
+# - Import errors - Check dependencies in pyproject.toml
+# - Path issues - Use Path objects, not strings
+```
+
+#### Build Failures
+
+**Error**: Package build failed
+```bash
+# Check pyproject.toml syntax
+python -m build
+
+# Common issues:
+# - Invalid metadata - Check version, dependencies
+# - Missing files - Check MANIFEST.in or pyproject.toml [tool.setuptools]
+```
+
+### Coverage Requirements
+
+- **Minimum**: 90% overall coverage (current: 94%)
+- **Target**: Maintain or improve current coverage
+- New code should have 95%+ coverage where possible
+
+View coverage reports:
+- **Local**: `pytest --cov=clauxton --cov-report=html` then open `htmlcov/index.html`
+- **CI**: Check Codecov badge in README or visit [Codecov](https://codecov.io/gh/nakishiyaman/clauxton)
 
 ---
 
