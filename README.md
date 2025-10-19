@@ -260,7 +260,9 @@ MIT License - see [LICENSE](LICENSE) for details.
 - ⏳ Basic MCP Server (0% - deferred to Phase 1)
 - ✅ Tests & Documentation (100% - 111 tests, 93% coverage)
 
-See [docs/roadmap.md](docs/roadmap.md) for detailed timeline.
+See [Phase 0 Completion Summary](docs/PHASE_0_COMPLETE.md) for detailed results.
+See [docs/roadmap.md](docs/roadmap.md) for overall timeline.
+See [docs/phase-1-plan.md](docs/phase-1-plan.md) for next steps.
 
 ---
 
