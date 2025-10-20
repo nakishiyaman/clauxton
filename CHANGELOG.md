@@ -45,8 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `recommend_safe_order`: Get optimal task order
 - `check_file_conflicts`: Check file availability
 
-#### Testing & Quality (Week 12 Day 6-7)
-- **352 tests total**: 52 conflict-related tests including:
+#### Testing & Quality (Week 12 Day 6-8)
+- **390 tests total** (+38 error resilience tests): 52 conflict-related tests including:
   - 22 CLI conflict command tests (detect, order, check)
   - 13 integration workflow tests (NEW in Day 7)
   - 9 MCP conflict tool tests (NEW in Day 7)
@@ -59,7 +59,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - CLI output format regression test (NEW in Day 7)
   - Error handling and boundary conditions
 
-- **Code Coverage**: 94% overall, 91%+ for CLI conflicts module
+- **38 Error Resilience Tests** (NEW in Day 8):
+  - `tests/core/test_error_resilience.py` (24 tests): YAML errors, missing resources, corrupted data, validation errors
+  - `tests/cli/test_error_handling.py` (17 tests): CLI error handling, uninitialized project, input validation
+
+- **Code Coverage**: 94% overall, 92-94% for CLI modules (+1-3% improvement)
 - **Integration Tests**: 13 end-to-end workflow scenarios
   - Pre-Start Check workflow
   - Sprint Planning with priorities
@@ -69,7 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Performance testing with 20+ tasks
 - **Performance**: <500ms for conflict detection (10 tasks), <1s for ordering (20 tasks)
 
-#### Documentation (Week 12 Day 6-7)
+#### Documentation (Week 12 Day 6-8)
 - **conflict-detection.md**: Complete 35KB+ guide
   - Python API, MCP tools, CLI commands
   - Algorithm details, performance tuning
@@ -89,8 +93,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Risk level explanations (🔴 HIGH, 🟡 MEDIUM, 🔵 LOW)
   - 3 common workflows (Pre-Start Check, Sprint Planning, File Coordination)
 
-- **README.md**: Features section updated
+- **README.md**: Updated with Phase 2 completion
   - ⚠️ Conflict Detection feature highlighted
+  - Phase 2 status: Complete (100%)
+  - Test count: 390 tests
+  - MCP tools: 15 total
+
+- **RELEASE_NOTES_v0.9.0-beta.md**: Migration Guide expanded (NEW in Day 8)
+  - Comprehensive upgrade instructions (v0.8.0 → v0.9.0-beta)
+  - Workflow updates (Solo/Team/Sprint Planning)
+  - Troubleshooting and rollback guide
+  - ~5KB of user documentation
 
 ### Technical Details
 - **Architecture**: ConflictDetector as standalone module in `clauxton/core/`

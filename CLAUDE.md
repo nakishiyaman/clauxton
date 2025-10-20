@@ -9,7 +9,7 @@ Clauxton is a Claude Code plugin providing **persistent project context** throug
 - **Task Management**: Auto-inferred task dependencies with DAG validation
 - **Conflict Detection**: Pre-merge conflict prediction (Phase 2)
 
-**Status**: v0.8.0 - Production ready (94% test coverage, 267 tests)
+**Status**: v0.9.0-beta - Production ready (94% test coverage, 390 tests)
 
 ## Build/Test Commands
 
@@ -77,9 +77,10 @@ clauxton task update TASK-001 --status in_progress
 clauxton task next                 # Get AI-recommended next task
 clauxton task delete TASK-001
 
-# Conflict Detection commands (Phase 2 - Week 12)
-clauxton conflicts check           # Check for conflicts between tasks
-clauxton conflicts check --task-id TASK-001 TASK-002
+# Conflict Detection commands (Phase 2 - v0.9.0-beta)
+clauxton conflict detect TASK-001           # Check conflicts for a task
+clauxton conflict order TASK-001 TASK-002   # Get safe execution order
+clauxton conflict check src/api/users.py    # Check file availability
 ```
 
 ## High-Level Architecture
@@ -98,7 +99,7 @@ clauxton/
 │   ├── tasks.py                   # Task management commands
 │   └── conflicts.py               # Conflict detection commands
 ├── mcp/                           # MCP Server integration
-│   └── server.py                  # 12 MCP tools (kb_*, task_*)
+│   └── server.py                  # 15 MCP tools (kb_*, task_*, conflict detection)
 └── utils/                         # Utility modules
     ├── yaml_utils.py              # Safe YAML I/O with atomic writes
     └── file_utils.py              # Secure file operations
@@ -133,9 +134,10 @@ Storage: .clauxton/
    - Graceful fallback to keyword search if unavailable
    - Multi-field search (title, content, tags)
 
-5. **MCP Integration**: 12 tools exposed to Claude Code
+5. **MCP Integration**: 15 tools exposed to Claude Code
    - Knowledge Base: kb_search, kb_add, kb_list, kb_get, kb_update, kb_delete
    - Task Management: task_add, task_list, task_get, task_update, task_next, task_delete
+   - Conflict Detection: detect_conflicts, recommend_safe_order, check_file_conflicts
 
 ### Data Flow
 
@@ -256,8 +258,8 @@ tests/
 
 ### GitHub Actions (.github/workflows/ci.yml)
 - Runs on: Python 3.11 & 3.12
-- Jobs: Test (267 tests, ~42s), Lint (ruff + mypy, ~18s), Build (twine check, ~17s)
-- All jobs run in parallel (~44s total)
+- Jobs: Test (390 tests, ~50s), Lint (ruff + mypy, ~18s), Build (twine check, ~17s)
+- All jobs run in parallel (~52s total)
 
 ## Important Patterns
 
@@ -373,11 +375,12 @@ cp .clauxton/backups/knowledge-base.yml.bak .clauxton/knowledge-base.yml
 - Auto-dependency inference
 - MCP Server (12 tools)
 
-### Phase 2: Conflict Detection (In Progress - Week 12)
+### Phase 2: Conflict Detection (Complete - v0.9.0-beta)
 - File overlap detection
-- Risk scoring (0.0-1.0)
+- Risk scoring (LOW/MEDIUM/HIGH)
 - Safe execution order recommendations
-- CLI commands: `clauxton conflicts check`
+- 3 CLI commands: `clauxton conflict detect/order/check`
+- 3 MCP tools (15 tools total)
 
 ## Links
 

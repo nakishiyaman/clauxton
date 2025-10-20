@@ -122,7 +122,7 @@ pip install -e .
 - ✅ `check_file_conflicts` - Check if files are being edited
 
 #### 📊 Quality Metrics
-- ✅ **352 Tests** - Comprehensive test coverage including 52 conflict tests
+- ✅ **390 Tests** - Comprehensive test coverage including 52 conflict tests + 38 error resilience tests
 - ✅ **94% Coverage** - High code quality maintained
 - ✅ **13 Integration Tests** - End-to-end workflow validation
 - ✅ **Type Safe** - Full Pydantic validation
@@ -164,7 +164,8 @@ pip install clauxton==0.8.0
 **What's Included**:
 - ✅ Knowledge Base management (CRUD + TF-IDF search)
 - ✅ Task Management system with auto-dependencies
-- ✅ MCP Server (12 tools for Claude Code)
+- ✅ Conflict Detection (pre-merge conflict prediction)
+- ✅ MCP Server (15 tools for Claude Code)
 - ✅ All dependencies (scikit-learn, numpy, pydantic, click, pyyaml, mcp)
 
 ### Development Installation
@@ -304,12 +305,20 @@ The Clauxton MCP Server provides full Knowledge Base and Task Management for Cla
 
 See [MCP Server Guide](docs/mcp-server.md) for complete documentation.
 
-### Coming in Phase 2
+### Conflict Detection Commands (Phase 2 ✅)
 
 ```bash
-# Conflict detection
-/conflicts-check
+# Check conflicts before starting a task
+clauxton conflict detect TASK-001
+
+# Get safe execution order for multiple tasks
+clauxton conflict order TASK-001 TASK-002 TASK-003
+
+# Check if specific files are being edited
+clauxton conflict check src/api/users.py src/models/user.py
 ```
+
+See [Conflict Detection Guide](docs/conflict-detection.md) for complete documentation.
 
 ### Knowledge Base YAML Structure
 
@@ -424,12 +433,13 @@ MIT License - see [LICENSE](LICENSE) for details.
 | Phase | Status | Completion | Release |
 |-------|--------|------------|---------|
 | **Phase 0: Foundation** | ✅ Complete | 100% | v0.1.0 |
-| **Phase 1: Core Engine** | ✅ Complete | 100% | **v0.9.0-beta** |
-| Phase 2: Conflict Prevention | 📋 Planned | 0% | v0.9.0 (target) |
-| Beta Testing | 📋 Planned | 0% | - |
+| **Phase 1: Core Engine** | ✅ Complete | 100% | v0.8.0 |
+| **Phase 2: Conflict Detection** | ✅ Complete | 100% | **v0.9.0-beta** |
+| Phase 3: Advanced Features | 📋 Planned | 0% | v0.10.0 (target) |
+| Beta Testing | 🔄 In Progress | 0% | - |
 | v1.0 Public Launch | 📋 Planned | 0% | v1.0.0 (target) |
 
-**Phase 1 Complete** (v0.9.0-beta - Released 2025-10-19) ✅:
+**Phase 1 Complete** (v0.8.0 - Released 2025-10-19) ✅:
 - ✅ Knowledge Base CRUD (6 MCP tools + CLI)
 - ✅ TF-IDF Relevance Search (scikit-learn powered)
 - ✅ Task Management (6 MCP tools + CLI)
@@ -437,13 +447,16 @@ MIT License - see [LICENSE](LICENSE) for details.
 - ✅ DAG Validation (cycle detection)
 - ✅ Full Documentation (20 guides)
 - ✅ **267 tests, 94% coverage**
-- ✅ **Production ready, stable release**
 
-**What's New in v0.9.0-beta**:
-- 🆕 TF-IDF relevance-based search
-- 🆕 Comprehensive documentation (search-algorithm.md, troubleshooting.md)
-- 🆕 Performance validated (200+ KB entries)
-- 🆕 PyPI distribution (pip install clauxton)
+**Phase 2 Complete** (v0.9.0-beta - Released 2025-10-20) ✅:
+- 🆕 Conflict Detection (file-based conflict prediction)
+- 🆕 Risk Scoring (LOW/MEDIUM/HIGH)
+- 🆕 Safe Execution Order (topological sort + conflict-aware)
+- 🆕 3 CLI Commands (detect, order, check)
+- 🆕 3 MCP Tools (15 tools total)
+- 🆕 **390 tests (+123), 94% coverage maintained**
+- 🆕 Comprehensive migration guide
+- 🆕 **Production ready, beta release**
 
 See [docs/PHASE_1_COMPLETE.md](docs/PHASE_1_COMPLETE.md) for full Phase 1 summary.
 See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
