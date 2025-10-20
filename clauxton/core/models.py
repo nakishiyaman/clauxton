@@ -18,31 +18,87 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class ClauxtonError(Exception):
-    """Base exception for all Clauxton errors."""
+    """
+    Base exception for all Clauxton errors.
+
+    All Clauxton exceptions inherit from this class for easy catching.
+    """
 
     pass
 
 
 class ValidationError(ClauxtonError):
-    """Raised when data validation fails."""
+    """
+    Raised when data validation fails.
+
+    This includes:
+    - Invalid KB entry or task data
+    - Malformed YAML files
+    - Schema validation failures
+    - Field constraint violations
+
+    Example:
+        >>> raise ValidationError(
+        ...     "Task name cannot be empty.\\n\\n"
+        ...     "Suggestion: Provide a descriptive task name.\\n"
+        ...     "  Example: --name 'Setup database schema'"
+        ... )
+    """
 
     pass
 
 
 class NotFoundError(ClauxtonError):
-    """Raised when an entity (KB entry, task, etc.) is not found."""
+    """
+    Raised when an entity (KB entry, task, etc.) is not found.
+
+    Best Practice: Include suggestion with available IDs or how to list them.
+
+    Example:
+        >>> available_ids = ["TASK-001", "TASK-002"]
+        >>> raise NotFoundError(
+        ...     "Task with ID 'TASK-999' not found.\\n\\n"
+        ...     "Suggestion: Check if the task ID is correct.\\n"
+        ...     f"  Available task IDs: {', '.join(available_ids)}\\n"
+        ...     "  List all tasks: clauxton task list"
+        ... )
+    """
 
     pass
 
 
 class DuplicateError(ClauxtonError):
-    """Raised when attempting to create a duplicate entity."""
+    """
+    Raised when attempting to create a duplicate entity.
+
+    Best Practice: Include suggestion to update existing entity or use different ID.
+
+    Example:
+        >>> raise DuplicateError(
+        ...     "Task with ID 'TASK-001' already exists.\\n\\n"
+        ...     "Suggestion: Use a different task ID or update existing task.\\n"
+        ...     "  Update existing: clauxton task update TASK-001 --name 'New name'\\n"
+        ...     "  View existing: clauxton task get TASK-001"
+        ... )
+    """
 
     pass
 
 
 class CycleDetectedError(ClauxtonError):
-    """Raised when a circular dependency is detected in task graph."""
+    """
+    Raised when a circular dependency is detected in task graph.
+
+    Best Practice: Include the cycle path and suggestion to break it.
+
+    Example:
+        >>> raise CycleDetectedError(
+        ...     "Circular dependency detected: TASK-001 → TASK-002 → TASK-001\\n\\n"
+        ...     "Suggestion: Remove one of the dependencies to break the cycle.\\n"
+        ...     "  - Remove dependency: clauxton task update TASK-002 --remove-dep TASK-001\\n"
+        ...     "  - View dependencies: clauxton task get TASK-001"
+        ... )
+    """
 
     pass
 

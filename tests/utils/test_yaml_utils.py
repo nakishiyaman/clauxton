@@ -253,6 +253,100 @@ def test_write_yaml_preserves_order(tmp_path: Path) -> None:
     assert lines[3].startswith("fourth:")
 
 
+def test_write_yaml_creates_timestamped_backup(tmp_path: Path) -> None:
+    """Test that write_yaml creates timestamped backup via BackupManager."""
+    yaml_file = tmp_path / "test.yml"
+    backup_dir = tmp_path / "backups"
+
+    # Write initial data
+    data1 = {"version": "1.0", "count": 1}
+    write_yaml(yaml_file, data1, backup=False)
+
+    # Write again with backup enabled (default)
+    data2 = {"version": "1.0", "count": 2}
+    write_yaml(yaml_file, data2, backup=True)
+
+    # Verify timestamped backup exists
+    assert backup_dir.exists()
+    backups = list(backup_dir.glob("test_*.yml"))
+    assert len(backups) == 1
+    assert backups[0].name.startswith("test_")
+
+    # Verify backup contains old data
+    from clauxton.utils.yaml_utils import read_yaml
+    backup_data = read_yaml(backups[0])
+    assert backup_data["count"] == 1
+
+    # Verify current file has new data
+    current_data = read_yaml(yaml_file)
+    assert current_data["count"] == 2
+
+
+def test_write_yaml_generation_limit(tmp_path: Path) -> None:
+    """Test that write_yaml respects max_generations parameter."""
+    yaml_file = tmp_path / "test.yml"
+    backup_dir = tmp_path / "backups"
+
+    # Write initial data
+    data = {"version": "1.0", "count": 0}
+    write_yaml(yaml_file, data, backup=False)
+
+    # Write 12 times with max_generations=5
+    for i in range(1, 13):
+        data = {"version": "1.0", "count": i}
+        write_yaml(yaml_file, data, backup=True, max_generations=5)
+
+    # Verify only 5 backups exist
+    backups = list(backup_dir.glob("test_*.yml"))
+    assert len(backups) == 5
+
+    # Verify backups contain most recent data (7-11, since 12 is current)
+    from clauxton.utils.yaml_utils import read_yaml
+    backup_counts = sorted([read_yaml(b)["count"] for b in backups])
+    assert backup_counts == [7, 8, 9, 10, 11]
+
+
+def test_write_yaml_legacy_bak_compatibility(tmp_path: Path) -> None:
+    """Test that write_yaml still creates legacy .bak file."""
+    yaml_file = tmp_path / "test.yml"
+    bak_file = tmp_path / "test.yml.bak"
+
+    # Write initial data
+    data1 = {"version": "1.0", "data": "original"}
+    write_yaml(yaml_file, data1, backup=False)
+
+    # Write again with backup
+    data2 = {"version": "1.0", "data": "updated"}
+    write_yaml(yaml_file, data2, backup=True)
+
+    # Verify legacy .bak exists
+    assert bak_file.exists()
+
+    # Verify .bak contains old data
+    from clauxton.utils.yaml_utils import read_yaml
+    bak_data = read_yaml(bak_file)
+    assert bak_data["data"] == "original"
+
+
+def test_write_yaml_performance(tmp_path: Path) -> None:
+    """Test that backup creation is fast (< 100ms requirement)."""
+    import time
+
+    yaml_file = tmp_path / "test.yml"
+
+    # Write initial data
+    data = {"version": "1.0", "entries": [f"entry_{i}" for i in range(100)]}
+    write_yaml(yaml_file, data, backup=False)
+
+    # Measure backup creation time
+    start = time.time()
+    write_yaml(yaml_file, data, backup=True)
+    elapsed = (time.time() - start) * 1000  # Convert to ms
+
+    # Should be under 100ms
+    assert elapsed < 100, f"Backup took {elapsed:.2f}ms (expected < 100ms)"
+
+
 def test_read_yaml_large_file(tmp_path: Path) -> None:
     """Test reading a large YAML file with many entries."""
     yaml_file = tmp_path / "large.yml"

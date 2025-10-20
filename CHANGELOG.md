@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### v0.10.0 - Transparent Integration (In Development)
 **Target Release**: 2025-11-10
-**Status**: Week 2 Day 7 Complete (Logging Functionality)
+**Status**: Week 2 Day 10 Complete (Backup Enhancement + Error Messages)
 
 #### Completed Features
 
@@ -88,8 +88,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Performance improvement**: 100 tasks in 0.2s (25x faster than 5s)
   - `import_yaml()` uses batch operation automatically
   - Backward compatible: All existing tests pass (607 total)
-- Backup Enhancement: Multiple generations (keep 10 backups)
-- Error Message Improvement: Detailed, actionable error messages
+- ✅ **Backup Enhancement** (Week 2 Day 10): Timestamped backups with generation management
+  - 22 tests (18 BackupManager + 4 yaml_utils integration)
+  - **`BackupManager` class**: Centralized backup management
+  - **Timestamped backups**: `filename_YYYYMMDD_HHMMSS_microseconds.yml`
+  - **Generation limit**: Keep latest 10 backups per file (configurable via `max_generations`)
+  - **Automatic cleanup**: Old backups deleted when limit exceeded
+  - **Backup directory**: `.clauxton/backups/` (auto-created with 700 permissions)
+  - **Legacy compatibility**: `.bak` files still created for backward compatibility
+  - **Helper methods**: `get_latest_backup()`, `count_backups()`, `list_backups()`, `restore_backup()`
+  - **Performance**: Backup creation < 100ms (tested with 100-entry files)
+  - **File permissions**: Backups stored with 600 (owner read/write only)
+  - Integrated into `yaml_utils.write_yaml()` - all YAML writes create backups automatically
+- ✅ **Error Message Improvement** (Week 2 Day 10): Actionable error messages with suggestions
+  - Enhanced all exception classes with detailed docstrings and examples
+  - `ValidationError`: Include specific field and fix suggestion
+  - `NotFoundError`: List available IDs and how to list them
+  - `DuplicateError`: Suggest update or use different ID
+  - `CycleDetectedError`: Show cycle path and how to break it
+  - All error handlers use new format with context + suggestion + commands
 - **Configurable Confirmation Mode**: Set Human-in-the-Loop level (always/auto/never)
 
 **📚 Documentation**:
@@ -101,8 +118,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance Guide: `docs/performance-guide.md` (NEW)
 
 **🧪 Quality**:
-- +217 tests (390 → 607 tests)
-- 92% coverage achieved (98% for task_manager.py, 100% for task_validator.py, 97% for logger.py, 95% for KB/MCP)
+- +239 tests (390 → 629 tests)
+- 91% coverage maintained (98% for task_manager.py, 100% for task_validator.py, 97% for logger.py, 95% for KB/MCP, 89% for backup_manager.py)
 - Integration scenarios: Happy path, error recovery, undo flow, confirmation mode
 
 **Expected Impact**:
