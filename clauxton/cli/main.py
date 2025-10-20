@@ -479,5 +479,107 @@ from clauxton.cli.conflicts import conflict  # noqa: E402
 cli.add_command(conflict)
 
 
+# ============================================================================
+# Undo Commands
+# ============================================================================
+
+
+@cli.command()
+@click.option(
+    "--history",
+    "-h",
+    is_flag=True,
+    help="Show operation history instead of undoing",
+)
+@click.option(
+    "--limit",
+    "-l",
+    type=int,
+    default=10,
+    help="Number of operations to show in history (default: 10)",
+)
+def undo(history: bool, limit: int) -> None:
+    """
+    Undo the last operation or show operation history.
+
+    Examples:
+        $ clauxton undo                # Undo last operation
+        $ clauxton undo --history      # Show operation history
+        $ clauxton undo -h -l 20       # Show last 20 operations
+    """
+    from clauxton.core.operation_history import OperationHistory
+
+    root_dir = Path.cwd()
+    op_history = OperationHistory(root_dir)
+
+    try:
+        if history:
+            # Show operation history
+            operations = op_history.list_operations(limit=limit)
+
+            if not operations:
+                click.echo("No operations in history")
+                return
+
+            click.echo(
+                click.style(f"\n📜 Operation History (last {len(operations)}):\n", bold=True)
+            )
+
+            for i, op in enumerate(operations, start=1):
+                click.echo(
+                    f"{i}. [{op.operation_type}] {op.description}\n"
+                    f"   Timestamp: {op.timestamp}"
+                )
+                if i < len(operations):
+                    click.echo()
+
+            click.echo(
+                click.style(
+                    "\nTo undo the last operation, run: clauxton undo",
+                    fg="cyan",
+                )
+            )
+
+        else:
+            # Undo last operation
+            last_op = op_history.get_last_operation()
+
+            if not last_op:
+                click.echo(click.style("No operations to undo", fg="yellow"))
+                return
+
+            # Show what will be undone
+            click.echo(
+                click.style("\n🔄 Undoing last operation:\n", bold=True)
+            )
+            click.echo(f"Operation: {last_op.operation_type}")
+            click.echo(f"Description: {last_op.description}")
+            click.echo(f"Timestamp: {last_op.timestamp}\n")
+
+            # Confirm
+            if not click.confirm("Are you sure you want to undo this operation?"):
+                click.echo("Cancelled")
+                return
+
+            # Perform undo
+            result = op_history.undo_last_operation()
+
+            if result["status"] == "success":
+                click.echo(
+                    click.style(f"\n✓ {result['message']}", fg="green")
+                )
+            else:
+                click.echo(
+                    click.style(f"\n✗ Undo failed: {result['message']}", fg="red")
+                )
+                if result.get("error"):
+                    click.echo(click.style(f"Error: {result['error']}", fg="red"))
+                raise click.Abort()
+
+    except Exception as e:
+        click.echo(click.style(f"Error: {e}", fg="red"))
+        raise click.Abort()
+
+
 if __name__ == "__main__":
     cli()

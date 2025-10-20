@@ -683,6 +683,17 @@ class TaskManager:
                 self._invalidate_cache()
                 task_ids = [t.id for t in tasks_to_create]
 
+                # Record operation for undo
+                from clauxton.core.operation_history import Operation, OperationHistory, OperationType
+
+                history = OperationHistory(self.root_dir)
+                operation = Operation(
+                    operation_type=OperationType.TASK_IMPORT,
+                    operation_data={"task_ids": task_ids},
+                    description=f"Imported {len(task_ids)} tasks from YAML",
+                )
+                history.record(operation)
+
             # Step 6: Get next task
             next_task_id = None
             if task_ids and not dry_run:

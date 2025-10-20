@@ -773,6 +773,93 @@ def check_file_conflicts(files: List[str]) -> dict[str, Any]:
     }
 
 
+@mcp.tool()
+def undo_last_operation() -> dict[str, Any]:
+    """
+    Undo the last operation performed by Clauxton.
+
+    This tool allows users to revert the most recent operation such as:
+    - task_import (deletes imported tasks)
+    - task_add (deletes the task)
+    - task_delete (restores the task)
+    - task_update (restores previous state)
+    - kb_add (deletes the entry)
+    - kb_delete (restores the entry)
+    - kb_update (restores previous state)
+
+    Returns:
+        Dictionary with undo result status and details
+
+    Example:
+        >>> # After importing 10 tasks
+        >>> undo_last_operation()
+        {
+            "status": "success",
+            "operation_type": "task_import",
+            "description": "Imported 10 tasks from YAML",
+            "details": {
+                "deleted_tasks": 10,
+                "task_ids": ["TASK-001", "TASK-002", ...]
+            },
+            "message": "Undone: Imported 10 tasks from YAML (deleted 10 tasks)"
+        }
+    """
+    from clauxton.core.operation_history import OperationHistory
+
+    history = OperationHistory(Path.cwd())
+    result = history.undo_last_operation()
+
+    return result
+
+
+@mcp.tool()
+def get_recent_operations(limit: int = 10) -> dict[str, Any]:
+    """
+    Get recent operations that can be undone.
+
+    This tool shows the operation history, allowing users to see
+    what operations have been performed recently.
+
+    Args:
+        limit: Maximum number of operations to return (default: 10)
+
+    Returns:
+        Dictionary with list of recent operations
+
+    Example:
+        >>> get_recent_operations(limit=5)
+        {
+            "status": "success",
+            "count": 5,
+            "operations": [
+                {
+                    "operation_type": "task_import",
+                    "timestamp": "2025-10-20T15:30:00",
+                    "description": "Imported 10 tasks from YAML"
+                },
+                ...
+            ]
+        }
+    """
+    from clauxton.core.operation_history import OperationHistory
+
+    history = OperationHistory(Path.cwd())
+    operations = history.list_operations(limit=limit)
+
+    return {
+        "status": "success",
+        "count": len(operations),
+        "operations": [
+            {
+                "operation_type": op.operation_type,
+                "timestamp": op.timestamp,
+                "description": op.description,
+            }
+            for op in operations
+        ],
+    }
+
+
 def main() -> None:
     """Run the MCP server."""
     mcp.run()
