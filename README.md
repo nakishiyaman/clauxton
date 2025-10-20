@@ -11,14 +11,14 @@
 [![Test Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen.svg)](https://github.com/nakishiyaman/clauxton)
 [![codecov](https://codecov.io/gh/nakishiyaman/clauxton/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/clauxton)
 
-> ✅ **Production Ready**: Clauxton v0.8.0 is stable and ready for production use. Phase 1 complete with TF-IDF search, task management, and MCP integration.
+> ✅ **Production Ready**: Clauxton v0.9.0-beta is stable and ready for production use. Phase 1 complete with TF-IDF search, task management, and MCP integration.
 
 Clauxton is a Claude Code plugin that provides **persistent project context** to solve AI-assisted development pain points.
 
 **Vision** (Roadmap):
 1. ✅ **Session Context Loss** → Persistent Knowledge Base with TF-IDF Search (Phase 0-1 - **Complete**)
 2. ✅ **Manual Dependency Tracking** → Auto-inferred task dependencies (Phase 1 - **Complete**)
-3. 🔄 **Post-hoc Conflict Detection** → Pre-merge conflict prediction (Phase 2 - Planned)
+3. ✅ **Post-hoc Conflict Detection** → Pre-merge conflict prediction (Phase 2 - **Complete in v0.9.0-beta**)
 
 ---
 
@@ -31,7 +31,7 @@ Clauxton is a Claude Code plugin that provides **persistent project context** to
 pip install clauxton
 
 # Verify installation
-clauxton --version  # Should show: clauxton, version 0.8.0
+clauxton --version  # Should show: clauxton, version 0.9.0-beta
 ```
 
 ### Basic Usage
@@ -65,7 +65,14 @@ pip install -e .
 
 ## ✨ Features
 
-### ✅ Phase 1: Complete (v0.8.0)
+- 🧠 **Persistent Knowledge Base** - Store architecture decisions, patterns, constraints across sessions
+- 📋 **Task Management** - AI-powered task tracking with automatic dependency inference
+- ⚠️ **Conflict Detection** - Predict file conflicts before they occur, get safe execution order (v0.9.0-beta)
+- 🔍 **TF-IDF Search** - Relevance-based search with intelligent ranking (powered by scikit-learn)
+- 🔒 **Privacy First** - Local-only by default, no cloud dependencies
+- 🤖 **MCP Integration** - Seamless integration with Claude Code via Model Context Protocol
+
+### ✅ Phase 1: Complete (v0.9.0-beta)
 
 #### 🔍 TF-IDF Relevance Search
 - ✅ **Intelligent Ranking**: TF-IDF algorithm ranks results by relevance (powered by scikit-learn)
@@ -92,7 +99,7 @@ pip install -e .
 - ✅ **Progress Tracking**: Track status (pending, in_progress, completed, blocked)
 - ✅ **Time Estimates**: Optional hour estimates for planning
 
-#### 🔌 MCP Server Integration (12 Tools)
+#### 🔌 MCP Server Integration (15 Tools)
 **Knowledge Base Tools** (6):
 - ✅ `kb_search` - TF-IDF relevance-ranked search
 - ✅ `kb_add` - Add new knowledge entry
@@ -109,19 +116,33 @@ pip install -e .
 - ✅ `task_next` - Get AI-recommended next task
 - ✅ `task_delete` - Delete task
 
+**Conflict Detection Tools** (3) - NEW in v0.9.0-beta:
+- ✅ `detect_conflicts` - Detect file conflicts for a task
+- ✅ `recommend_safe_order` - Get optimal task execution order
+- ✅ `check_file_conflicts` - Check if files are being edited
+
 #### 📊 Quality Metrics
-- ✅ **267 Tests** - Comprehensive test coverage
-- ✅ **94% Coverage** - High code quality
+- ✅ **352 Tests** - Comprehensive test coverage including 52 conflict tests
+- ✅ **94% Coverage** - High code quality maintained
+- ✅ **13 Integration Tests** - End-to-end workflow validation
 - ✅ **Type Safe** - Full Pydantic validation
-- ✅ **Production Ready** - Stable v0.8.0 release
+- ✅ **Production Ready** - Stable v0.9.0-beta release
 
-### 🔄 Phase 2: Conflict Prevention (Planned)
+### ✅ Phase 2: Conflict Detection (Complete in v0.9.0-beta)
 
-#### Pre-merge Conflict Detection
-- 🔄 **File Overlap Detection**: Detect potential merge conflicts
-- 🔄 **Risk Scoring**: Calculate conflict risk (0.0-1.0)
-- 🔄 **Safe Execution Order**: Recommend optimal task order
-- 🔄 **Drift Detection**: Detect scope expansion
+#### ⚠️ Pre-merge Conflict Detection
+- ✅ **File Overlap Detection**: Detects file conflicts between tasks
+- ✅ **Risk Scoring**: Calculates risk (LOW <40%, MEDIUM 40-70%, HIGH >70%)
+- ✅ **Safe Execution Order**: Recommends optimal task execution order
+- ✅ **File Availability Check**: Check if files are currently being edited
+- ✅ **CLI Commands**: `conflict detect`, `conflict order`, `conflict check`
+- ✅ **MCP Tools**: Full integration for Claude Code
+
+### 🔄 Phase 3: Advanced Conflict Prevention (Planned)
+- 🔄 **Line-Level Conflict Detection**: Detect conflicts at code line level
+- 🔄 **Drift Detection**: Track scope expansion in tasks
+- 🔄 **Event Logging**: Complete audit trail with events.jsonl
+- 🔄 **Lifecycle Hooks**: Pre-commit and post-edit hooks
 
 ---
 
@@ -134,7 +155,7 @@ pip install -e .
 pip install clauxton
 
 # Verify installation
-clauxton --version  # Should show: clauxton, version 0.8.0
+clauxton --version  # Should show: clauxton, version 0.9.0-beta
 
 # Install specific version
 pip install clauxton==0.8.0
@@ -403,12 +424,12 @@ MIT License - see [LICENSE](LICENSE) for details.
 | Phase | Status | Completion | Release |
 |-------|--------|------------|---------|
 | **Phase 0: Foundation** | ✅ Complete | 100% | v0.1.0 |
-| **Phase 1: Core Engine** | ✅ Complete | 100% | **v0.8.0** |
+| **Phase 1: Core Engine** | ✅ Complete | 100% | **v0.9.0-beta** |
 | Phase 2: Conflict Prevention | 📋 Planned | 0% | v0.9.0 (target) |
 | Beta Testing | 📋 Planned | 0% | - |
 | v1.0 Public Launch | 📋 Planned | 0% | v1.0.0 (target) |
 
-**Phase 1 Complete** (v0.8.0 - Released 2025-10-19) ✅:
+**Phase 1 Complete** (v0.9.0-beta - Released 2025-10-19) ✅:
 - ✅ Knowledge Base CRUD (6 MCP tools + CLI)
 - ✅ TF-IDF Relevance Search (scikit-learn powered)
 - ✅ Task Management (6 MCP tools + CLI)
@@ -418,7 +439,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 - ✅ **267 tests, 94% coverage**
 - ✅ **Production ready, stable release**
 
-**What's New in v0.8.0**:
+**What's New in v0.9.0-beta**:
 - 🆕 TF-IDF relevance-based search
 - 🆕 Comprehensive documentation (search-algorithm.md, troubleshooting.md)
 - 🆕 Performance validated (200+ KB entries)

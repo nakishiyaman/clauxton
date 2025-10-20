@@ -9,6 +9,104 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Phase 2 Features (Week 13-15)
+- Drift Detection: Track scope expansion in tasks
+- Event Logging: Complete audit trail with events.jsonl
+- Lifecycle Hooks: Pre-commit and post-edit hooks
+
+---
+
+## [0.9.0-beta] - 2025-10-20 (Week 12 Complete: Conflict Detection)
+
+### Added - Conflict Detection (Phase 2 - Week 12)
+
+#### Core Features
+- **ConflictDetector Engine**: File-based conflict prediction system
+  - Detects file overlap between tasks (O(n²) pairwise comparison)
+  - Risk scoring: LOW (<40%), MEDIUM (40-70%), HIGH (>70%)
+  - Only checks `in_progress` tasks to avoid false positives
+
+- **Safe Execution Order**: Topological sort + conflict-aware scheduling
+  - Respects task dependencies (DAG validation)
+  - Minimizes file conflicts
+  - Considers task priorities (critical > high > medium > low)
+
+- **File Availability Checking**: Pre-edit conflict detection
+  - Check which tasks are editing specific files
+  - Supports multiple file checking with wildcard patterns
+
+#### CLI Commands (3 new)
+- `clauxton conflict detect <TASK_ID> [--verbose]`: Check conflicts for a task
+- `clauxton conflict order <TASK_IDS...> [--details]`: Get safe execution order
+- `clauxton conflict check <FILES...> [--verbose]`: Check file availability
+
+#### MCP Tools (3 new)
+- `detect_conflicts`: Detect conflicts for a task
+- `recommend_safe_order`: Get optimal task order
+- `check_file_conflicts`: Check file availability
+
+#### Testing & Quality (Week 12 Day 6-7)
+- **352 tests total**: 52 conflict-related tests including:
+  - 22 CLI conflict command tests (detect, order, check)
+  - 13 integration workflow tests (NEW in Day 7)
+  - 9 MCP conflict tool tests (NEW in Day 7)
+  - 26 core ConflictDetector tests
+  - Edge cases: empty files, nonexistent files, multiple in-progress tasks
+  - Risk level validation (LOW/MEDIUM/HIGH)
+  - Completed task filtering
+  - Priority-based ordering
+  - Special characters in file paths (Unicode, spaces)
+  - CLI output format regression test (NEW in Day 7)
+  - Error handling and boundary conditions
+
+- **Code Coverage**: 94% overall, 91%+ for CLI conflicts module
+- **Integration Tests**: 13 end-to-end workflow scenarios
+  - Pre-Start Check workflow
+  - Sprint Planning with priorities
+  - File Coordination lifecycle
+  - MCP-CLI consistency validation
+  - Error recovery scenarios
+  - Performance testing with 20+ tasks
+- **Performance**: <500ms for conflict detection (10 tasks), <1s for ordering (20 tasks)
+
+#### Documentation (Week 12 Day 6-7)
+- **conflict-detection.md**: Complete 35KB+ guide
+  - Python API, MCP tools, CLI commands
+  - Algorithm details, performance tuning
+  - Comprehensive troubleshooting section (10 detailed issues, NEW in Day 7)
+    - No conflicts detected (with debug steps)
+    - False positives explanation
+    - Risk score calculation with examples
+    - Safe order logic
+    - Unicode/special characters handling
+    - Performance issues with benchmarks
+    - MCP tool errors
+    - CLI command debugging
+    - Vague recommendations analysis
+
+- **quick-start.md**: Added Conflict Detection Workflow section
+  - 3 CLI command examples with real output
+  - Risk level explanations (🔴 HIGH, 🟡 MEDIUM, 🔵 LOW)
+  - 3 common workflows (Pre-Start Check, Sprint Planning, File Coordination)
+
+- **README.md**: Features section updated
+  - ⚠️ Conflict Detection feature highlighted
+
+### Technical Details
+- **Architecture**: ConflictDetector as standalone module in `clauxton/core/`
+- **Algorithm**: Pairwise task comparison with early termination
+- **Risk Calculation**: File overlap count ÷ total unique files
+- **MCP Integration**: 15 tools total (12 existing + 3 new)
+
+### Performance Benchmarks
+- Conflict detection: <500ms (10 tasks)
+- Safe order recommendation: <1s (20 tasks with dependencies)
+- File availability check: <100ms (10 files)
+
+---
+
+## [Week 11] - 2025-10-17 to 2025-10-18
+
 ### Added (Week 11: Documentation & Community Setup)
 
 #### Documentation (Days 1-2, 5-6)

@@ -19,7 +19,7 @@ Clauxton provides **persistent project context** for Claude Code through a Knowl
 pip install clauxton
 
 # Verify installation
-clauxton --version  # Should show: clauxton, version 0.8.0
+clauxton --version  # Should show: clauxton, version 0.9.0-beta
 ```
 
 ### From Source (Development)
@@ -469,6 +469,177 @@ clauxton task list --priority high
 ```
 
 **Learn more**: [Task Management Guide](task-management-guide.md)
+
+---
+
+### Conflict Detection Workflow
+
+Clauxton predicts file conflicts **before** they occur, helping you avoid merge conflicts and coordination issues.
+
+#### Check Task Conflicts
+
+Before starting work on a task, check if it will conflict with other in-progress tasks:
+
+```bash
+clauxton conflict detect TASK-002
+```
+
+**Output**:
+```
+Conflict Detection Report
+Task: TASK-002 - Add OAuth support
+Files: 2 file(s)
+
+⚠ 1 conflict(s) detected
+
+Conflict 1:
+  Task: TASK-001 - Refactor JWT authentication
+  Risk: MEDIUM (67%)
+  Files: 1 overlapping
+  → Complete TASK-001 before starting TASK-002, or coordinate changes
+```
+
+**Risk Levels**:
+- 🔴 **HIGH** (>70%): Many files overlap, high merge conflict risk
+- 🟡 **MEDIUM** (40-70%): Some file overlap, coordination recommended
+- 🔵 **LOW** (<40%): Minor overlap, safe to proceed with caution
+
+**Verbose mode** for detailed information:
+
+```bash
+clauxton conflict detect TASK-002 --verbose
+```
+
+Shows:
+- Exact overlapping files
+- Line-level analysis (if available)
+- Detailed recommendations
+
+#### Get Safe Execution Order
+
+Planning to work on multiple tasks? Get AI-recommended order to minimize conflicts:
+
+```bash
+clauxton conflict order TASK-001 TASK-002 TASK-003
+```
+
+**Output**:
+```
+Task Execution Order
+Tasks: 3 task(s)
+
+Order respects dependencies and minimizes conflicts
+
+Recommended Order:
+1. TASK-001 - Refactor authentication
+2. TASK-002 - Add OAuth support
+3. TASK-003 - Update user model
+
+💡 Execute tasks in this order to minimize conflicts
+```
+
+**With task details**:
+
+```bash
+clauxton conflict order TASK-001 TASK-002 --details
+```
+
+Shows priority, files to edit, and dependencies for each task.
+
+**How it works**:
+- Uses topological sort for dependencies
+- Analyzes file overlap between tasks
+- Considers task priorities
+- Suggests optimal order to reduce conflicts
+
+#### Check File Availability
+
+Before editing files, check if other tasks are currently working on them:
+
+```bash
+clauxton conflict check src/api/auth.py
+```
+
+**Output when available**:
+```
+File Availability Check
+Files: 1 file(s)
+
+✓ All 1 file(s) available for editing
+```
+
+**Output when locked**:
+```
+File Availability Check
+Files: 1 file(s)
+
+⚠ 1 task(s) editing these files
+
+Conflicting Tasks:
+  TASK-001 - Refactor JWT authentication
+  Status: in_progress
+  Editing: 1 of your file(s)
+
+💡 Coordinate with task owners or wait until tasks complete
+```
+
+**Check multiple files**:
+
+```bash
+clauxton conflict check src/api/auth.py src/models/user.py
+```
+
+**Verbose mode** shows per-file status:
+
+```bash
+clauxton conflict check src/api/*.py --verbose
+```
+
+**Output**:
+```
+File Status:
+  ✗ src/api/auth.py (locked by: TASK-001)
+  ✓ src/api/users.py (available)
+  ✗ src/api/oauth.py (locked by: TASK-002, TASK-003)
+```
+
+#### Common Conflict Detection Workflows
+
+**Workflow 1: Pre-Start Check**
+```bash
+# 1. Check for conflicts before starting
+clauxton conflict detect TASK-002
+
+# 2. If conflicts found, check safe order
+clauxton conflict order TASK-001 TASK-002
+
+# 3. Start tasks in recommended order
+clauxton task update TASK-001 --status in_progress
+```
+
+**Workflow 2: Sprint Planning**
+```bash
+# 1. List all pending tasks
+clauxton task list --status pending
+
+# 2. Get optimal execution order
+clauxton conflict order TASK-001 TASK-002 TASK-003 TASK-004
+
+# 3. Assign tasks based on order
+```
+
+**Workflow 3: File Coordination**
+```bash
+# 1. Check if file is available
+clauxton conflict check src/api/auth.py
+
+# 2. If locked, see who's editing
+clauxton conflict check src/api/auth.py --verbose
+
+# 3. Coordinate with team or wait
+```
+
+**Learn more**: [Conflict Detection Guide](conflict-detection.md)
 
 ---
 

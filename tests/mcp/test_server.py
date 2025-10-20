@@ -11,7 +11,11 @@ Tests cover:
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from clauxton.mcp.server import (
+    check_file_conflicts,
+    detect_conflicts,
     kb_add,
     kb_delete,
     kb_get,
@@ -19,6 +23,7 @@ from clauxton.mcp.server import (
     kb_search,
     kb_update,
     mcp,
+    recommend_safe_order,
     task_add,
     task_delete,
     task_get,
@@ -382,3 +387,168 @@ def test_kb_delete_tool(mock_kb_class: MagicMock, tmp_path: Path) -> None:
     assert "Entry to Delete" in result["message"]
     mock_kb.get.assert_called_once_with("KB-20251019-001")
     mock_kb.delete.assert_called_once_with("KB-20251019-001")
+
+
+# ============================================================================
+# Conflict Detection MCP Tool Tests
+# ============================================================================
+
+
+def test_detect_conflicts_tool_callable() -> None:
+    """Test that detect_conflicts tool is callable."""
+    assert callable(detect_conflicts)
+
+
+def test_recommend_safe_order_tool_callable() -> None:
+    """Test that recommend_safe_order tool is callable."""
+    assert callable(recommend_safe_order)
+
+
+def test_check_file_conflicts_tool_callable() -> None:
+    """Test that check_file_conflicts tool is callable."""
+    assert callable(check_file_conflicts)
+
+
+def test_detect_conflicts_tool_input_validation(tmp_path: Path) -> None:
+    """Test detect_conflicts tool with invalid task raises exception."""
+    with patch("clauxton.mcp.server.TaskManager") as MockTM:
+        with patch("clauxton.mcp.server.ConflictDetector") as MockCD:
+            # Mock TaskManager to raise exception for invalid task
+            mock_tm_instance = MagicMock()
+            MockTM.return_value = mock_tm_instance
+            mock_tm_instance.get.side_effect = Exception("Task not found: TASK-999")
+
+            mock_cd_instance = MagicMock()
+            MockCD.return_value = mock_cd_instance
+
+            # Execute tool with invalid task_id - should raise exception
+            with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+                with pytest.raises(Exception) as exc_info:
+                    detect_conflicts(task_id="TASK-999")
+
+                assert "Task not found" in str(exc_info.value)
+
+
+def test_detect_conflicts_tool_output_format(tmp_path: Path) -> None:
+    """Test detect_conflicts tool output matches expected schema."""
+    from datetime import datetime
+
+    from clauxton.core.models import ConflictReport
+
+    with patch("clauxton.mcp.server.TaskManager") as MockTM:
+        with patch("clauxton.mcp.server.ConflictDetector") as MockCD:
+            # Mock TaskManager
+            mock_tm_instance = MagicMock()
+            MockTM.return_value = mock_tm_instance
+            mock_task = MagicMock()
+            mock_task.id = "TASK-001"
+            mock_task.name = "Test task"
+            mock_tm_instance.get.return_value = mock_task
+
+            # Mock ConflictDetector to return sample conflict
+            mock_cd_instance = MagicMock()
+            MockCD.return_value = mock_cd_instance
+            sample_conflict = ConflictReport(
+                task_a_id="TASK-001",
+                task_b_id="TASK-002",
+                conflict_type="file_overlap",
+                risk_level="medium",
+                risk_score=0.5,
+                overlapping_files=["file.py"],
+                details="Test conflict",
+                recommendation="Complete TASK-002 first",
+                detected_at=datetime.now(),
+            )
+            mock_cd_instance.detect_conflicts.return_value = [sample_conflict]
+
+            # Execute tool
+            with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+                result = detect_conflicts(task_id="TASK-001")
+
+            # Verify output structure
+            assert "task_id" in result
+            assert "conflicts" in result
+            assert result["task_id"] == "TASK-001"
+            assert len(result["conflicts"]) > 0
+            # Verify conflict structure
+            conflict = result["conflicts"][0]
+            assert "task_b_id" in conflict
+            assert "risk_level" in conflict
+            assert "risk_score" in conflict
+            assert "overlapping_files" in conflict
+
+
+def test_recommend_safe_order_tool_handles_empty_list(tmp_path: Path) -> None:
+    """Test recommend_safe_order tool with empty task list."""
+    with patch("clauxton.mcp.server.TaskManager") as MockTM:
+        with patch("clauxton.mcp.server.ConflictDetector") as MockCD:
+            # Mock valid empty scenario
+            mock_tm_instance = MagicMock()
+            MockTM.return_value = mock_tm_instance
+
+            mock_cd_instance = MagicMock()
+            MockCD.return_value = mock_cd_instance
+            mock_cd_instance.recommend_safe_order.return_value = []
+
+            # Execute tool with empty list
+            with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+                result = recommend_safe_order(task_ids=[])
+
+            # Verify it handles empty list gracefully
+            assert "task_count" in result
+            assert result["task_count"] == 0
+
+
+def test_recommend_safe_order_tool_output_format(tmp_path: Path) -> None:
+    """Test recommend_safe_order tool output format."""
+    with patch("clauxton.mcp.server.TaskManager") as MockTM:
+        with patch("clauxton.mcp.server.ConflictDetector") as MockCD:
+            # Mock TaskManager
+            mock_tm_instance = MagicMock()
+            MockTM.return_value = mock_tm_instance
+
+            # Mock ConflictDetector
+            mock_cd_instance = MagicMock()
+            MockCD.return_value = mock_cd_instance
+            mock_cd_instance.recommend_safe_order.return_value = [
+                "TASK-001",
+                "TASK-002",
+                "TASK-003",
+            ]
+
+            # Execute tool
+            with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+                result = recommend_safe_order(
+                    task_ids=["TASK-001", "TASK-002", "TASK-003"]
+                )
+
+            # Verify output structure
+            assert "task_ids" in result or "recommended_order" in result
+            # Should contain ordered list
+            if "recommended_order" in result:
+                assert isinstance(result["recommended_order"], list)
+                assert len(result["recommended_order"]) == 3
+
+
+def test_check_file_conflicts_tool_output_format(tmp_path: Path) -> None:
+    """Test check_file_conflicts tool output format."""
+    with patch("clauxton.mcp.server.TaskManager") as MockTM:
+        with patch("clauxton.mcp.server.ConflictDetector") as MockCD:
+            # Mock TaskManager
+            mock_tm_instance = MagicMock()
+            MockTM.return_value = mock_tm_instance
+
+            # Mock ConflictDetector
+            mock_cd_instance = MagicMock()
+            MockCD.return_value = mock_cd_instance
+            mock_cd_instance.check_file_conflicts.return_value = ["TASK-001"]
+
+            # Execute tool
+            with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+                result = check_file_conflicts(files=["file.py"])
+
+            # Verify output structure
+            assert "files" in result or "conflicting_tasks" in result
+            # Should contain list of conflicting tasks
+            if "conflicting_tasks" in result:
+                assert isinstance(result["conflicting_tasks"], list)

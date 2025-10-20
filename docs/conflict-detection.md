@@ -814,34 +814,398 @@ TASK-002: edits src/api/auth.py, lines 80-120
 
 ## Troubleshooting
 
-### No Conflicts Detected (Expected Conflicts)
+### Common Issues
+
+#### Issue 1: No Conflicts Detected (Expected Conflicts)
 
 **Symptom**: `detect_conflicts()` returns empty list, but you expect conflicts.
 
 **Possible Causes**:
 1. **Both tasks are not in_progress**: Only in_progress tasks are checked
    - **Solution**: Update task status to `in_progress`
+   ```bash
+   clauxton task update TASK-001 --status in_progress
+   ```
+
 2. **Different file paths**: File paths must match exactly
    - **Solution**: Use consistent paths (e.g., `src/api/auth.py` not `./src/api/auth.py`)
+   ```python
+   # BAD: Inconsistent paths
+   task1.files_to_edit = ["./src/api/auth.py"]
+   task2.files_to_edit = ["src/api/auth.py"]  # Won't match!
+
+   # GOOD: Consistent paths
+   task1.files_to_edit = ["src/api/auth.py"]
+   task2.files_to_edit = ["src/api/auth.py"]  # Will match
+   ```
+
 3. **Empty files_to_edit**: Tasks with no files cannot conflict
    - **Solution**: Add files to `Task.files_to_edit` field
+   ```bash
+   clauxton task update TASK-001 --files "src/api/auth.py,src/models/user.py"
+   ```
 
-**Debug**:
+**Debug Steps**:
 ```python
+# Check task status and files
 task = tm.get("TASK-001")
-print(f"Status: {task.status}")
-print(f"Files: {task.files_to_edit}")
+print(f"Status: {task.status}")  # Must be 'in_progress'
+print(f"Files: {task.files_to_edit}")  # Must not be empty
+
+# Check all in_progress tasks
+all_tasks = tm.list_all()
+in_progress = [t for t in all_tasks if t.status == "in_progress"]
+print(f"In-progress tasks: {len(in_progress)}")
+for t in in_progress:
+    print(f"  {t.id}: {t.files_to_edit}")
 ```
 
-### False Positives (Unexpected Conflicts)
+---
+
+#### Issue 2: False Positives (Unexpected Conflicts)
 
 **Symptom**: Conflict detected, but tasks don't actually conflict.
 
 **Possible Causes**:
-1. **File-level detection only**: Tasks may edit different parts of the file
-   - **Mitigation**: Coordinate manually or wait for line-level detection (Phase 3)
-2. **Case-sensitive paths**: `src/Api/auth.py` ≠ `src/api/auth.py`
-   - **Solution**: Use consistent casing
+
+**1. File-level detection only** (Most common)
+- **Explanation**: Current version detects file overlap, not line-level conflicts
+- **Example**: Both tasks edit `auth.py` but different functions
+- **Mitigation**:
+  - Check manually which sections each task edits
+  - Coordinate with team members
+  - Wait for line-level detection (Phase 3, Q1 2026)
+
+**2. Case-sensitive paths**
+```python
+# These won't match on Linux/Mac:
+task1.files_to_edit = ["src/Api/auth.py"]  # Capital A
+task2.files_to_edit = ["src/api/auth.py"]  # Lowercase a
+
+# Solution: Use consistent casing
+```
+
+**3. Symlinks and relative paths**
+```python
+# These may not match:
+task1.files_to_edit = ["src/api/auth.py"]
+task2.files_to_edit = ["src/api/../api/auth.py"]  # Same file, different path
+
+# Solution: Normalize paths
+from pathlib import Path
+normalized = str(Path("src/api/../api/auth.py").resolve())
+```
+
+**Workaround for False Positives**:
+```bash
+# If you're confident tasks won't conflict, proceed anyway
+clauxton conflict detect TASK-002
+# Review output, then decide to ignore warning
+clauxton task update TASK-002 --status in_progress
+```
+
+---
+
+#### Issue 3: Risk Score Seems Incorrect
+
+**Symptom**: Risk score doesn't match your expectation.
+
+**How Risk Scores Work**:
+```python
+# Risk calculation (simplified):
+overlap_count = len(set(task1.files) & set(task2.files))
+total_files = len(set(task1.files) | set(task2.files))
+risk_score = overlap_count / total_files
+
+# Risk levels:
+# HIGH:   risk_score > 0.7  (>70% file overlap)
+# MEDIUM: 0.4 <= risk_score <= 0.7  (40-70% overlap)
+# LOW:    risk_score < 0.4  (<40% overlap)
+```
+
+**Examples**:
+```python
+# HIGH risk (100% overlap):
+task1.files = ["auth.py"]
+task2.files = ["auth.py"]
+# overlap=1, total=1, score=1.0 → HIGH
+
+# MEDIUM risk (67% overlap):
+task1.files = ["auth.py", "user.py"]
+task2.files = ["auth.py", "config.py"]
+# overlap=1, total=3, score=0.33 → Wait, this is LOW!
+# Actually: overlap=1 (auth.py), unique=3 (auth, user, config)
+# score = 1/3 = 0.33 → LOW
+
+# Correct MEDIUM example:
+task1.files = ["auth.py", "user.py"]
+task2.files = ["auth.py", "admin.py"]
+# overlap=1, total=3, score=0.33 → LOW
+# For MEDIUM, need 2+ overlaps
+
+task1.files = ["auth.py", "user.py", "session.py"]
+task2.files = ["auth.py", "user.py", "config.py"]
+# overlap=2, total=4, score=0.5 → MEDIUM ✓
+```
+
+**If Risk Seems Too High**:
+- Check if tasks really need to edit that many of the same files
+- Consider splitting task into smaller tasks
+
+**If Risk Seems Too Low**:
+- Remember: Risk is based on file count, not importance
+- A single critical file conflict might be more important than 10 minor files
+
+---
+
+#### Issue 4: Safe Order Doesn't Match Expectations
+
+**Symptom**: `recommend_safe_order()` returns unexpected order.
+
+**How Ordering Works** (Priority order):
+1. **Dependencies first**: Tasks with no unmet dependencies
+2. **Priority next**: Critical > High > Medium > Low
+3. **Conflicts last**: Minimize file overlap
+
+**Example**:
+```python
+# TASK-001: priority=low, no deps
+# TASK-002: priority=high, no deps
+# TASK-003: priority=critical, depends on TASK-001
+
+# Expected order: TASK-001, TASK-003, TASK-002
+# Why? TASK-003 depends on TASK-001, so TASK-001 must come first
+# Then TASK-003 (critical) before TASK-002 (high)
+```
+
+**Debug Ordering**:
+```python
+for task_id in task_ids:
+    task = tm.get(task_id)
+    print(f"{task_id}:")
+    print(f"  Priority: {task.priority}")
+    print(f"  Depends on: {task.depends_on}")
+    print(f"  Files: {task.files_to_edit}")
+```
+
+---
+
+#### Issue 5: File Check Shows Locked but Task is Completed
+
+**Symptom**: `check_file_conflicts()` reports file locked by completed task.
+
+**Cause**: Task status not properly updated or cached.
+
+**Solutions**:
+
+1. **Verify task status**:
+```bash
+clauxton task get TASK-001
+# Check if status is really 'completed'
+```
+
+2. **Update task status if needed**:
+```bash
+clauxton task update TASK-001 --status completed
+```
+
+3. **Check for multiple tasks with same ID** (rare):
+```bash
+clauxton task list | grep TASK-001
+```
+
+4. **Reload from disk** (if using API directly):
+```python
+tm = TaskManager(Path.cwd())  # Fresh instance
+conflicts = detector.check_file_conflicts(["file.py"])
+```
+
+---
+
+#### Issue 6: Unicode/Special Characters in File Names
+
+**Symptom**: Files with Unicode or special characters not detected.
+
+**Examples of Problematic Names**:
+- `src/api/ユーザー認証.py` (Japanese)
+- `src/models/用户.py` (Chinese)
+- `src/utils/file (v2).py` (spaces and parentheses)
+- `src/api/auth_🔐.py` (emoji)
+
+**Solutions**:
+
+1. **Ensure UTF-8 encoding**:
+```python
+# When creating tasks
+task.files_to_edit = ["src/api/ユーザー認証.py"]  # Works if UTF-8
+```
+
+2. **Use consistent encoding**:
+```bash
+# In CLI
+clauxton task add --name "Japanese file" --files "src/api/ユーザー認証.py"
+```
+
+3. **Verify file paths**:
+```bash
+# Check actual file name
+ls -la src/api/
+# Use exact name from ls output
+```
+
+**Note**: Clauxton v0.9.0-beta supports Unicode in file names (tested).
+
+---
+
+#### Issue 7: Performance Issues (Slow Detection)
+
+**Symptom**: Conflict detection takes >2 seconds.
+
+**Possible Causes**:
+
+**1. Too many in_progress tasks**:
+```bash
+# Check count
+clauxton task list --status in_progress | grep TASK | wc -l
+
+# If >50, consider completing some tasks first
+```
+
+**2. Large files_to_edit lists**:
+```python
+# Avoid:
+task.files_to_edit = ["src/**/*.py"]  # Don't use globs!
+
+# Instead, list specific files:
+task.files_to_edit = ["src/api/auth.py", "src/models/user.py"]
+```
+
+**3. Many tasks with `recommend_safe_order`**:
+```bash
+# Avoid ordering too many tasks at once
+clauxton conflict order TASK-001 TASK-002 ... TASK-100  # Slow!
+
+# Instead, order in batches
+clauxton conflict order TASK-001 TASK-002 TASK-003 TASK-004 TASK-005
+```
+
+**Performance Benchmarks**:
+- <10 in_progress tasks: <100ms ✅
+- 10-50 tasks: <500ms ✅
+- 50-100 tasks: <2s ⚠️
+- >100 tasks: Consider optimization 🔴
+
+---
+
+#### Issue 8: MCP Tool Returns Error in Claude Code
+
+**Symptom**: Error when using `detect_conflicts` MCP tool in Claude Code.
+
+**Common Errors**:
+
+**1. "Task not found"**:
+```json
+{"error": "Task not found: TASK-999"}
+```
+**Solution**: Verify task ID exists
+```bash
+clauxton task list  # Check actual task IDs
+```
+
+**2. "Invalid task_id format"**:
+```json
+{"error": "Invalid task_id: TASK-1"}
+```
+**Solution**: Use correct format `TASK-NNN` (3 digits)
+```bash
+# Correct: TASK-001, TASK-002, TASK-123
+# Wrong: TASK-1, TASK-01, task-001
+```
+
+**3. "No .clauxton directory"**:
+```json
+{"error": "Clauxton not initialized"}
+```
+**Solution**: Initialize in project root
+```bash
+cd /path/to/project
+clauxton init
+```
+
+---
+
+#### Issue 9: CLI Command Hangs or Crashes
+
+**Symptom**: `clauxton conflict detect` hangs indefinitely.
+
+**Debug Steps**:
+
+1. **Check for corrupted YAML**:
+```bash
+# Validate tasks.yml
+python3 -c "import yaml; yaml.safe_load(open('.clauxton/tasks.yml'))"
+```
+
+2. **Check for circular dependencies**:
+```bash
+# List all tasks with dependencies
+clauxton task list --format json | jq '.[] | {id, depends_on}'
+```
+
+3. **Run with verbose/debug mode** (if available):
+```bash
+# Future feature
+clauxton conflict detect TASK-001 --debug
+```
+
+4. **Restore from backup**:
+```bash
+cp .clauxton/backups/tasks.yml.bak .clauxton/tasks.yml
+```
+
+---
+
+#### Issue 10: Recommendation Not Helpful
+
+**Symptom**: Conflict detected, but recommendation is vague.
+
+**Example**:
+```
+⚠ 1 conflict detected
+Risk: HIGH (85%)
+→ "Proceed with caution"
+```
+
+**Why This Happens**:
+- Simple heuristic recommendations (v0.9.0-beta)
+- No context about task importance or team availability
+
+**Better Workflow**:
+
+1. **Get detailed info**:
+```bash
+clauxton conflict detect TASK-002 --verbose
+# Shows exact overlapping files
+```
+
+2. **Analyze overlap manually**:
+```bash
+# List files for both tasks
+clauxton task get TASK-001 | grep "Files:"
+clauxton task get TASK-002 | grep "Files:"
+```
+
+3. **Decide based on context**:
+- Is one task nearly done? Wait for it.
+- Do tasks edit different sections? Coordinate and proceed.
+- Is conflict unavoidable? Merge carefully later.
+
+**Future Enhancement** (Phase 3):
+- Context-aware recommendations
+- LLM-powered suggestion
+- Team availability integration
+
+---
 
 ### Performance Issues (Slow Conflict Detection)
 
