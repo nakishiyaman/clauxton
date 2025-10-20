@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### v0.10.0 - Transparent Integration (In Development)
 **Target Release**: 2025-11-10
-**Status**: Week 1 Day 5 Complete (Error Recovery + YAML Safety)
+**Status**: Week 2 Day 6 Complete (Enhanced Validation)
 
 #### Completed Features
 
@@ -51,7 +51,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - None remaining for Week 1!
 
 **🟡 Important Features** (UX & Quality):
-- Enhanced Validation: Detect empty names, duplicate files, invalid paths
+- ✅ **Enhanced Validation** (Week 2 Day 6): Pre-Pydantic validation for better error messages
+  - 32 tests (100% coverage of task_validator.py)
+  - Validates: task names, duplicate IDs, duplicate names (warning), priorities, statuses, dependencies, estimated hours, file paths
+  - Errors (blocking): empty name, duplicate ID, invalid priority/status, negative hours
+  - Warnings (non-blocking): duplicate name, large hours (>1000), nonexistent files
+  - Integration: Step 1.5 in import_yaml (after YAML parse, before Pydantic)
+  - Can be bypassed: `skip_validation=True` parameter
+  - Works with error recovery strategies (rollback/skip/abort)
 - Operation Logging: `.clauxton/logs/` - Track all operations for debugging
 - KB Export: `kb_export_docs()` - Generate Markdown documentation from KB
 - Progress Display: Real-time feedback for long operations
@@ -66,8 +73,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migration Guide: v0.9.0-beta → v0.10.0
 
 **🧪 Quality**:
-- +90 tests (390 → 480 tests)
-- 94% coverage maintained
+- +138 tests (390 → 528 tests)
+- 91% coverage maintained (97% for task_manager.py, 100% for task_validator.py)
 - Integration scenarios: Happy path, error recovery, undo flow, confirmation mode
 
 **Expected Impact**:

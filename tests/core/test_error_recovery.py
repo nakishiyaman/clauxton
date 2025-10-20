@@ -93,7 +93,7 @@ class TestErrorRecoverySkip:
             priority: low
         """
 
-        result = tm.import_yaml(yaml_content, on_error="skip")
+        result = tm.import_yaml(yaml_content, on_error="skip", skip_validation=True)
 
         # Should return partial status
         assert result["status"] == "partial"
@@ -126,7 +126,7 @@ class TestErrorRecoverySkip:
             priority: low
         """
 
-        result = tm.import_yaml(yaml_content, on_error="skip")
+        result = tm.import_yaml(yaml_content, on_error="skip", skip_validation=True)
 
         assert result["status"] == "partial"
         assert result["imported"] == 2  # Task 1 and Task 4
@@ -151,7 +151,7 @@ class TestErrorRecoverySkip:
             # Invalid priority
         """
 
-        result = tm.import_yaml(yaml_content, on_error="skip")
+        result = tm.import_yaml(yaml_content, on_error="skip", skip_validation=True)
 
         # All tasks failed, return error
         assert result["status"] == "error"
@@ -223,7 +223,7 @@ class TestErrorRecoveryAbort:
             # Second error - not processed
         """
 
-        result = tm.import_yaml(yaml_content, on_error="abort")
+        result = tm.import_yaml(yaml_content, on_error="abort", skip_validation=True)
 
         assert result["status"] == "error"
         assert result["imported"] == 0

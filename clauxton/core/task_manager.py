@@ -635,7 +635,7 @@ class TaskManager:
                 from clauxton.core.task_validator import TaskValidator
 
                 existing_tasks_temp = self._load_tasks()
-                existing_task_ids = set(existing_tasks_temp.keys())
+                existing_task_ids = {task.id for task in existing_tasks_temp}
 
                 validator = TaskValidator(self.root_dir)
                 validation_result = validator.validate_tasks(tasks_data, existing_task_ids)
