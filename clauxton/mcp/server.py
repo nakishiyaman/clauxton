@@ -465,6 +465,7 @@ def task_import_yaml(
     dry_run: bool = False,
     skip_validation: bool = False,
     skip_confirmation: bool = False,
+    on_error: str = "rollback",
 ) -> dict[str, Any]:
     """
     Import multiple tasks from YAML content.
@@ -477,10 +478,14 @@ def task_import_yaml(
         dry_run: If True, validate only without creating tasks (default: False)
         skip_validation: If True, skip dependency validation (default: False)
         skip_confirmation: If True, skip confirmation prompt (default: False)
+        on_error: Error recovery strategy (default: "rollback")
+            - "rollback": Revert all changes on error (transactional)
+            - "skip": Skip failed tasks, continue with others
+            - "abort": Stop immediately on first error
 
     Returns:
         Dictionary with:
-            - status: "success" | "error" | "confirmation_required"
+            - status: "success" | "error" | "confirmation_required" | "partial"
             - imported: Number of tasks imported (0 if dry_run)
             - task_ids: List of created task IDs
             - errors: List of error messages (if any)
@@ -535,6 +540,7 @@ def task_import_yaml(
         dry_run=dry_run,
         skip_validation=skip_validation,
         skip_confirmation=skip_confirmation,
+        on_error=on_error,
     )
     return result
 

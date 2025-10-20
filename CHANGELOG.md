@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### v0.10.0 - Transparent Integration (In Development)
 **Target Release**: 2025-11-10
-**Status**: Week 1 Day 4 Complete (Confirmation Prompts)
+**Status**: Week 1 Day 5 Complete (Error Recovery + YAML Safety)
 
 #### Completed Features
 
@@ -31,12 +31,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Parameters: `skip_confirmation`, `confirmation_threshold`
   - Returns `status: "confirmation_required"` with preview data
   - Works with: YAML import, dry-run mode, validation errors
+- ✅ **Error Recovery** (Week 1 Day 5): Transactional import with configurable error handling
+  - 15 tests covering rollback/skip/abort strategies
+  - `on_error="rollback"` (default): Revert all changes on any error (transactional)
+  - `on_error="skip"`: Skip invalid tasks, continue with valid ones (returns `status: "partial"`)
+  - `on_error="abort"`: Stop immediately on first error
+  - Returns `skipped` list for skip mode
+  - Integration with undo functionality
+- ✅ **YAML Safety** (Week 1 Day 5): Security checks to prevent code injection
+  - 10 tests covering dangerous patterns
+  - Detects `!!python`, `!!exec`, `!!apply` tags
+  - Detects `__import__`, `eval()`, `exec()`, `compile()` patterns
+  - Blocks import before any processing (highest precedence)
+  - Clear security error messages
 
 #### Planned Features
 
 **🔴 Critical Features** (Safety & Core):
-- Error Recovery: Transactional import with rollback/skip/abort strategies
-- YAML Safety: Detect dangerous YAML patterns (code injection prevention)
+- None remaining for Week 1!
 
 **🟡 Important Features** (UX & Quality):
 - Enhanced Validation: Detect empty names, duplicate files, invalid paths

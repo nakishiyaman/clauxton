@@ -515,6 +515,7 @@ class TaskManager:
         skip_validation: bool = False,
         skip_confirmation: bool = False,
         confirmation_threshold: int = 10,
+        on_error: str = "rollback",
     ) -> Dict[str, Any]:
         """
         Import multiple tasks from YAML content.
@@ -528,13 +529,18 @@ class TaskManager:
             skip_validation: If True, skip dependency validation
             skip_confirmation: If True, skip confirmation prompt (default: False)
             confirmation_threshold: Number of tasks to trigger confirmation (default: 10)
+            on_error: Error recovery strategy (default: "rollback")
+                - "rollback": Revert all changes on error (transactional)
+                - "skip": Skip failed tasks, continue with others
+                - "abort": Stop immediately on first error
 
         Returns:
             Dictionary with:
-                - status: "success" | "error" | "confirmation_required"
+                - status: "success" | "error" | "confirmation_required" | "partial"
                 - imported: Number of tasks imported (0 if dry_run)
                 - task_ids: List of created task IDs
                 - errors: List of error messages (if any)
+                - skipped: List of skipped task names (if on_error="skip")
                 - next_task: Recommended next task ID
                 - confirmation_required: True if confirmation needed (optional)
                 - preview: Preview of tasks to import (optional)
@@ -560,6 +566,16 @@ class TaskManager:
                 "task_ids": ["TASK-001", "TASK-002"],
                 "next_task": "TASK-001"
             }
+
+            >>> # Error recovery with skip
+            >>> result = tm.import_yaml(yaml_content, on_error="skip")
+            >>> result
+            {
+                "status": "partial",
+                "imported": 1,
+                "skipped": ["Failed task"],
+                "errors": ["Task validation error..."]
+            }
         """
         from datetime import datetime, timezone
 
@@ -567,8 +583,20 @@ class TaskManager:
 
         errors: List[str] = []
         task_ids: List[str] = []
+        skipped: List[str] = []
 
         try:
+            # Step 0: YAML Safety Check
+            safety_errors = self._validate_yaml_safety(yaml_content)
+            if safety_errors:
+                return {
+                    "status": "error",
+                    "imported": 0,
+                    "task_ids": [],
+                    "errors": safety_errors,
+                    "next_task": None,
+                }
+
             # Step 1: Parse YAML
             data = yaml.safe_load(yaml_content)
             if not isinstance(data, dict) or "tasks" not in data:
@@ -634,14 +662,46 @@ class TaskManager:
                     tasks_to_create.append(task)
 
                 except Exception as e:
-                    errors.append(f"Task {i} ('{task_data.get('name', 'unnamed')}'): {str(e)}")
+                    error_msg = f"Task {i} ('{task_data.get('name', 'unnamed')}'): {str(e)}"
 
-            if errors:
+                    if on_error == "abort":
+                        # Abort: Return error immediately
+                        return {
+                            "status": "error",
+                            "imported": 0,
+                            "task_ids": [],
+                            "errors": [error_msg],
+                            "next_task": None,
+                        }
+                    elif on_error == "skip":
+                        # Skip: Record error and skipped task, continue
+                        errors.append(error_msg)
+                        skipped.append(task_data.get("name", "unnamed"))
+                        continue
+                    else:  # rollback (default)
+                        # Rollback: Collect error and will return at end
+                        errors.append(error_msg)
+
+            # Check errors based on strategy
+            if errors and on_error == "rollback":
+                # Rollback: No tasks created, return error
                 return {
                     "status": "error",
                     "imported": 0,
                     "task_ids": [],
                     "errors": errors,
+                    "next_task": None,
+                }
+
+            # After skip mode processing, check if any tasks remain
+            if not tasks_to_create:
+                # Skip mode: All tasks failed
+                return {
+                    "status": "error",
+                    "imported": 0,
+                    "task_ids": [],
+                    "errors": errors if errors else ["No valid tasks to import"],
+                    "skipped": skipped,
                     "next_task": None,
                 }
 
@@ -659,7 +719,8 @@ class TaskManager:
                                 f"Depends on non-existent task '{dep_id}'"
                             )
 
-                if errors:
+                # Handle dependency errors based on strategy
+                if errors and on_error == "rollback":
                     return {
                         "status": "error",
                         "imported": 0,
@@ -667,6 +728,7 @@ class TaskManager:
                         "errors": errors,
                         "next_task": None,
                     }
+                # For skip/abort, errors are already recorded, continue
 
             # Step 4: Detect circular dependencies
             temp_graph = {t.id: t.depends_on for t in existing_tasks}
@@ -675,6 +737,7 @@ class TaskManager:
 
             cycle_errors = self._detect_cycles_in_graph(temp_graph)
             if cycle_errors:
+                # Circular dependency errors always block import
                 return {
                     "status": "error",
                     "imported": 0,
@@ -736,13 +799,25 @@ class TaskManager:
                     # If get_next_task fails, just use first task
                     next_task_id = task_ids[0] if task_ids else None
 
-            return {
-                "status": "success",
+            # Determine final status
+            final_status = "success"
+            if errors and on_error == "skip":
+                # Some tasks were skipped
+                final_status = "partial"
+
+            result = {
+                "status": final_status,
                 "imported": len(tasks_to_create) if not dry_run else 0,
                 "task_ids": task_ids if not dry_run else [t.id for t in tasks_to_create],
-                "errors": [],
+                "errors": errors if errors else [],
                 "next_task": next_task_id,
             }
+
+            # Add skipped info if any tasks were skipped
+            if skipped:
+                result["skipped"] = skipped
+
+            return result
 
         except yaml.YAMLError as e:
             return {
@@ -814,6 +889,59 @@ class TaskManager:
             "by_status": dict(by_status),
             "tasks_summary": tasks_summary,
         }
+
+    def _validate_yaml_safety(self, yaml_content: str) -> List[str]:
+        """
+        Validate YAML content for dangerous patterns.
+
+        Detects potential code injection risks like:
+        - !!python/object tag (arbitrary code execution)
+        - !!python/name tag (module imports)
+        - __import__ function calls
+        - eval(), exec() function calls
+
+        Args:
+            yaml_content: Raw YAML string to validate
+
+        Returns:
+            List of security error messages (empty if safe)
+
+        Example:
+            >>> errors = tm._validate_yaml_safety("tasks:\\n  - name: Test")
+            >>> errors
+            []
+
+            >>> errors = tm._validate_yaml_safety("!!python/object/apply:os.system")
+            >>> errors
+            ['Dangerous YAML tag detected: !!python']
+        """
+        errors: List[str] = []
+
+        # Dangerous YAML tags
+        dangerous_tags = ["!!python", "!!exec", "!!apply"]
+        for tag in dangerous_tags:
+            if tag in yaml_content:
+                errors.append(
+                    f"Dangerous YAML tag detected: {tag}. "
+                    "This could allow code injection. "
+                    "Please use plain YAML without special tags."
+                )
+
+        # Dangerous function calls
+        dangerous_patterns = [
+            ("__import__", "Import statements"),
+            ("eval(", "eval() function"),
+            ("exec(", "exec() function"),
+            ("compile(", "compile() function"),
+        ]
+        for pattern, description in dangerous_patterns:
+            if pattern in yaml_content:
+                errors.append(
+                    f"Potentially dangerous pattern detected: {description}. "
+                    "Please remove this before importing."
+                )
+
+        return errors
 
     def _detect_cycles_in_graph(self, graph: Dict[str, List[str]]) -> List[str]:
         """
