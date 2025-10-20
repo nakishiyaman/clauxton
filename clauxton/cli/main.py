@@ -581,5 +581,153 @@ def undo(history: bool, limit: int) -> None:
         raise click.Abort()
 
 
+@cli.command()
+@click.option(
+    "--limit",
+    "-l",
+    default=100,
+    help="Maximum number of log entries to display (default: 100)",
+)
+@click.option(
+    "--operation",
+    "-o",
+    help="Filter by operation type (e.g., task_add, kb_search)",
+)
+@click.option(
+    "--level",
+    help="Filter by log level (debug, info, warning, error)",
+)
+@click.option(
+    "--days",
+    "-d",
+    default=7,
+    help="Number of days to look back (default: 7)",
+)
+@click.option(
+    "--date",
+    help="Show logs for specific date (YYYY-MM-DD format)",
+)
+@click.option(
+    "--json",
+    "output_json",
+    is_flag=True,
+    help="Output logs in JSON format",
+)
+@click.pass_context
+def logs(
+    ctx: click.Context,
+    limit: int,
+    operation: Optional[str],
+    level: Optional[str],
+    days: int,
+    date: Optional[str],
+    output_json: bool,
+) -> None:
+    """
+    View Clauxton operation logs.
+
+    Shows recent operations performed by Clauxton, including task
+    management, KB operations, and other activities.
+
+    Examples:
+        $ clauxton logs                              # Last 100 entries, 7 days
+        $ clauxton logs --limit 20                   # Last 20 entries
+        $ clauxton logs --operation task_add         # Only task_add operations
+        $ clauxton logs --level error                # Only errors
+        $ clauxton logs --days 30                    # Last 30 days
+        $ clauxton logs --date 2025-10-21            # Specific date
+        $ clauxton logs --json                       # JSON format output
+    """
+    import json
+
+    from clauxton.utils.logger import ClauxtonLogger
+
+    try:
+        logger = ClauxtonLogger(Path.cwd())
+
+        # Get logs
+        if date:
+            # Specific date
+            log_entries = logger.get_logs_by_date(date)
+            # Apply filters
+            if operation:
+                log_entries = [
+                    e for e in log_entries if e.get("operation") == operation
+                ]
+            if level:
+                log_entries = [
+                    e for e in log_entries if e.get("level") == level.lower()
+                ]
+            # Apply limit
+            log_entries = log_entries[-limit:]
+        else:
+            # Recent logs
+            log_entries = logger.get_recent_logs(
+                limit=limit,
+                operation=operation,
+                level=level,
+                days=days,
+            )
+
+        # Output
+        if output_json:
+            # JSON format
+            click.echo(json.dumps(log_entries, indent=2, ensure_ascii=False))
+        else:
+            # Human-readable format
+            if not log_entries:
+                click.echo(click.style("No logs found.", fg="yellow"))
+                return
+
+            click.echo(
+                click.style(
+                    f"\n📋 Showing {len(log_entries)} log entries:\n",
+                    bold=True,
+                )
+            )
+
+            for entry in log_entries:
+                # Color by level
+                level_color = {
+                    "debug": "cyan",
+                    "info": "green",
+                    "warning": "yellow",
+                    "error": "red",
+                }.get(entry.get("level", "info"), "white")
+
+                # Format timestamp
+                timestamp = entry.get("timestamp", "")
+                if "T" in timestamp:
+                    timestamp = timestamp.replace("T", " ")[:19]
+
+                # Format operation
+                op = entry.get("operation", "unknown")
+                level_str = entry.get("level", "info").upper()
+                message = entry.get("message", "")
+
+                # Output line
+                click.echo(
+                    click.style(f"[{timestamp}] ", fg="white", dim=True)
+                    + click.style(f"{level_str:<8}", fg=level_color, bold=True)
+                    + click.style(f"{op:<20}", fg="blue")
+                    + click.style(message, fg="white")
+                )
+
+                # Show metadata if present
+                metadata = entry.get("metadata", {})
+                if metadata:
+                    for key, value in metadata.items():
+                        click.echo(
+                            click.style(f"  └─ {key}: ", fg="white", dim=True)
+                            + click.style(str(value), fg="cyan")
+                        )
+
+            click.echo("")  # Blank line
+
+    except Exception as e:
+        click.echo(click.style(f"Error: {e}", fg="red"))
+        raise click.Abort()
+
+
 if __name__ == "__main__":
     cli()

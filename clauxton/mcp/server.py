@@ -871,6 +871,81 @@ def get_recent_operations(limit: int = 10) -> dict[str, Any]:
     }
 
 
+# ============================================================================
+# Logging Tools (v0.10.0 Week 2 Day 7)
+# ============================================================================
+
+
+@mcp.tool()
+def get_recent_logs(
+    limit: int = 100,
+    operation: Optional[str] = None,
+    level: Optional[str] = None,
+    days: int = 7,
+) -> dict[str, Any]:
+    """
+    Get recent log entries from Clauxton logs.
+
+    Returns structured log entries from the last N days, with optional
+    filtering by operation type and log level.
+
+    Args:
+        limit: Maximum number of entries to return (default: 100)
+        operation: Filter by operation type (optional)
+            Examples: "task_add", "kb_search", "task_import_yaml"
+        level: Filter by log level (optional)
+            Values: "debug", "info", "warning", "error"
+        days: Number of days to look back (default: 7)
+
+    Returns:
+        Dictionary with status, count, and list of log entries
+
+    Example:
+        >>> get_recent_logs(limit=10, operation="task_add", level="info")
+        {
+            "status": "success",
+            "count": 5,
+            "logs": [
+                {
+                    "timestamp": "2025-10-21T10:30:00",
+                    "operation": "task_add",
+                    "level": "info",
+                    "message": "Added task TASK-001",
+                    "metadata": {"task_id": "TASK-001", "priority": "high"}
+                },
+                ...
+            ]
+        }
+
+    Use Cases:
+        1. **Debugging**: Review recent operations to troubleshoot issues
+        2. **Audit Trail**: Track all modifications to KB and tasks
+        3. **Operation History**: See what Claude Code has done recently
+        4. **Error Investigation**: Filter error-level logs to diagnose problems
+
+    Notes:
+        - Log files are stored in .clauxton/logs/ directory
+        - Logs are automatically rotated after 30 days
+        - Logs use JSON Lines format for structured data
+        - Timestamps are in ISO 8601 format
+    """
+    from clauxton.utils.logger import ClauxtonLogger
+
+    logger = ClauxtonLogger(Path.cwd())
+    logs = logger.get_recent_logs(
+        limit=limit,
+        operation=operation,
+        level=level,
+        days=days,
+    )
+
+    return {
+        "status": "success",
+        "count": len(logs),
+        "logs": logs,
+    }
+
+
 def main() -> None:
     """Run the MCP server."""
     mcp.run()

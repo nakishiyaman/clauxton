@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### v0.10.0 - Transparent Integration (In Development)
 **Target Release**: 2025-11-10
-**Status**: Week 2 Day 6 Complete (Enhanced Validation)
+**Status**: Week 2 Day 7 Complete (Logging Functionality)
 
 #### Completed Features
 
@@ -59,7 +59,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integration: Step 1.5 in import_yaml (after YAML parse, before Pydantic)
   - Can be bypassed: `skip_validation=True` parameter
   - Works with error recovery strategies (rollback/skip/abort)
-- Operation Logging: `.clauxton/logs/` - Track all operations for debugging
+- ✅ **Operation Logging** (Week 2 Day 7): Structured logging with daily log files
+  - 47 tests (97% coverage of logger.py - 28 unit + 11 MCP + 11 CLI + 6 error handling tests)
+  - Features:
+    - Daily log files: `.clauxton/logs/YYYY-MM-DD.log`
+    - Automatic log rotation: 30-day retention
+    - JSON Lines format: Structured data for easy parsing
+    - Filtering: By operation type, log level, date range
+    - Secure permissions: 700 for logs directory, 600 for files
+  - MCP tool: `get_recent_logs(limit, operation, level, days)`
+  - CLI command: `clauxton logs [--limit N] [--operation TYPE] [--level LEVEL] [--days N] [--date YYYY-MM-DD] [--json]`
+  - Log levels: debug, info, warning, error
+  - Graceful handling: Skips malformed JSON lines, Unicode support
 - KB Export: `kb_export_docs()` - Generate Markdown documentation from KB
 - Progress Display: Real-time feedback for long operations
 - Performance Optimization: Batch write operations (25x faster)
@@ -73,8 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migration Guide: v0.9.0-beta → v0.10.0
 
 **🧪 Quality**:
-- +138 tests (390 → 528 tests)
-- 91% coverage maintained (97% for task_manager.py, 100% for task_validator.py)
+- +185 tests (390 → 575 tests)
+- 92% coverage achieved (97% for task_manager.py, 100% for task_validator.py, 97% for logger.py, 95% for MCP server)
 - Integration scenarios: Happy path, error recovery, undo flow, confirmation mode
 
 **Expected Impact**:
