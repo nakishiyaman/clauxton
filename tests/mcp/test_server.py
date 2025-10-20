@@ -411,15 +411,15 @@ def test_check_file_conflicts_tool_callable() -> None:
 
 def test_detect_conflicts_tool_input_validation(tmp_path: Path) -> None:
     """Test detect_conflicts tool with invalid task raises exception."""
-    with patch("clauxton.mcp.server.TaskManager") as MockTM:
-        with patch("clauxton.mcp.server.ConflictDetector") as MockCD:
+    with patch("clauxton.mcp.server.TaskManager") as mock_tm:
+        with patch("clauxton.mcp.server.ConflictDetector") as mock_cd:
             # Mock TaskManager to raise exception for invalid task
             mock_tm_instance = MagicMock()
-            MockTM.return_value = mock_tm_instance
+            mock_tm.return_value = mock_tm_instance
             mock_tm_instance.get.side_effect = Exception("Task not found: TASK-999")
 
             mock_cd_instance = MagicMock()
-            MockCD.return_value = mock_cd_instance
+            mock_cd.return_value = mock_cd_instance
 
             # Execute tool with invalid task_id - should raise exception
             with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
@@ -435,11 +435,11 @@ def test_detect_conflicts_tool_output_format(tmp_path: Path) -> None:
 
     from clauxton.core.models import ConflictReport
 
-    with patch("clauxton.mcp.server.TaskManager") as MockTM:
-        with patch("clauxton.mcp.server.ConflictDetector") as MockCD:
+    with patch("clauxton.mcp.server.TaskManager") as mock_tm:
+        with patch("clauxton.mcp.server.ConflictDetector") as mock_cd:
             # Mock TaskManager
             mock_tm_instance = MagicMock()
-            MockTM.return_value = mock_tm_instance
+            mock_tm.return_value = mock_tm_instance
             mock_task = MagicMock()
             mock_task.id = "TASK-001"
             mock_task.name = "Test task"
@@ -447,7 +447,7 @@ def test_detect_conflicts_tool_output_format(tmp_path: Path) -> None:
 
             # Mock ConflictDetector to return sample conflict
             mock_cd_instance = MagicMock()
-            MockCD.return_value = mock_cd_instance
+            mock_cd.return_value = mock_cd_instance
             sample_conflict = ConflictReport(
                 task_a_id="TASK-001",
                 task_b_id="TASK-002",
@@ -480,14 +480,14 @@ def test_detect_conflicts_tool_output_format(tmp_path: Path) -> None:
 
 def test_recommend_safe_order_tool_handles_empty_list(tmp_path: Path) -> None:
     """Test recommend_safe_order tool with empty task list."""
-    with patch("clauxton.mcp.server.TaskManager") as MockTM:
-        with patch("clauxton.mcp.server.ConflictDetector") as MockCD:
+    with patch("clauxton.mcp.server.TaskManager") as mock_tm:
+        with patch("clauxton.mcp.server.ConflictDetector") as mock_cd:
             # Mock valid empty scenario
             mock_tm_instance = MagicMock()
-            MockTM.return_value = mock_tm_instance
+            mock_tm.return_value = mock_tm_instance
 
             mock_cd_instance = MagicMock()
-            MockCD.return_value = mock_cd_instance
+            mock_cd.return_value = mock_cd_instance
             mock_cd_instance.recommend_safe_order.return_value = []
 
             # Execute tool with empty list
@@ -501,15 +501,15 @@ def test_recommend_safe_order_tool_handles_empty_list(tmp_path: Path) -> None:
 
 def test_recommend_safe_order_tool_output_format(tmp_path: Path) -> None:
     """Test recommend_safe_order tool output format."""
-    with patch("clauxton.mcp.server.TaskManager") as MockTM:
-        with patch("clauxton.mcp.server.ConflictDetector") as MockCD:
+    with patch("clauxton.mcp.server.TaskManager") as mock_tm:
+        with patch("clauxton.mcp.server.ConflictDetector") as mock_cd:
             # Mock TaskManager
             mock_tm_instance = MagicMock()
-            MockTM.return_value = mock_tm_instance
+            mock_tm.return_value = mock_tm_instance
 
             # Mock ConflictDetector
             mock_cd_instance = MagicMock()
-            MockCD.return_value = mock_cd_instance
+            mock_cd.return_value = mock_cd_instance
             mock_cd_instance.recommend_safe_order.return_value = [
                 "TASK-001",
                 "TASK-002",
@@ -532,15 +532,15 @@ def test_recommend_safe_order_tool_output_format(tmp_path: Path) -> None:
 
 def test_check_file_conflicts_tool_output_format(tmp_path: Path) -> None:
     """Test check_file_conflicts tool output format."""
-    with patch("clauxton.mcp.server.TaskManager") as MockTM:
-        with patch("clauxton.mcp.server.ConflictDetector") as MockCD:
+    with patch("clauxton.mcp.server.TaskManager") as mock_tm:
+        with patch("clauxton.mcp.server.ConflictDetector") as mock_cd:
             # Mock TaskManager
             mock_tm_instance = MagicMock()
-            MockTM.return_value = mock_tm_instance
+            mock_tm.return_value = mock_tm_instance
 
             # Mock ConflictDetector
             mock_cd_instance = MagicMock()
-            MockCD.return_value = mock_cd_instance
+            mock_cd.return_value = mock_cd_instance
             mock_cd_instance.check_file_conflicts.return_value = ["TASK-001"]
 
             # Execute tool

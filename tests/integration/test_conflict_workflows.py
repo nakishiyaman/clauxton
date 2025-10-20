@@ -7,7 +7,6 @@ Tests end-to-end workflows combining CLI, MCP, and Core components.
 from datetime import datetime
 from pathlib import Path
 
-import pytest
 from click.testing import CliRunner
 
 from clauxton.cli.main import cli

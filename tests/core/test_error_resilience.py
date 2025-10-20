@@ -9,10 +9,8 @@ Tests error handling paths that are not covered by normal functional tests:
 """
 
 from pathlib import Path
-from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
-import yaml
 
 from clauxton.core.conflict_detector import ConflictDetector
 from clauxton.core.knowledge_base import KnowledgeBase
@@ -181,7 +179,7 @@ class TestTaskManagerErrorHandling:
         # Note: Current implementation may raise exception or skip corrupted files
         # Both behaviors are acceptable for error resilience testing
         try:
-            tasks = tm.list()
+            tm.list()  # Attempt to list tasks
             # If it succeeds, test passes (corrupted file was handled)
             assert True
         except Exception:
@@ -231,7 +229,7 @@ class TestKnowledgeBaseErrorHandling:
         # list() should handle corrupted files gracefully
         # Both raising exception and skipping are acceptable behaviors
         try:
-            entries = kb.list()
+            kb.list()  # Attempt to list entries
             # If it succeeds, test passes (corrupted file was handled)
             assert True
         except Exception:
@@ -245,7 +243,6 @@ class TestSearchFallbackHandling:
     @pytest.mark.skip(reason="sklearn mocking needs adjustment for implementation")
     def test_search_engine_requires_sklearn(self, tmp_path: Path) -> None:
         """Test that SearchEngine requires scikit-learn."""
-        from clauxton.core.search import SearchEngine
 
         # Note: This test requires deeper understanding of SearchEngine initialization
         # Skipped for now as it requires mock adjustment
