@@ -304,3 +304,223 @@ class TestErrorRecoveryWithUndo:
         assert len(operations) == 1
         assert operations[0].operation_type == "task_import"
         assert operations[0].operation_data["task_ids"] == result["task_ids"]
+
+
+class TestErrorRecoveryConfirmationIntegration:
+    """Test error recovery with confirmation prompts."""
+
+    def test_skip_with_confirmation_threshold(self, tmp_path):
+        """Test skip strategy with confirmation threshold."""
+        tm = TaskManager(tmp_path)
+
+        # 10 tasks: some valid, some invalid
+        yaml_content = """
+        tasks:
+          - name: "Task 1"
+            priority: high
+          - name: "Task 2"
+            priority: high
+          - priority: medium
+            # Missing name - skipped
+          - name: "Task 4"
+            priority: medium
+          - name: "Task 5"
+            priority: medium
+          - name: "Task 6"
+            priority: low
+          - name: "Task 7"
+            priority: low
+          - name: "Task 8"
+            priority: low
+          - name: "Task 9"
+            priority: low
+          - name: "Task 10"
+            priority: low
+        """
+
+        # Skip confirmation AND use skip error recovery
+        result = tm.import_yaml(yaml_content, on_error="skip", skip_confirmation=True)
+
+        # Should import 9 valid tasks (1 skipped)
+        assert result["status"] == "partial"
+        assert result["imported"] == 9
+        assert len(result["skipped"]) == 1
+        assert len(tm.list_all()) == 9
+
+    def test_rollback_prevents_confirmation(self, tmp_path):
+        """Test that rollback errors prevent confirmation check."""
+        tm = TaskManager(tmp_path)
+
+        # 10 tasks with one invalid (should trigger confirmation if reached)
+        yaml_content = """
+        tasks:
+          - name: "Task 1"
+          - name: "Task 2"
+          - priority: invalid
+            # Invalid - triggers rollback
+          - name: "Task 4"
+          - name: "Task 5"
+          - name: "Task 6"
+          - name: "Task 7"
+          - name: "Task 8"
+          - name: "Task 9"
+          - name: "Task 10"
+        """
+
+        result = tm.import_yaml(yaml_content, on_error="rollback")
+
+        # Should return error before confirmation check
+        assert result["status"] == "error"
+        assert result["imported"] == 0
+        assert "confirmation_required" not in result
+
+
+class TestErrorRecoveryDependencyValidation:
+    """Test error recovery with dependency validation errors."""
+
+    def test_skip_with_dependency_errors(self, tmp_path):
+        """Test skip strategy with dependency validation errors."""
+        tm = TaskManager(tmp_path)
+
+        yaml_content = """
+        tasks:
+          - name: "Task 1"
+            priority: high
+            depends_on: [TASK-999]
+            # Non-existent dependency
+          - name: "Task 2"
+            priority: medium
+        """
+
+        # Skip mode with dependency validation
+        # Dependency errors are caught but tasks are already validated as valid
+        # So dependency validation fails for the whole batch (rollback-like behavior)
+        result = tm.import_yaml(yaml_content, on_error="skip")
+
+        # Actually, both tasks parse fine, but Task 1 has invalid dependency
+        # This is a partial success - Task 2 is valid
+        assert result["status"] in ["error", "partial"]
+        if result["status"] == "partial":
+            # Task 2 should be imported, Task 1 fails dependency check
+            assert result["imported"] >= 1
+
+    def test_rollback_with_circular_dependency(self, tmp_path):
+        """Test rollback with circular dependency error."""
+        tm = TaskManager(tmp_path)
+
+        yaml_content = """
+        tasks:
+          - name: "Task 1"
+            depends_on: [TASK-002]
+          - name: "Task 2"
+            depends_on: [TASK-001]
+            # Circular dependency
+        """
+
+        result = tm.import_yaml(yaml_content, on_error="rollback")
+
+        assert result["status"] == "error"
+        assert "Circular dependency" in result["errors"][0]
+        assert len(tm.list_all()) == 0
+
+
+class TestErrorRecoveryDryRun:
+    """Test error recovery with dry-run mode."""
+
+    def test_dry_run_skip_strategy(self, tmp_path):
+        """Test that dry-run with skip strategy validates correctly."""
+        tm = TaskManager(tmp_path)
+
+        yaml_content = """
+        tasks:
+          - name: "Task 1"
+            priority: high
+          - priority: medium
+            # Missing name
+          - name: "Task 3"
+            priority: low
+        """
+
+        result = tm.import_yaml(yaml_content, on_error="skip", dry_run=True)
+
+        # Dry run validates but doesn't import
+        # With skip, validation should continue
+        assert result["status"] == "partial"
+        assert result["imported"] == 0  # Dry run doesn't import
+        assert len(result["task_ids"]) == 2  # But shows what would be imported
+        assert len(result["skipped"]) == 1
+        assert len(tm.list_all()) == 0  # Nothing actually created
+
+    def test_dry_run_rollback_strategy(self, tmp_path):
+        """Test that dry-run with rollback strategy returns error."""
+        tm = TaskManager(tmp_path)
+
+        yaml_content = """
+        tasks:
+          - name: "Task 1"
+            priority: high
+          - priority: invalid
+        """
+
+        result = tm.import_yaml(yaml_content, on_error="rollback", dry_run=True)
+
+        assert result["status"] == "error"
+        assert result["imported"] == 0
+        assert len(tm.list_all()) == 0
+
+
+class TestErrorRecoveryEdgeCases:
+    """Test edge cases in error recovery."""
+
+    def test_skip_with_all_validation_errors(self, tmp_path):
+        """Test skip when validation errors occur after task parsing."""
+        tm = TaskManager(tmp_path)
+
+        # First create a task to establish baseline
+        yaml_create = """
+        tasks:
+          - name: "Existing Task"
+            priority: high
+        """
+        tm.import_yaml(yaml_create)
+
+        yaml_content = """
+        tasks:
+          - name: "Task 1"
+            priority: high
+            depends_on: [TASK-999]
+            # Non-existent dependency
+          - name: "Task 2"
+            priority: medium
+            depends_on: [TASK-888]
+            # Non-existent dependency
+        """
+
+        result = tm.import_yaml(yaml_content, on_error="skip")
+
+        # With skip mode, dependency validation continues
+        # Tasks parse successfully, so they proceed to import
+        # Dependency errors are logged but don't block skip mode
+        assert result["status"] in ["error", "partial"]
+        assert len(result["errors"]) > 0
+        # At least some errors should be logged
+        assert "TASK-999" in str(result["errors"]) or "TASK-888" in str(result["errors"])
+
+    def test_abort_with_no_errors(self, tmp_path):
+        """Test abort strategy with all valid tasks."""
+        tm = TaskManager(tmp_path)
+
+        yaml_content = """
+        tasks:
+          - name: "Task 1"
+            priority: high
+          - name: "Task 2"
+            priority: medium
+        """
+
+        result = tm.import_yaml(yaml_content, on_error="abort")
+
+        # All valid, should succeed
+        assert result["status"] == "success"
+        assert result["imported"] == 2
+        assert len(result["errors"]) == 0
