@@ -1,46 +1,58 @@
-# Week 2 Day 10 開始ガイド
+# Week 2 Day 11 開始ガイド
 
 ## 現在の状態（2025-10-21）
 
 ### 完了済み
+- ✅ Week 2 Day 1-2: YAML Bulk Import
+- ✅ Week 2 Day 3: Undo/Rollback
+- ✅ Week 2 Day 4: Confirmation Prompts
+- ✅ Week 2 Day 5: Error Recovery + YAML Safety
 - ✅ Week 2 Day 6: Enhanced Validation
 - ✅ Week 2 Day 7: Logging Functionality
 - ✅ Week 2 Day 8: KB Export Functionality
 - ✅ Week 2 Day 9: Progress Display + Performance Optimization
+- ✅ Week 2 Day 10: Backup Enhancement + Error Message Improvement
 
 ### 現在のメトリクス
-- **テスト数**: 607 tests
-- **カバレッジ**: 92%
-- **最新コミット**: `66482e7` (Week 2 Day 9 完了)
-- **ブランチ**: main (origin/mainより5コミット先行)
+- **テスト数**: 629 tests
+- **カバレッジ**: 91%
+- **最新コミット**: `38c3e24` (Week 2 Day 10 完了)
+- **ブランチ**: main (origin/mainより7コミット先行)
 
 ---
 
-## 次のタスク: Week 2 Day 10
+## 次のタスク: Week 2 Day 11
 
-### 機能: バックアップ強化 + エラーメッセージ改善
+### 機能: 設定可能な確認モード（Configurable Confirmation Mode）
 
 #### 実装内容
 
-**バックアップ強化 (Backup Enhancement)**:
-- `BackupManager` class（新規作成）
-- Timestamped backups: `filename_YYYYMMDD_HHMMSS.yml`
-- Multiple generations: 最新10世代を保持
-- `.clauxton/backups/` directory
-- 自動クリーンアップ（古いバックアップ削除）
+**設定可能な確認モード (Configurable Confirmation Mode)**:
+- `ConfirmationManager` class（新規作成）
+- 3つの確認モード: "always" (100% HITL), "auto" (75% HITL), "never" (25% HITL)
+- `.clauxton/config.yml` configuration file
+- `clauxton config set/get/list` CLI commands
+- MCP integration: 既存ツールへの統合
 
-**エラーメッセージ改善 (Error Message Improvement)**:
-- Detailed error messages with context
-- Suggested fixes for common errors
-- Help links to documentation
-- Examples in error messages
+**3つの確認モード**:
+1. **"always" mode (100% HITL)**: すべての書き込み操作で確認が必要
+   - Use case: チーム開発、本番環境、厳格なワークフロー
+   - Behavior: すべての`add`, `update`, `delete`, `import`操作で確認プロンプト
+
+2. **"auto" mode (75% HITL, default)**: 閾値ベース確認
+   - Use case: 多くの開発ワークフロー（バランス重視）
+   - Behavior: 閾値超過時のみ確認（例: 10個以上のタスク一括作成）
+
+3. **"never" mode (25% HITL)**: 確認プロンプトなし
+   - Use case: 高速プロトタイピング、個人プロジェクト
+   - Behavior: 確認なし（undo機能で復元可能）
 
 #### テスト要件
-- **Tests**: 15 tests (Backup focused)
-- バックアップ作成テスト
-- 世代管理テスト（10世代制限）
-- 古いバックアップ削除テスト
-- エラーメッセージ改善テスト
+- **Tests**: 7 tests (Confirmation Manager focused)
+- 設定ファイル読み書きテスト
+- モード切り替えテスト
+- should_confirm ロジックテスト
+- CLI commands テスト
 
 ---
 
@@ -66,181 +78,362 @@ pytest --cov=clauxton --cov-report=term | grep -E "(TOTAL|clauxton/)"
 ## 実装ファイル予定
 
 ### 新規作成ファイル
-1. `clauxton/utils/backup_manager.py` (NEW)
-   - `BackupManager` class
-   - `create_backup(file_path, max_generations=10)` method
-   - `cleanup_old_backups(file_path, max_generations)` method
-   - `list_backups(file_path)` method
-   - `restore_backup(backup_path)` method
+1. `clauxton/core/confirmation_manager.py` (NEW)
+   - `ConfirmationManager` class
+   - `get_mode()` method
+   - `set_mode(mode)` method
+   - `should_confirm(operation_type, operation_count)` method
+   - `get_threshold(operation_type)` method
+   - `set_threshold(operation_type, value)` method
+
+2. `clauxton/cli/config.py` (NEW)
+   - `config` command group
+   - `clauxton config set <key> <value>` command
+   - `clauxton config get <key>` command
+   - `clauxton config list` command
 
 ### 修正するファイル
-1. `clauxton/utils/yaml_utils.py`
-   - `write_yaml()` に BackupManager 統合
-   - バックアップ作成を自動化
+1. `clauxton/cli/main.py`
+   - `config` command group を追加（import）
 
-2. `clauxton/core/models.py`
-   - エラーメッセージ改善（ValidationError, NotFoundError等）
-   - 具体的な修正提案を追加
+2. `clauxton/mcp/server.py` (Optional)
+   - MCP tools に ConfirmationManager 統合（必要に応じて）
 
 ### 新規テストファイル
-1. `tests/utils/test_backup_manager.py` (NEW)
-   - BackupManager の全機能をテスト
-   - 世代管理テスト
-   - クリーンアップテスト
+1. `tests/core/test_confirmation_manager.py` (NEW)
+   - ConfirmationManager の全機能をテスト
+   - モード切り替えテスト
+   - should_confirm ロジックテスト
+
+2. `tests/cli/test_config_commands.py` (NEW)
+   - CLI config commands のテスト
+   - set/get/list コマンドテスト
 
 ---
 
-## 参考情報
+## 設計仕様
 
-### 現在のバックアップ実装
-
-現在、`yaml_utils.py` にはシンプルなバックアップ機能があります：
+### ConfirmationManager Class
 
 ```python
-# clauxton/utils/yaml_utils.py (現状)
-def write_yaml(file_path: Path, data: Dict[str, Any]) -> None:
-    """Write data to YAML file with atomic write and backup."""
-    # Create backup if file exists
-    if file_path.exists():
-        backup_path = file_path.with_suffix(".yml.bak")
-        shutil.copy2(file_path, backup_path)
-
-    # Atomic write logic...
-```
-
-**問題点**:
-- 1世代しか保持されない（`.bak` のみ）
-- タイムスタンプなし
-- 古いバックアップが上書きされる
-
-### 新しいバックアップ設計
-
-```python
-# clauxton/utils/backup_manager.py (新設計)
+# clauxton/core/confirmation_manager.py
 from pathlib import Path
-from typing import List
-from datetime import datetime
+from typing import Literal, Dict
 
-class BackupManager:
+ConfirmationMode = Literal["always", "auto", "never"]
+
+class ConfirmationManager:
     """
-    Manages timestamped backups with generation limit.
+    Manage confirmation levels for operations.
+
+    Supports 3 modes:
+    - "always": Confirm all write operations (100% HITL)
+    - "auto": Confirm based on thresholds (75% HITL, default)
+    - "never": No confirmation prompts (25% HITL)
 
     Example:
-        >>> bm = BackupManager()
-        >>> bm.create_backup(Path("tasks.yml"), max_generations=10)
-        Path(".clauxton/backups/tasks_20251021_143052.yml")
+        >>> cm = ConfirmationManager(Path(".clauxton/config.yml"))
+        >>> cm.set_mode("always")
+        >>> cm.should_confirm("task_import", 5)
+        True
     """
 
-    def __init__(self, backup_dir: Path):
-        """Initialize BackupManager."""
-        self.backup_dir = backup_dir
-        self.backup_dir.mkdir(parents=True, exist_ok=True)
+    def __init__(self, config_path: Path):
+        """
+        Initialize ConfirmationManager.
 
-    def create_backup(
+        Args:
+            config_path: Path to config file (e.g., .clauxton/config.yml)
+        """
+        pass
+
+    def get_mode(self) -> ConfirmationMode:
+        """
+        Get current confirmation mode.
+
+        Returns:
+            Current mode: "always", "auto", or "never"
+
+        Example:
+            >>> cm.get_mode()
+            'auto'
+        """
+        pass
+
+    def set_mode(self, mode: ConfirmationMode) -> None:
+        """
+        Set confirmation mode.
+
+        Args:
+            mode: New mode ("always", "auto", or "never")
+
+        Raises:
+            ValidationError: If mode is invalid
+
+        Example:
+            >>> cm.set_mode("always")
+        """
+        pass
+
+    def should_confirm(
         self,
-        file_path: Path,
-        max_generations: int = 10
-    ) -> Path:
+        operation_type: str,
+        operation_count: int = 1
+    ) -> bool:
         """
-        Create timestamped backup and cleanup old generations.
+        Check if confirmation is needed for an operation.
 
         Args:
-            file_path: File to backup
-            max_generations: Max backups to keep (default: 10)
+            operation_type: Type of operation (e.g., "task_import", "task_delete")
+            operation_count: Number of items affected (default: 1)
 
         Returns:
-            Path to created backup file
+            True if confirmation is needed, False otherwise
+
+        Logic:
+            - "always" mode: Always return True
+            - "never" mode: Always return False
+            - "auto" mode: Return True if operation_count >= threshold
+
+        Example:
+            >>> cm.set_mode("auto")
+            >>> cm.should_confirm("task_import", 5)
+            False  # Below default threshold (10)
+            >>> cm.should_confirm("task_import", 15)
+            True   # Above threshold
         """
         pass
 
-    def cleanup_old_backups(
-        self,
-        file_path: Path,
-        max_generations: int = 10
-    ) -> List[Path]:
+    def get_threshold(self, operation_type: str) -> int:
         """
-        Remove old backups beyond max_generations.
+        Get threshold for an operation type.
 
         Args:
-            file_path: Original file path
-            max_generations: Max backups to keep
+            operation_type: Type of operation
 
         Returns:
-            List of deleted backup paths
+            Threshold value (default: 10 if not configured)
+
+        Example:
+            >>> cm.get_threshold("task_import")
+            10
         """
         pass
 
-    def list_backups(self, file_path: Path) -> List[Path]:
+    def set_threshold(self, operation_type: str, value: int) -> None:
         """
-        List all backups for a file, sorted by timestamp (newest first).
+        Set threshold for an operation type.
 
         Args:
-            file_path: Original file path
+            operation_type: Type of operation
+            value: New threshold value (must be >= 1)
 
-        Returns:
-            List of backup paths
-        """
-        pass
+        Raises:
+            ValidationError: If value < 1
 
-    def restore_backup(self, backup_path: Path, target_path: Path) -> None:
-        """
-        Restore a backup to target path.
-
-        Args:
-            backup_path: Backup file to restore
-            target_path: Destination path
+        Example:
+            >>> cm.set_threshold("task_import", 5)
         """
         pass
 ```
 
-### バックアップファイル命名規則
+### Configuration File Format
 
-```
-Original file: .clauxton/tasks.yml
+```yaml
+# .clauxton/config.yml
+version: "1.0"
+confirmation_mode: auto  # always | auto | never
 
-Backups:
-  .clauxton/backups/tasks_20251021_143052.yml  (newest)
-  .clauxton/backups/tasks_20251021_142030.yml
-  .clauxton/backups/tasks_20251021_141015.yml
-  ...
-  .clauxton/backups/tasks_20251020_153000.yml  (10th generation)
-
-Deleted (older than 10 generations):
-  .clauxton/backups/tasks_20251020_152000.yml  (removed)
-  .clauxton/backups/tasks_20251020_151000.yml  (removed)
+confirmation_thresholds:
+  task_import: 10      # Confirm if importing >= 10 tasks
+  task_delete: 5       # Confirm if deleting >= 5 tasks
+  kb_delete: 3         # Confirm if deleting >= 3 KB entries
+  kb_import: 5         # Confirm if importing >= 5 KB entries
 ```
 
-### エラーメッセージ改善例
+### CLI Commands
 
-**Before (現状)**:
+```bash
+# Set confirmation mode
+clauxton config set confirmation_mode always
+clauxton config set confirmation_mode auto
+clauxton config set confirmation_mode never
+
+# Get confirmation mode
+clauxton config get confirmation_mode
+# Output: always
+
+# Set threshold
+clauxton config set task_import_threshold 20
+clauxton config get task_import_threshold
+# Output: 20
+
+# List all configuration
+clauxton config list
+# Output:
+# confirmation_mode: auto
+# task_import_threshold: 10
+# task_delete_threshold: 5
+# kb_delete_threshold: 3
+# kb_import_threshold: 5
 ```
-NotFoundError: Task with ID 'TASK-999' not found.
+
+### CLI Implementation
+
+```python
+# clauxton/cli/config.py
+import click
+from pathlib import Path
+from clauxton.core.confirmation_manager import ConfirmationManager
+
+@click.group()
+def config():
+    """Manage Clauxton configuration."""
+    pass
+
+@config.command()
+@click.argument("key")
+@click.argument("value")
+def set(key: str, value: str):
+    """
+    Set configuration value.
+
+    Example:
+        clauxton config set confirmation_mode always
+        clauxton config set task_import_threshold 20
+    """
+    pass
+
+@config.command()
+@click.argument("key")
+def get(key: str):
+    """
+    Get configuration value.
+
+    Example:
+        clauxton config get confirmation_mode
+    """
+    pass
+
+@config.command()
+def list():
+    """
+    List all configuration values.
+
+    Example:
+        clauxton config list
+    """
+    pass
 ```
 
-**After (改善後)**:
+---
+
+## テスト設計
+
+### Core Tests (4 tests) - tests/core/test_confirmation_manager.py
+
+```python
+def test_confirmation_manager_init():
+    """Test ConfirmationManager initialization creates config if missing."""
+
+def test_get_set_mode():
+    """Test getting and setting confirmation mode."""
+
+def test_should_confirm_always_mode():
+    """Test should_confirm returns True for all operations in 'always' mode."""
+
+def test_should_confirm_auto_mode():
+    """Test should_confirm respects thresholds in 'auto' mode."""
+
+def test_should_confirm_never_mode():
+    """Test should_confirm returns False for all operations in 'never' mode."""
+
+def test_get_set_threshold():
+    """Test getting and setting thresholds."""
+
+def test_invalid_mode():
+    """Test setting invalid mode raises ValidationError."""
 ```
-NotFoundError: Task with ID 'TASK-999' not found.
 
-Suggestion: Check if the task ID is correct.
-  - List all tasks: clauxton task list
-  - Search tasks: clauxton task list | grep TASK
+### CLI Tests (3 tests) - tests/cli/test_config_commands.py
 
-Available task IDs: TASK-001, TASK-002, TASK-003
+```python
+def test_config_set_mode():
+    """Test 'clauxton config set confirmation_mode' command."""
 
-Documentation: https://docs.clauxton.com/troubleshooting#task-not-found
+def test_config_get_mode():
+    """Test 'clauxton config get confirmation_mode' command."""
+
+def test_config_list():
+    """Test 'clauxton config list' command."""
+
+def test_config_set_threshold():
+    """Test 'clauxton config set task_import_threshold' command."""
 ```
+
+---
+
+## デフォルト設定
+
+```python
+DEFAULT_CONFIG = {
+    "version": "1.0",
+    "confirmation_mode": "auto",  # Default to balanced mode
+    "confirmation_thresholds": {
+        "task_import": 10,
+        "task_delete": 5,
+        "kb_delete": 3,
+        "kb_import": 5,
+    }
+}
+```
+
+---
+
+## MCP統合（Optional）
+
+既存のMCPツールに`ConfirmationManager`を統合する場合：
+
+```python
+# clauxton/mcp/server.py
+
+# Example: task_import_yaml tool integration
+@server.call_tool()
+async def task_import_yaml(
+    yaml_content: str,
+    skip_confirmation: bool = False,
+    on_error: str = "rollback"
+) -> Dict[str, Any]:
+    """Import tasks from YAML with configurable confirmation."""
+
+    # Check if confirmation is needed
+    cm = ConfirmationManager(Path(".clauxton/config.yml"))
+    tasks_count = len(parsed_tasks)
+
+    if not skip_confirmation and cm.should_confirm("task_import", tasks_count):
+        return {
+            "status": "confirmation_required",
+            "message": f"Confirmation needed for {tasks_count} tasks",
+            "preview": {...}
+        }
+
+    # Proceed with import
+    # ...
+```
+
+**Note**: MCP統合はDay 11のスコープ外としても良い（Day 12-13で統合テスト時に実装）。
 
 ---
 
 ## 品質チェックリスト
 
 実装後に必ず実行：
-- [ ] `mypy clauxton/utils/backup_manager.py clauxton/utils/yaml_utils.py`
+- [ ] `mypy clauxton/core/confirmation_manager.py clauxton/cli/config.py`
 - [ ] `ruff check clauxton/ tests/`
 - [ ] `pytest tests/ -q`
 - [ ] `pytest --cov=clauxton --cov-report=term`
-- [ ] カバレッジが92%以上維持されていること
-- [ ] 全テストがパスすること
+- [ ] カバレッジが91%以上維持されていること
+- [ ] 全テストがパスすること（636+ tests expected）
 
 ---
 
@@ -253,17 +446,17 @@ Documentation: https://docs.clauxton.com/troubleshooting#task-not-found
    ```
 
 2. **設計レビュー** (10分)
-   - BackupManager のインターフェース設計
-   - 既存の yaml_utils.py との統合方法
+   - ConfirmationManager のインターフェース設計
+   - config.yml のスキーマ設計
 
-3. **実装** (2時間)
-   - `BackupManager` class 実装
-   - `yaml_utils.py` 統合
-   - エラーメッセージ改善
+3. **実装** (4時間)
+   - `ConfirmationManager` class 実装
+   - `clauxton/cli/config.py` 実装
+   - config.yml 読み書き機能
 
-4. **テスト作成** (1.5時間)
-   - BackupManager テスト
-   - 統合テスト
+4. **テスト作成** (2時間)
+   - Core tests (4 tests)
+   - CLI tests (3 tests)
 
 5. **品質チェック** (30分)
    - mypy, ruff, pytest
@@ -277,49 +470,48 @@ Documentation: https://docs.clauxton.com/troubleshooting#task-not-found
 ## 注意事項
 
 ### 既存機能への影響
-- `yaml_utils.py` は既存の多くの場所で使用されている
-- 後方互換性を保つ
-- 既存の `.yml.bak` ファイルは残す（互換性のため）
+- 既存のconfirmation_threshold機能と統合
+- `task_import_yaml()` の `skip_confirmation` パラメータとの互換性維持
+- 後方互換性を保つ（既存の動作を破壊しない）
 
 ### テスト観点
-- タイムスタンプが正しいフォーマットか
-- 10世代制限が正しく動作するか
-- 古いバックアップが正しく削除されるか
-- バックアップディレクトリが自動作成されるか
-- ファイルパーミッションが正しいか（600）
+- 設定ファイルが存在しない場合（初回実行）
+- 設定ファイルが破損している場合
+- 無効なモード/閾値が設定された場合
+- 複数の操作タイプでの動作確認
+- CLI出力フォーマット
 
 ### パフォーマンス考慮
-- バックアップ作成は高速であるべき（< 100ms）
-- クリーンアップは効率的であるべき
-- ファイル数が多くても問題ないこと
+- 設定ファイル読み込みはキャッシュ（頻繁な読み込みを避ける）
+- should_confirm() は高速であるべき（< 1ms）
 
 ---
 
 ## 参考リンク
 
-- Roadmap: `docs/design/REVISED_ROADMAP_v0.10.0.md:227-244`
-- yaml_utils: `clauxton/utils/yaml_utils.py`
-- 既存テスト: `tests/utils/test_yaml_utils.py`
+- Roadmap: `docs/design/REVISED_ROADMAP_v0.10.0.md:246-266`
+- 既存の confirmation 実装: `tests/core/test_confirmation.py`
+- CLAUDE.md: Human-in-the-Loop philosophy
 
 ---
 
 ## 期待される成果
 
 ### 機能
-- ✅ BackupManager class（タイムスタンプ付きバックアップ）
-- ✅ 10世代管理（自動クリーンアップ）
-- ✅ yaml_utils.py 統合（自動バックアップ）
-- ✅ 改善されたエラーメッセージ
+- ✅ ConfirmationManager class（モード管理）
+- ✅ .clauxton/config.yml（設定ファイル）
+- ✅ clauxton config CLI commands（set/get/list）
+- ✅ 3つの確認モード（always/auto/never）
 
 ### テスト
-- ✅ 15 新規テスト（backup_manager.py）
+- ✅ 7 新規テスト（confirmation_manager + config CLI）
 - ✅ 既存テスト全てパス
-- ✅ 92%+ カバレッジ維持
+- ✅ 91%+ カバレッジ維持
 
 ### ドキュメント
 - ✅ CHANGELOG.md 更新
-- ✅ docs/backup-guide.md 作成（推奨）
+- ✅ docs/human-in-the-loop-guide.md 作成（推奨）
 
 ---
 
-**準備完了！新セッションでこのファイルを参照して Week 2 Day 10 を開始してください。**
+**準備完了！新セッションでこのファイルを参照して Week 2 Day 11 を開始してください。**
