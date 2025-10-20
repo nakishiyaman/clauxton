@@ -1,4 +1,4 @@
-# Week 2 Day 11 開始ガイド
+# Week 2 Day 15-16 開始ガイド
 
 ## 現在の状態（2025-10-21）
 
@@ -12,47 +12,128 @@
 - ✅ Week 2 Day 8: KB Export Functionality
 - ✅ Week 2 Day 9: Progress Display + Performance Optimization
 - ✅ Week 2 Day 10: Backup Enhancement + Error Message Improvement
+- ✅ Week 2 Day 11: Configurable Confirmation Mode
+- ✅ Week 2 Day 14: Documentation Update
 
 ### 現在のメトリクス
-- **テスト数**: 629 tests
-- **カバレッジ**: 91%
-- **最新コミット**: `38c3e24` (Week 2 Day 10 完了)
-- **ブランチ**: main (origin/mainより7コミット先行)
+- **テスト数**: 666 tests
+- **カバレッジ**: 92%
+- **最新コミット**: `3a78a44` (Week 2 Day 14 完了)
+- **ブランチ**: main (origin/mainより10コミット先行)
+- **MCP Tools**: 20 tools
+- **CLI Commands**: +7 new commands
+
+### 実装完了機能（13個）
+1. ✅ YAML Bulk Import (30x faster)
+2. ✅ Undo/Rollback (7 operation types)
+3. ✅ Confirmation Prompts (threshold-based)
+4. ✅ Error Recovery (rollback/skip/abort)
+5. ✅ YAML Safety (code injection prevention)
+6. ✅ Enhanced Validation (pre-Pydantic)
+7. ✅ Operation Logging (daily logs, 30-day retention)
+8. ✅ KB Export (Markdown docs, ADR format)
+9. ✅ Progress Display (real-time progress bars)
+10. ✅ Performance Optimization (10x faster bulk ops)
+11. ✅ Backup Enhancement (timestamped, last 10 kept)
+12. ✅ Error Message Improvement (context + suggestion + commands)
+13. ✅ Configurable Confirmation Mode (always/auto/never)
+
+### ドキュメント完成（10ファイル）
+- ✅ ERROR_HANDLING_GUIDE.md (657 lines, 37 sections)
+- ✅ MIGRATION_v0.10.0.md (614 lines, 31 sections)
+- ✅ configuration-guide.md (482 lines)
+- ✅ YAML_TASK_FORMAT.md
+- ✅ kb-export-guide.md
+- ✅ logging-guide.md
+- ✅ performance-guide.md
+- ✅ backup-guide.md
+- ✅ README.md (updated with v0.10.0 features)
+- ✅ CHANGELOG.md (complete v0.10.0 section)
 
 ---
 
-## 次のタスク: Week 2 Day 11
+## 次のタスク: Week 2 Day 15-16
 
-### 機能: 設定可能な確認モード（Configurable Confirmation Mode）
+### オプション1: 統合テスト + バグ修正（推奨）
 
-#### 実装内容
+**目的**: リリース前の最終品質保証
 
-**設定可能な確認モード (Configurable Confirmation Mode)**:
-- `ConfirmationManager` class（新規作成）
-- 3つの確認モード: "always" (100% HITL), "auto" (75% HITL), "never" (25% HITL)
-- `.clauxton/config.yml` configuration file
-- `clauxton config set/get/list` CLI commands
-- MCP integration: 既存ツールへの統合
+#### Day 15: Integration Testing (1日)
+**実装内容**:
+- エンドツーエンドテスト追加
+- 実際の使用シナリオテスト
+- パフォーマンステスト
 
-**3つの確認モード**:
-1. **"always" mode (100% HITL)**: すべての書き込み操作で確認が必要
-   - Use case: チーム開発、本番環境、厳格なワークフロー
-   - Behavior: すべての`add`, `update`, `delete`, `import`操作で確認プロンプト
+**テスト観点**:
+1. **Full Workflow Tests** (5 tests):
+   - 初期化 → YAML import → タスク実行 → KB export → undo
+   - 複数エラーシナリオ（YAML safety + validation + recovery）
+   - 設定変更 → タスクimport → 確認モード検証
 
-2. **"auto" mode (75% HITL, default)**: 閾値ベース確認
-   - Use case: 多くの開発ワークフロー（バランス重視）
-   - Behavior: 閾値超過時のみ確認（例: 10個以上のタスク一括作成）
+2. **MCP Integration Tests** (3 tests):
+   - 全20ツールの連携動作確認
+   - エラーハンドリング統合確認
+   - ログ記録確認
 
-3. **"never" mode (25% HITL)**: 確認プロンプトなし
-   - Use case: 高速プロトタイピング、個人プロジェクト
-   - Behavior: 確認なし（undo機能で復元可能）
+3. **Performance Regression Tests** (2 tests):
+   - 100タスク一括import時間 < 1秒
+   - 1000エントリKB export時間 < 5秒
 
-#### テスト要件
-- **Tests**: 7 tests (Confirmation Manager focused)
-- 設定ファイル読み書きテスト
-- モード切り替えテスト
-- should_confirm ロジックテスト
-- CLI commands テスト
+**目標**:
+- +10 integration tests
+- 全テスト実行時間 < 30秒
+- カバレッジ維持: 92%+
+
+---
+
+#### Day 16: Bug Fixes + Release Preparation (1日)
+
+**実装内容**:
+1. **Bug Fix Pass** (2-4時間):
+   - 統合テストで見つかったバグ修正
+   - エッジケース対応
+   - エラーメッセージ改善
+
+2. **Release Preparation** (2-4時間):
+   - pyproject.toml: version bump (0.9.0-beta → 0.10.0)
+   - CHANGELOG.md: 最終レビュー + リリース日追加
+   - README.md: 最終確認
+   - GitHub Release準備
+
+3. **Final Quality Checks**:
+   ```bash
+   # すべてのチェック実行
+   mypy clauxton/
+   ruff check clauxton/ tests/
+   pytest --cov=clauxton --cov-report=term
+   python -m build
+   twine check dist/*
+   ```
+
+**リリースチェックリスト**:
+- [ ] 全テストパス (676+ tests expected)
+- [ ] カバレッジ 92%+
+- [ ] mypy strict mode パス
+- [ ] ruff linting パス
+- [ ] ドキュメント完全性確認
+- [ ] CHANGELOG.md 完成
+- [ ] pyproject.toml version updated
+- [ ] GitHub Release draft作成
+
+---
+
+### オプション2: 直接リリース準備（Day 16のみ）
+
+Day 15をスキップして直接リリース準備に進む。
+
+**理由**:
+- 既存テストが包括的（666 tests, 92% coverage）
+- 全機能が個別テスト済み
+- 統合テストは必須ではない
+
+**リスク**:
+- 複雑な機能間の相互作用が未検証
+- 実際の使用シナリオでの問題発見が遅れる可能性
 
 ---
 
@@ -71,447 +152,292 @@ pytest tests/ -q
 
 # 3. カバレッジ確認
 pytest --cov=clauxton --cov-report=term | grep -E "(TOTAL|clauxton/)"
+
+# 4. メトリクス確認
+echo "Tests: $(pytest --collect-only -q 2>&1 | tail -1)"
+echo "MCP Tools: $(grep -c '^@mcp.tool()' clauxton/mcp/server.py)"
 ```
 
 ---
 
-## 実装ファイル予定
+## Day 15 実装ファイル予定（オプション1選択時）
 
 ### 新規作成ファイル
-1. `clauxton/core/confirmation_manager.py` (NEW)
-   - `ConfirmationManager` class
-   - `get_mode()` method
-   - `set_mode(mode)` method
-   - `should_confirm(operation_type, operation_count)` method
-   - `get_threshold(operation_type)` method
-   - `set_threshold(operation_type, value)` method
+1. `tests/integration/test_full_workflow.py` (NEW)
+   - エンドツーエンドテスト
+   - 実際の使用シナリオ
 
-2. `clauxton/cli/config.py` (NEW)
-   - `config` command group
-   - `clauxton config set <key> <value>` command
-   - `clauxton config get <key>` command
-   - `clauxton config list` command
+2. `tests/integration/test_mcp_integration.py` (NEW)
+   - MCP tools連携テスト
 
-### 修正するファイル
-1. `clauxton/cli/main.py`
-   - `config` command group を追加（import）
+3. `tests/integration/test_performance_regression.py` (NEW)
+   - パフォーマンス回帰テスト
 
-2. `clauxton/mcp/server.py` (Optional)
-   - MCP tools に ConfirmationManager 統合（必要に応じて）
+### テスト設計
 
-### 新規テストファイル
-1. `tests/core/test_confirmation_manager.py` (NEW)
-   - ConfirmationManager の全機能をテスト
-   - モード切り替えテスト
-   - should_confirm ロジックテスト
+#### Full Workflow Tests (5 tests)
 
-2. `tests/cli/test_config_commands.py` (NEW)
-   - CLI config commands のテスト
-   - set/get/list コマンドテスト
+```python
+def test_complete_workflow_init_to_export():
+    """Test complete workflow: init → import → execute → export → undo."""
+
+def test_error_cascade_yaml_safety_to_recovery():
+    """Test error handling cascade through all safety layers."""
+
+def test_confirmation_mode_workflow():
+    """Test confirmation mode changes affect import behavior."""
+
+def test_multi_user_scenario_with_conflicts():
+    """Test task conflicts detection in multi-user scenario."""
+
+def test_kb_full_lifecycle():
+    """Test KB full lifecycle: add → search → update → export → delete."""
+```
+
+#### MCP Integration Tests (3 tests)
+
+```python
+def test_all_mcp_tools_return_valid_json():
+    """Test all 20 MCP tools return valid JSON responses."""
+
+def test_mcp_error_handling_consistency():
+    """Test all MCP tools handle errors consistently."""
+
+def test_mcp_logging_integration():
+    """Test all MCP operations are logged correctly."""
+```
+
+#### Performance Regression Tests (2 tests)
+
+```python
+def test_bulk_import_performance():
+    """Test 100 tasks import completes in < 1 second."""
+
+def test_kb_export_performance():
+    """Test 1000 KB entries export completes in < 5 seconds."""
+```
 
 ---
 
-## 設計仕様
+## Day 16 リリース準備タスク
 
-### ConfirmationManager Class
-
-```python
-# clauxton/core/confirmation_manager.py
-from pathlib import Path
-from typing import Literal, Dict
-
-ConfirmationMode = Literal["always", "auto", "never"]
-
-class ConfirmationManager:
-    """
-    Manage confirmation levels for operations.
-
-    Supports 3 modes:
-    - "always": Confirm all write operations (100% HITL)
-    - "auto": Confirm based on thresholds (75% HITL, default)
-    - "never": No confirmation prompts (25% HITL)
-
-    Example:
-        >>> cm = ConfirmationManager(Path(".clauxton/config.yml"))
-        >>> cm.set_mode("always")
-        >>> cm.should_confirm("task_import", 5)
-        True
-    """
-
-    def __init__(self, config_path: Path):
-        """
-        Initialize ConfirmationManager.
-
-        Args:
-            config_path: Path to config file (e.g., .clauxton/config.yml)
-        """
-        pass
-
-    def get_mode(self) -> ConfirmationMode:
-        """
-        Get current confirmation mode.
-
-        Returns:
-            Current mode: "always", "auto", or "never"
-
-        Example:
-            >>> cm.get_mode()
-            'auto'
-        """
-        pass
-
-    def set_mode(self, mode: ConfirmationMode) -> None:
-        """
-        Set confirmation mode.
-
-        Args:
-            mode: New mode ("always", "auto", or "never")
-
-        Raises:
-            ValidationError: If mode is invalid
-
-        Example:
-            >>> cm.set_mode("always")
-        """
-        pass
-
-    def should_confirm(
-        self,
-        operation_type: str,
-        operation_count: int = 1
-    ) -> bool:
-        """
-        Check if confirmation is needed for an operation.
-
-        Args:
-            operation_type: Type of operation (e.g., "task_import", "task_delete")
-            operation_count: Number of items affected (default: 1)
-
-        Returns:
-            True if confirmation is needed, False otherwise
-
-        Logic:
-            - "always" mode: Always return True
-            - "never" mode: Always return False
-            - "auto" mode: Return True if operation_count >= threshold
-
-        Example:
-            >>> cm.set_mode("auto")
-            >>> cm.should_confirm("task_import", 5)
-            False  # Below default threshold (10)
-            >>> cm.should_confirm("task_import", 15)
-            True   # Above threshold
-        """
-        pass
-
-    def get_threshold(self, operation_type: str) -> int:
-        """
-        Get threshold for an operation type.
-
-        Args:
-            operation_type: Type of operation
-
-        Returns:
-            Threshold value (default: 10 if not configured)
-
-        Example:
-            >>> cm.get_threshold("task_import")
-            10
-        """
-        pass
-
-    def set_threshold(self, operation_type: str, value: int) -> None:
-        """
-        Set threshold for an operation type.
-
-        Args:
-            operation_type: Type of operation
-            value: New threshold value (must be >= 1)
-
-        Raises:
-            ValidationError: If value < 1
-
-        Example:
-            >>> cm.set_threshold("task_import", 5)
-        """
-        pass
-```
-
-### Configuration File Format
-
-```yaml
-# .clauxton/config.yml
-version: "1.0"
-confirmation_mode: auto  # always | auto | never
-
-confirmation_thresholds:
-  task_import: 10      # Confirm if importing >= 10 tasks
-  task_delete: 5       # Confirm if deleting >= 5 tasks
-  kb_delete: 3         # Confirm if deleting >= 3 KB entries
-  kb_import: 5         # Confirm if importing >= 5 KB entries
-```
-
-### CLI Commands
-
+### 1. Version Bump
 ```bash
-# Set confirmation mode
-clauxton config set confirmation_mode always
-clauxton config set confirmation_mode auto
-clauxton config set confirmation_mode never
+# pyproject.toml
+version = "0.10.0"  # From "0.9.0b1"
 
-# Get confirmation mode
-clauxton config get confirmation_mode
-# Output: always
-
-# Set threshold
-clauxton config set task_import_threshold 20
-clauxton config get task_import_threshold
-# Output: 20
-
-# List all configuration
-clauxton config list
-# Output:
-# confirmation_mode: auto
-# task_import_threshold: 10
-# task_delete_threshold: 5
-# kb_delete_threshold: 3
-# kb_import_threshold: 5
+# clauxton/__version__.py
+__version__ = "0.10.0"
 ```
 
-### CLI Implementation
+### 2. CHANGELOG.md Final Review
+```markdown
+## [0.10.0] - 2025-10-21
 
-```python
-# clauxton/cli/config.py
-import click
-from pathlib import Path
-from clauxton.core.confirmation_manager import ConfirmationManager
+### Added
+- YAML Bulk Import (30x faster)
+- Undo/Rollback (7 operation types)
+- ... (13 features total)
 
-@click.group()
-def config():
-    """Manage Clauxton configuration."""
-    pass
+### Changed
+- MCP tools: 15 → 20 tools
+- Test suite: 390 → 676 tests
+- Coverage: 94% → 92% (intentional, more code)
 
-@config.command()
-@click.argument("key")
-@click.argument("value")
-def set(key: str, value: str):
-    """
-    Set configuration value.
+### Fixed
+- None (no bugs reported in beta)
 
-    Example:
-        clauxton config set confirmation_mode always
-        clauxton config set task_import_threshold 20
-    """
-    pass
-
-@config.command()
-@click.argument("key")
-def get(key: str):
-    """
-    Get configuration value.
-
-    Example:
-        clauxton config get confirmation_mode
-    """
-    pass
-
-@config.command()
-def list():
-    """
-    List all configuration values.
-
-    Example:
-        clauxton config list
-    """
-    pass
+[0.10.0]: https://github.com/nakishiyaman/clauxton/compare/v0.9.0...v0.10.0
 ```
 
----
+### 3. GitHub Release Draft
+```markdown
+# Clauxton v0.10.0 - Transparent Integration
 
-## テスト設計
+**Major feature release with 100% backward compatibility.**
 
-### Core Tests (4 tests) - tests/core/test_confirmation_manager.py
+## 🚀 13 New Features
 
-```python
-def test_confirmation_manager_init():
-    """Test ConfirmationManager initialization creates config if missing."""
+**Bulk Operations**:
+- ✅ YAML Bulk Import (30x faster)
+- ✅ KB Export (Markdown docs)
+- ✅ Progress Display (real-time progress bars)
 
-def test_get_set_mode():
-    """Test getting and setting confirmation mode."""
+**Safety & Recovery**:
+- ✅ Undo/Rollback (reverse accidental operations)
+- ✅ Error Recovery (transactional import)
+- ✅ YAML Safety (prevent code injection)
+- ✅ Backup Enhancement (automatic backups)
+- ✅ Enhanced Validation (pre-Pydantic)
 
-def test_should_confirm_always_mode():
-    """Test should_confirm returns True for all operations in 'always' mode."""
+**User Experience**:
+- ✅ Confirmation Prompts (threshold-based)
+- ✅ Configurable Confirmation Mode (always/auto/never)
+- ✅ Operation Logging (daily log files)
+- ✅ Better Error Messages (context + suggestion + commands)
+- ✅ Performance Optimization (10x faster bulk ops)
 
-def test_should_confirm_auto_mode():
-    """Test should_confirm respects thresholds in 'auto' mode."""
+## 📊 Quality Metrics
 
-def test_should_confirm_never_mode():
-    """Test should_confirm returns False for all operations in 'never' mode."""
+- **Tests**: 390 → **676 tests** (+286 tests, +73%)
+- **Coverage**: 92%
+- **MCP Tools**: 15 → **20 tools** (+5 tools)
+- **CLI Commands**: +7 new commands
+- **Documentation**: 10 comprehensive guides
 
-def test_get_set_threshold():
-    """Test getting and setting thresholds."""
+## 🔄 Migration
 
-def test_invalid_mode():
-    """Test setting invalid mode raises ValidationError."""
+**No breaking changes!** See [MIGRATION_v0.10.0.md](docs/MIGRATION_v0.10.0.md)
+
+## 📚 Documentation
+
+- [ERROR_HANDLING_GUIDE.md](docs/ERROR_HANDLING_GUIDE.md): Complete error resolution guide
+- [MIGRATION_v0.10.0.md](docs/MIGRATION_v0.10.0.md): Migration guide
+- [configuration-guide.md](docs/configuration-guide.md): Configuration reference
+
+## 🙏 Acknowledgments
+
+Thank you to all beta testers and contributors!
 ```
-
-### CLI Tests (3 tests) - tests/cli/test_config_commands.py
-
-```python
-def test_config_set_mode():
-    """Test 'clauxton config set confirmation_mode' command."""
-
-def test_config_get_mode():
-    """Test 'clauxton config get confirmation_mode' command."""
-
-def test_config_list():
-    """Test 'clauxton config list' command."""
-
-def test_config_set_threshold():
-    """Test 'clauxton config set task_import_threshold' command."""
-```
-
----
-
-## デフォルト設定
-
-```python
-DEFAULT_CONFIG = {
-    "version": "1.0",
-    "confirmation_mode": "auto",  # Default to balanced mode
-    "confirmation_thresholds": {
-        "task_import": 10,
-        "task_delete": 5,
-        "kb_delete": 3,
-        "kb_import": 5,
-    }
-}
-```
-
----
-
-## MCP統合（Optional）
-
-既存のMCPツールに`ConfirmationManager`を統合する場合：
-
-```python
-# clauxton/mcp/server.py
-
-# Example: task_import_yaml tool integration
-@server.call_tool()
-async def task_import_yaml(
-    yaml_content: str,
-    skip_confirmation: bool = False,
-    on_error: str = "rollback"
-) -> Dict[str, Any]:
-    """Import tasks from YAML with configurable confirmation."""
-
-    # Check if confirmation is needed
-    cm = ConfirmationManager(Path(".clauxton/config.yml"))
-    tasks_count = len(parsed_tasks)
-
-    if not skip_confirmation and cm.should_confirm("task_import", tasks_count):
-        return {
-            "status": "confirmation_required",
-            "message": f"Confirmation needed for {tasks_count} tasks",
-            "preview": {...}
-        }
-
-    # Proceed with import
-    # ...
-```
-
-**Note**: MCP統合はDay 11のスコープ外としても良い（Day 12-13で統合テスト時に実装）。
-
----
-
-## 品質チェックリスト
-
-実装後に必ず実行：
-- [ ] `mypy clauxton/core/confirmation_manager.py clauxton/cli/config.py`
-- [ ] `ruff check clauxton/ tests/`
-- [ ] `pytest tests/ -q`
-- [ ] `pytest --cov=clauxton --cov-report=term`
-- [ ] カバレッジが91%以上維持されていること
-- [ ] 全テストがパスすること（636+ tests expected）
 
 ---
 
 ## 推奨開始フロー
 
-1. **環境確認** (2分)
+### オプション1選択時（統合テスト + リリース準備）
+
+**Day 15 (統合テスト)**:
+1. **環境確認** (5分)
    ```bash
    git status
    pytest tests/ -q
    ```
 
-2. **設計レビュー** (10分)
-   - ConfirmationManager のインターフェース設計
-   - config.yml のスキーマ設計
+2. **統合テスト設計** (30分)
+   - ワークフローシナリオ定義
+   - テストケース設計
 
-3. **実装** (4時間)
-   - `ConfirmationManager` class 実装
-   - `clauxton/cli/config.py` 実装
-   - config.yml 読み書き機能
+3. **統合テスト実装** (5時間)
+   - Full workflow tests (5 tests)
+   - MCP integration tests (3 tests)
+   - Performance tests (2 tests)
 
-4. **テスト作成** (2時間)
-   - Core tests (4 tests)
-   - CLI tests (3 tests)
+4. **バグ修正** (2時間)
+   - 発見されたバグの修正
+   - エッジケース対応
 
 5. **品質チェック** (30分)
    - mypy, ruff, pytest
    - カバレッジ確認
 
-6. **コミット** (15分)
-   - git commit with comprehensive message
+**Day 16 (リリース準備)**:
+1. **Version Bump** (15分)
+2. **CHANGELOG.md 最終レビュー** (30分)
+3. **ドキュメント最終確認** (30分)
+4. **Final Quality Checks** (30分)
+5. **Build & Validate** (15分)
+6. **GitHub Release Draft** (30分)
+7. **最終コミット** (15分)
+
+---
+
+### オプション2選択時（直接リリース準備）
+
+**Day 16 のみ**:
+1. **環境確認** (5分)
+2. **既存テスト全実行** (5分)
+3. **Version Bump** (15分)
+4. **CHANGELOG.md 最終レビュー** (30分)
+5. **ドキュメント最終確認** (30分)
+6. **Final Quality Checks** (30分)
+7. **Build & Validate** (15分)
+8. **GitHub Release Draft** (30分)
+9. **最終コミット** (15分)
+
+合計: 約3時間
+
+---
+
+## 品質チェックリスト
+
+リリース前に必ず実行：
+- [ ] `mypy clauxton/` - strict mode パス
+- [ ] `ruff check clauxton/ tests/` - linting パス
+- [ ] `pytest tests/ -q` - 全テストパス (676+ tests)
+- [ ] `pytest --cov=clauxton --cov-report=term` - カバレッジ 92%+
+- [ ] `python -m build` - ビルド成功
+- [ ] `twine check dist/*` - パッケージ検証成功
+- [ ] 全ドキュメント最終レビュー (10 files)
+- [ ] CHANGELOG.md 完成
+- [ ] GitHub Release draft 作成
 
 ---
 
 ## 注意事項
 
-### 既存機能への影響
-- 既存のconfirmation_threshold機能と統合
-- `task_import_yaml()` の `skip_confirmation` パラメータとの互換性維持
-- 後方互換性を保つ（既存の動作を破壊しない）
+### リリース前の最終確認
+- **後方互換性**: v0.9.0-beta から破壊的変更なし
+- **ドキュメント完全性**: 全機能がドキュメント化されている
+- **テストカバレッジ**: 92%維持
+- **パフォーマンス**: 10x improvement documented
 
-### テスト観点
-- 設定ファイルが存在しない場合（初回実行）
-- 設定ファイルが破損している場合
-- 無効なモード/閾値が設定された場合
-- 複数の操作タイプでの動作確認
-- CLI出力フォーマット
-
-### パフォーマンス考慮
-- 設定ファイル読み込みはキャッシュ（頻繁な読み込みを避ける）
-- should_confirm() は高速であるべき（< 1ms）
+### リリース後のタスク
+- PyPI upload: `twine upload dist/*`
+- GitHub Release publish
+- Twitter/Blog announcement (optional)
+- Update project README badges
 
 ---
 
 ## 参考リンク
 
-- Roadmap: `docs/design/REVISED_ROADMAP_v0.10.0.md:246-266`
-- 既存の confirmation 実装: `tests/core/test_confirmation.py`
+- 現在のCHANGELOG: `CHANGELOG.md:1-200`
+- 現在のREADME: `README.md:1-150`
 - CLAUDE.md: Human-in-the-Loop philosophy
+- ERROR_HANDLING_GUIDE.md: Error resolution guide
+- MIGRATION_v0.10.0.md: Migration guide
 
 ---
 
 ## 期待される成果
 
-### 機能
-- ✅ ConfirmationManager class（モード管理）
-- ✅ .clauxton/config.yml（設定ファイル）
-- ✅ clauxton config CLI commands（set/get/list）
-- ✅ 3つの確認モード（always/auto/never）
+### Day 15 完了時（オプション1選択時）
+- ✅ 10 新規統合テスト
+- ✅ 全統合テスト合格
+- ✅ パフォーマンステスト合格
+- ✅ バグ修正完了
+- ✅ テスト総数: 676+ tests
+- ✅ カバレッジ: 92%+
 
-### テスト
-- ✅ 7 新規テスト（confirmation_manager + config CLI）
-- ✅ 既存テスト全てパス
-- ✅ 91%+ カバレッジ維持
-
-### ドキュメント
-- ✅ CHANGELOG.md 更新
-- ✅ docs/human-in-the-loop-guide.md 作成（推奨）
+### Day 16 完了時（両オプション共通）
+- ✅ Version bumped to 0.10.0
+- ✅ CHANGELOG.md 完成
+- ✅ All quality checks passed
+- ✅ Package built and validated
+- ✅ GitHub Release draft ready
+- ✅ Ready for PyPI upload
 
 ---
 
-**準備完了！新セッションでこのファイルを参照して Week 2 Day 11 を開始してください。**
+## 推奨オプション
+
+**推奨: オプション1（統合テスト + リリース準備）**
+
+**理由**:
+- v0.10.0は13の新機能を含む大規模リリース
+- 統合テストで機能間の相互作用を検証
+- リリース後のバグ報告リスクを最小化
+- 高品質リリースの実績を維持
+
+**時間**: 2日（Day 15 + Day 16）
+
+**代替案**: オプション2（直接リリース準備）
+- すぐにリリースしたい場合
+- 既存テストで十分と判断した場合
+- 時間: 1日（Day 16のみ）
+
+---
+
+**準備完了！新セッションでこのファイルを参照して Week 2 Day 15-16 を開始してください。**
+
+**推奨**: Claude Code に「ガイドに従って Week 2 Day 15（統合テスト）の実装を開始してください」と伝える。
