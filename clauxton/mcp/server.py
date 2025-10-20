@@ -11,6 +11,7 @@ from typing import Any, List, Optional
 
 from mcp.server.fastmcp import FastMCP
 
+from clauxton.core.conflict_detector import ConflictDetector
 from clauxton.core.knowledge_base import KnowledgeBase
 from clauxton.core.models import KnowledgeBaseEntry, Task
 from clauxton.core.task_manager import TaskManager
@@ -455,6 +456,142 @@ def task_delete(task_id: str) -> dict[str, str]:
     return {
         "task_id": task_id,
         "message": f"Successfully deleted task: {task_id}",
+    }
+
+
+# ============================================================================
+# Conflict Detection Tools (Phase 2)
+# ============================================================================
+
+
+@mcp.tool()
+def detect_conflicts(task_id: str) -> dict[str, Any]:
+    """
+    Detect potential conflicts for a task.
+
+    Analyzes the given task against all in_progress tasks to identify
+    file overlap conflicts that could lead to merge issues.
+
+    Args:
+        task_id: Task ID to check for conflicts (e.g., TASK-001)
+
+    Returns:
+        Dictionary with conflict count and list of conflict details
+
+    Example:
+        >>> detect_conflicts("TASK-002")
+        {
+            "task_id": "TASK-002",
+            "conflict_count": 1,
+            "conflicts": [
+                {
+                    "task_a_id": "TASK-002",
+                    "task_b_id": "TASK-001",
+                    "conflict_type": "file_overlap",
+                    "risk_level": "medium",
+                    "risk_score": 0.67,
+                    "overlapping_files": ["src/api/auth.py"],
+                    "details": "Both tasks edit: src/api/auth.py. ...",
+                    "recommendation": "Complete TASK-002 before starting TASK-001, ..."
+                }
+            ]
+        }
+    """
+    tm = TaskManager(Path.cwd())
+    detector = ConflictDetector(tm)
+
+    conflicts = detector.detect_conflicts(task_id)
+
+    return {
+        "task_id": task_id,
+        "conflict_count": len(conflicts),
+        "conflicts": [
+            {
+                "task_a_id": c.task_a_id,
+                "task_b_id": c.task_b_id,
+                "conflict_type": c.conflict_type,
+                "risk_level": c.risk_level,
+                "risk_score": c.risk_score,
+                "overlapping_files": c.overlapping_files,
+                "details": c.details,
+                "recommendation": c.recommendation,
+            }
+            for c in conflicts
+        ],
+    }
+
+
+@mcp.tool()
+def recommend_safe_order(task_ids: List[str]) -> dict[str, Any]:
+    """
+    Recommend safe execution order for tasks.
+
+    Uses topological sort based on dependencies and conflict analysis
+    to suggest an order that minimizes merge conflicts.
+
+    Args:
+        task_ids: List of task IDs to order (e.g., ["TASK-001", "TASK-002"])
+
+    Returns:
+        Dictionary with recommended execution order
+
+    Example:
+        >>> recommend_safe_order(["TASK-001", "TASK-002", "TASK-003"])
+        {
+            "task_count": 3,
+            "recommended_order": ["TASK-001", "TASK-002", "TASK-003"],
+            "message": "Execute tasks in the order shown to minimize conflicts"
+        }
+    """
+    tm = TaskManager(Path.cwd())
+    detector = ConflictDetector(tm)
+
+    order = detector.recommend_safe_order(task_ids)
+
+    return {
+        "task_count": len(order),
+        "recommended_order": order,
+        "message": "Execute tasks in the order shown to minimize conflicts",
+    }
+
+
+@mcp.tool()
+def check_file_conflicts(files: List[str]) -> dict[str, Any]:
+    """
+    Check which tasks are currently editing specific files.
+
+    Useful for determining if files are available for editing or
+    if coordination with other tasks is needed.
+
+    Args:
+        files: List of file paths to check (e.g., ["src/api/auth.py"])
+
+    Returns:
+        Dictionary with conflicting task IDs
+
+    Example:
+        >>> check_file_conflicts(["src/api/auth.py", "src/models/user.py"])
+        {
+            "file_count": 2,
+            "files": ["src/api/auth.py", "src/models/user.py"],
+            "conflicting_tasks": ["TASK-001", "TASK-003"],
+            "message": "2 in_progress task(s) are editing these files"
+        }
+    """
+    tm = TaskManager(Path.cwd())
+    detector = ConflictDetector(tm)
+
+    conflicting_tasks = detector.check_file_conflicts(files)
+
+    return {
+        "file_count": len(files),
+        "files": files,
+        "conflicting_tasks": conflicting_tasks,
+        "message": (
+            f"{len(conflicting_tasks)} in_progress task(s) are editing these files"
+            if conflicting_tasks
+            else "No conflicts - files are available"
+        ),
     }
 
 

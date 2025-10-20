@@ -201,14 +201,209 @@ else:
 
 ## MCP Tools
 
-> **Note**: MCP tools for conflict detection will be available in Week 12 Day 3-4.
+Clauxton provides MCP (Model Context Protocol) tools for conflict detection, allowing Claude Code to check conflicts directly.
 
-Planned MCP tools:
-- `detect_conflicts` - Detect conflicts for a task
-- `recommend_safe_order` - Get recommended execution order
-- `check_file_conflicts` - Check file availability
+### Available Tools
 
-See [MCP Server documentation](mcp-server.md) for details (coming soon).
+#### 1. detect_conflicts
+
+Detect potential conflicts for a specific task.
+
+**Signature**:
+```python
+detect_conflicts(task_id: str) -> dict[str, Any]
+```
+
+**Parameters**:
+- `task_id` (string, required): Task ID to check (e.g., "TASK-001")
+
+**Returns**:
+```json
+{
+  "task_id": "TASK-002",
+  "conflict_count": 1,
+  "conflicts": [
+    {
+      "task_a_id": "TASK-002",
+      "task_b_id": "TASK-001",
+      "conflict_type": "file_overlap",
+      "risk_level": "medium",
+      "risk_score": 0.67,
+      "overlapping_files": ["src/api/auth.py"],
+      "details": "Both tasks edit: src/api/auth.py. ...",
+      "recommendation": "Complete TASK-002 before starting TASK-001, ..."
+    }
+  ]
+}
+```
+
+**Example (Claude Code)**:
+```
+User: Check if TASK-002 has any conflicts
+
+Claude: Let me check for conflicts in TASK-002.
+
+[Uses detect_conflicts("TASK-002")]
+
+I found 1 conflict:
+- TASK-002 conflicts with TASK-001 (MEDIUM risk, 0.67 score)
+- Both tasks edit src/api/auth.py
+- Recommendation: Complete TASK-002 before starting TASK-001
+```
+
+#### 2. recommend_safe_order
+
+Recommend safe execution order for multiple tasks.
+
+**Signature**:
+```python
+recommend_safe_order(task_ids: List[str]) -> dict[str, Any]
+```
+
+**Parameters**:
+- `task_ids` (array of strings, required): List of task IDs to order
+
+**Returns**:
+```json
+{
+  "task_count": 3,
+  "recommended_order": ["TASK-001", "TASK-002", "TASK-003"],
+  "message": "Execute tasks in the order shown to minimize conflicts"
+}
+```
+
+**Example (Claude Code)**:
+```
+User: What's the best order to execute TASK-001, TASK-002, and TASK-003?
+
+Claude: Let me analyze the optimal execution order.
+
+[Uses recommend_safe_order(["TASK-001", "TASK-002", "TASK-003"])]
+
+Recommended execution order:
+1. TASK-001 (no dependencies, no conflicts)
+2. TASK-002 (depends on TASK-001)
+3. TASK-003 (depends on TASK-002)
+
+This order minimizes conflicts and respects all task dependencies.
+```
+
+#### 3. check_file_conflicts
+
+Check which tasks are currently editing specific files.
+
+**Signature**:
+```python
+check_file_conflicts(files: List[str]) -> dict[str, Any]
+```
+
+**Parameters**:
+- `files` (array of strings, required): List of file paths to check
+
+**Returns**:
+```json
+{
+  "file_count": 2,
+  "files": ["src/api/auth.py", "src/models/user.py"],
+  "conflicting_tasks": ["TASK-001", "TASK-003"],
+  "message": "2 in_progress task(s) are editing these files"
+}
+```
+
+**Example (Claude Code)**:
+```
+User: Is src/api/auth.py safe to edit?
+
+Claude: Let me check if anyone is currently editing that file.
+
+[Uses check_file_conflicts(["src/api/auth.py"])]
+
+⚠️ src/api/auth.py is currently being edited by:
+- TASK-001 (in_progress)
+
+You should coordinate with TASK-001 or wait until it's completed.
+```
+
+### MCP Tool Usage Patterns
+
+#### Pattern 1: Pre-Start Conflict Check
+
+Before starting a new task, check for conflicts:
+
+```
+User: I want to start TASK-005
+
+Claude:
+[Uses detect_conflicts("TASK-005")]
+
+✅ TASK-005 has no conflicts with active tasks.
+It's safe to start working on it.
+
+[User can proceed with task]
+```
+
+#### Pattern 2: Batch Task Planning
+
+When planning multiple tasks:
+
+```
+User: I have TASK-001, TASK-002, TASK-003. What order should I do them?
+
+Claude:
+[Uses recommend_safe_order(["TASK-001", "TASK-002", "TASK-003"])]
+
+Recommended order:
+1. TASK-001 (no conflicts, no deps)
+2. TASK-002 (depends on TASK-001)
+3. TASK-003 (depends on TASK-002)
+
+This minimizes conflicts and respects dependencies.
+```
+
+#### Pattern 3: File Availability Check
+
+Before editing a file:
+
+```
+User: Can I edit src/api/auth.py?
+
+Claude:
+[Uses check_file_conflicts(["src/api/auth.py"])]
+
+⚠️ Warning: src/api/auth.py is being edited by TASK-001 (in_progress).
+
+Recommendations:
+- Wait for TASK-001 to complete, or
+- Coordinate changes with the TASK-001 owner
+```
+
+### Integration with Claude Code
+
+MCP tools work seamlessly in Claude Code:
+
+1. **Automatic Tool Selection**: Claude Code automatically selects the appropriate conflict tool based on your question
+2. **Natural Language**: Just ask in plain English (e.g., "Are there any conflicts?")
+3. **Contextual Recommendations**: Claude Code uses conflict data to provide actionable advice
+
+**Example Conversation**:
+```
+User: I'm about to start TASK-007. Anything I should know?
+
+Claude:
+[Automatically uses detect_conflicts("TASK-007")]
+
+⚠️ TASK-007 has 1 high-risk conflict:
+- Conflicts with TASK-005 (both edit src/models/user.py)
+- Risk: 0.85 (HIGH)
+
+Recommendation:
+1. Complete TASK-005 first (currently in_progress)
+2. Or, coordinate changes in src/models/user.py to avoid overlap
+
+Would you like me to check the recommended execution order for all pending tasks?
+```
+
+See [MCP Server documentation](mcp-server.md) for complete MCP setup instructions.
 
 ---
 
