@@ -495,3 +495,218 @@ class KnowledgeBase:
                 self._search_engine = None
         else:
             self._search_engine = None
+
+    def export_to_markdown(
+        self,
+        output_dir: Path,
+        category: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Export Knowledge Base entries to Markdown documentation files.
+
+        Creates one Markdown file per category (or a single file if category specified).
+        Decision entries use ADR (Architecture Decision Record) format.
+        Other categories use standard documentation format.
+
+        Args:
+            output_dir: Directory to write Markdown files to
+            category: Optional category filter (export only this category)
+
+        Returns:
+            Dictionary with export statistics:
+                - "total_entries": Total entries exported
+                - "files_created": Number of files created
+                - "categories": List of categories exported
+
+        Raises:
+            ValidationError: If output_dir is invalid or not writable
+            NotFoundError: If no entries match the category filter
+
+        Example:
+            >>> stats = kb.export_to_markdown(Path("./docs/kb"))
+            >>> print(stats)
+            {"total_entries": 15, "files_created": 5, "categories": [...]}
+        """
+        # Validate output directory
+        if not output_dir.exists():
+            try:
+                output_dir.mkdir(parents=True, exist_ok=True)
+            except Exception as e:
+                from clauxton.core.models import ValidationError
+                raise ValidationError(
+                    f"Cannot create output directory '{output_dir}': {e}"
+                )
+
+        if not output_dir.is_dir():
+            from clauxton.core.models import ValidationError
+            raise ValidationError(
+                f"Output path '{output_dir}' is not a directory"
+            )
+
+        # Load entries
+        entries = self._load_entries()
+
+        # Filter by category if specified
+        if category:
+            entries = [e for e in entries if e.category == category]
+            if not entries:
+                raise NotFoundError(
+                    f"No entries found with category '{category}'"
+                )
+
+        # Group entries by category
+        entries_by_category: Dict[str, List[KnowledgeBaseEntry]] = {}
+        for entry in entries:
+            if entry.category not in entries_by_category:
+                entries_by_category[entry.category] = []
+            entries_by_category[entry.category].append(entry)
+
+        # Export each category
+        files_created = 0
+        total_entries = 0
+
+        for cat, cat_entries in entries_by_category.items():
+            filename = f"{cat}.md"
+            file_path = output_dir / filename
+
+            # Generate content based on category
+            if cat == "decision":
+                content = self._generate_adr_markdown(cat_entries)
+            else:
+                content = self._generate_standard_markdown(cat, cat_entries)
+
+            # Write file
+            file_path.write_text(content, encoding="utf-8")
+            files_created += 1
+            total_entries += len(cat_entries)
+
+        return {
+            "total_entries": total_entries,
+            "files_created": files_created,
+            "categories": list(entries_by_category.keys()),
+        }
+
+    def _generate_adr_markdown(self, entries: List[KnowledgeBaseEntry]) -> str:
+        """
+        Generate ADR-format Markdown for decision entries.
+
+        ADR Format:
+        - Title
+        - Status: Accepted/Rejected/Superseded
+        - Context: What is the issue we're addressing?
+        - Decision: What is the change we're proposing?
+        - Consequences: What are the positive/negative outcomes?
+
+        Args:
+            entries: List of decision entries to export
+
+        Returns:
+            Markdown content string
+        """
+        lines = [
+            "# Architecture Decision Records",
+            "",
+            "This document contains all architectural decisions made for this project.",
+            "",
+            "---",
+            "",
+        ]
+
+        for entry in sorted(entries, key=lambda e: e.created_at):
+            lines.extend([
+                f"## {entry.title}",
+                "",
+                f"**ID**: {entry.id}  ",
+                "**Status**: Accepted  ",
+                f"**Date**: {entry.created_at.strftime('%Y-%m-%d')}  ",
+                f"**Version**: {entry.version}  ",
+            ])
+
+            if entry.tags:
+                tags_str = ", ".join(f"`{tag}`" for tag in entry.tags)
+                lines.append(f"**Tags**: {tags_str}  ")
+
+            lines.extend([
+                "",
+                "### Context",
+                "",
+                entry.content,
+                "",
+                "### Consequences",
+                "",
+                "_This decision has been implemented and accepted._",
+                "",
+            ])
+
+            if entry.updated_at != entry.created_at:
+                lines.extend([
+                    f"**Last Updated**: {entry.updated_at.strftime('%Y-%m-%d')}",
+                    "",
+                ])
+
+            lines.extend([
+                "---",
+                "",
+            ])
+
+        return "\n".join(lines)
+
+    def _generate_standard_markdown(
+        self,
+        category: str,
+        entries: List[KnowledgeBaseEntry]
+    ) -> str:
+        """
+        Generate standard Markdown for non-decision categories.
+
+        Standard Format:
+        - Title with category header
+        - Entry title as section
+        - Content
+        - Metadata (ID, tags, dates)
+
+        Args:
+            category: Category name
+            entries: List of entries to export
+
+        Returns:
+            Markdown content string
+        """
+        # Capitalize category for title
+        category_title = category.capitalize()
+
+        lines = [
+            f"# {category_title}",
+            "",
+            f"This document contains all {category} entries for this project.",
+            "",
+            "---",
+            "",
+        ]
+
+        for entry in sorted(entries, key=lambda e: e.created_at):
+            lines.extend([
+                f"## {entry.title}",
+                "",
+                f"**ID**: {entry.id}  ",
+                f"**Created**: {entry.created_at.strftime('%Y-%m-%d')}  ",
+            ])
+
+            if entry.updated_at != entry.created_at:
+                lines.append(
+                    f"**Updated**: {entry.updated_at.strftime('%Y-%m-%d')}  "
+                )
+
+            if entry.tags:
+                tags_str = ", ".join(f"`{tag}`" for tag in entry.tags)
+                lines.append(f"**Tags**: {tags_str}  ")
+
+            lines.extend([
+                "",
+                entry.content,
+                "",
+                "---",
+                "",
+            ])
+
+        return "\n".join(lines)

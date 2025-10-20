@@ -674,3 +674,84 @@ tasks:
         result2 = task_import_yaml(yaml_content=yaml_content, skip_validation=True)
         assert result2["status"] == "success"
         assert result2["imported"] == 1
+
+
+# ============================================================================
+# KB Export Tool Tests
+# ============================================================================
+
+
+@patch("clauxton.mcp.server.KnowledgeBase")
+def test_kb_export_docs_success(mock_kb_class: MagicMock, tmp_path: Path) -> None:
+    """Test kb_export_docs tool with successful export."""
+    from clauxton.mcp.server import kb_export_docs
+
+    # Setup mock
+    mock_kb = MagicMock()
+    mock_kb_class.return_value = mock_kb
+    mock_kb.export_to_markdown.return_value = {
+        "total_entries": 10,
+        "files_created": 3,
+        "categories": ["architecture", "decision", "constraint"],
+    }
+
+    # Execute tool
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        result = kb_export_docs(output_dir="./docs/kb")
+
+    # Verify
+    assert result["status"] == "success"
+    assert result["total_entries"] == 10
+    assert result["files_created"] == 3
+    assert result["categories"] == ["architecture", "decision", "constraint"]
+    assert result["output_dir"] == "./docs/kb"
+    assert len(result["files"]) == 3
+    assert "Exported 10 entries" in result["message"]
+
+
+@patch("clauxton.mcp.server.KnowledgeBase")
+def test_kb_export_docs_specific_category(
+    mock_kb_class: MagicMock, tmp_path: Path
+) -> None:
+    """Test kb_export_docs tool with category filter."""
+    from clauxton.mcp.server import kb_export_docs
+
+    # Setup mock
+    mock_kb = MagicMock()
+    mock_kb_class.return_value = mock_kb
+    mock_kb.export_to_markdown.return_value = {
+        "total_entries": 3,
+        "files_created": 1,
+        "categories": ["decision"],
+    }
+
+    # Execute tool
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        result = kb_export_docs(output_dir="./docs/adr", category="decision")
+
+    # Verify
+    assert result["status"] == "success"
+    assert result["total_entries"] == 3
+    assert result["files_created"] == 1
+    assert result["categories"] == ["decision"]
+    assert "Exported 3 decision entries" in result["message"]
+
+
+@patch("clauxton.mcp.server.KnowledgeBase")
+def test_kb_export_docs_error_handling(mock_kb_class: MagicMock, tmp_path: Path) -> None:
+    """Test kb_export_docs tool error handling."""
+    from clauxton.mcp.server import kb_export_docs
+
+    # Setup mock to raise exception
+    mock_kb = MagicMock()
+    mock_kb_class.return_value = mock_kb
+    mock_kb.export_to_markdown.side_effect = Exception("Export failed")
+
+    # Execute tool
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        result = kb_export_docs(output_dir="./invalid/path")
+
+    # Verify error response
+    assert result["status"] == "error"
+    assert "Export failed" in result["error"]
+    assert "Failed to export KB" in result["message"]

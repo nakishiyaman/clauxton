@@ -871,6 +871,106 @@ def get_recent_operations(limit: int = 10) -> dict[str, Any]:
     }
 
 
+@mcp.tool()
+def kb_export_docs(
+    output_dir: str,
+    category: Optional[str] = None,
+) -> dict[str, Any]:
+    """
+    Export Knowledge Base entries to Markdown documentation files.
+
+    Creates one Markdown file per category (or a single file if category specified).
+    Decision entries use ADR (Architecture Decision Record) format.
+    Other categories use standard documentation format.
+
+    Args:
+        output_dir: Directory path to write Markdown files to (will be created if doesn't exist)
+        category: Optional category filter to export only specific category
+            Values: "architecture", "constraint", "decision", "pattern", "convention"
+
+    Returns:
+        Dictionary with export statistics and file list
+
+    Example:
+        >>> kb_export_docs(output_dir="./docs/kb")
+        {
+            "status": "success",
+            "total_entries": 15,
+            "files_created": 5,
+            "categories": ["architecture", "decision", "constraint"],
+            "output_dir": "./docs/kb",
+            "files": [
+                "architecture.md",
+                "decision.md",
+                "constraint.md"
+            ],
+            "message": "Exported 15 entries to 5 file(s) in ./docs/kb"
+        }
+
+        >>> kb_export_docs(output_dir="./docs/adr", category="decision")
+        {
+            "status": "success",
+            "total_entries": 3,
+            "files_created": 1,
+            "categories": ["decision"],
+            "output_dir": "./docs/adr",
+            "files": ["decision.md"],
+            "message": "Exported 3 decision entries to ./docs/adr/decision.md"
+        }
+
+    Use Cases:
+        1. **Documentation Generation**: Export KB to readable Markdown docs for team
+        2. **ADR Archive**: Export decision entries as Architecture Decision Records
+        3. **Knowledge Sharing**: Share project context with new team members
+        4. **Version Control**: Commit exported docs to Git for versioning
+        5. **Static Site**: Use exported Markdown in documentation sites (MkDocs, etc.)
+
+    Notes:
+        - Decision entries use ADR format (Context, Decision, Consequences)
+        - Other categories use standard format (Title, Content, Metadata)
+        - Files are named by category (e.g., architecture.md, decision.md)
+        - Output directory will be created if it doesn't exist
+        - Existing files will be overwritten
+        - Entries are sorted by creation date within each file
+    """
+    kb = KnowledgeBase(Path.cwd())
+    output_path = Path(output_dir)
+
+    try:
+        stats = kb.export_to_markdown(output_path, category=category)
+
+        # Generate list of created files
+        files = [f"{cat}.md" for cat in stats["categories"]]
+
+        # Create descriptive message
+        if category:
+            message = (
+                f"Exported {stats['total_entries']} {category} entries "
+                f"to {output_dir}/{category}.md"
+            )
+        else:
+            message = (
+                f"Exported {stats['total_entries']} entries "
+                f"to {stats['files_created']} file(s) in {output_dir}"
+            )
+
+        return {
+            "status": "success",
+            "total_entries": stats["total_entries"],
+            "files_created": stats["files_created"],
+            "categories": stats["categories"],
+            "output_dir": output_dir,
+            "files": files,
+            "message": message,
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "message": f"Failed to export KB: {e}",
+        }
+
+
 # ============================================================================
 # Logging Tools (v0.10.0 Week 2 Day 7)
 # ============================================================================

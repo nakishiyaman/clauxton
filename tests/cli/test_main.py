@@ -764,3 +764,121 @@ def test_kb_version_increments_correctly(runner: CliRunner, temp_project: Path) 
         get_result = runner.invoke(cli, ["kb", "get", entry_id])
         assert "Version: 6" in get_result.output
         assert "Version 6" in get_result.output  # Latest title
+
+
+# ============================================================================
+# kb export command tests
+# ============================================================================
+
+
+def test_kb_export_all_categories(runner: CliRunner, temp_project: Path) -> None:
+    """Test exporting all KB categories."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        # Add entries from different categories
+        runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Architecture Decision\narchitecture\nUse microservices\napi\n",
+        )
+        runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Technical Constraint\nconstraint\nPython 3.11+\npython\n",
+        )
+        runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Use PostgreSQL\ndecision\nPostgreSQL for production\ndb\n",
+        )
+
+        # Export
+        output_dir = temp_project / "docs" / "kb"
+        result = runner.invoke(cli, ["kb", "export", str(output_dir)])
+
+        assert result.exit_code == 0
+        assert "✓ Export successful!" in result.output
+        assert "Total entries: 3" in result.output
+        assert "Files created: 3" in result.output
+
+        # Verify files created
+        assert (output_dir / "architecture.md").exists()
+        assert (output_dir / "constraint.md").exists()
+        assert (output_dir / "decision.md").exists()
+
+
+def test_kb_export_specific_category(runner: CliRunner, temp_project: Path) -> None:
+    """Test exporting specific category only."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        # Add mixed entries
+        runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Arch\narchitecture\nContent\n\n",
+        )
+        runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Decision\ndecision\nContent\n\n",
+        )
+
+        # Export only decisions
+        output_dir = temp_project / "docs" / "adr"
+        result = runner.invoke(
+            cli, ["kb", "export", str(output_dir), "--category", "decision"]
+        )
+
+        assert result.exit_code == 0
+        assert "Total entries: 1" in result.output
+        assert "Files created: 1" in result.output
+        assert "ℹ Decision entries exported in ADR format" in result.output
+
+        # Verify only decision.md exists
+        assert (output_dir / "decision.md").exists()
+        assert not (output_dir / "architecture.md").exists()
+
+
+def test_kb_export_short_option(runner: CliRunner, temp_project: Path) -> None:
+    """Test export with short category option (-c)."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+        runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Pattern\npattern\nRepository pattern\n\n",
+        )
+
+        output_dir = temp_project / "docs"
+        result = runner.invoke(cli, ["kb", "export", str(output_dir), "-c", "pattern"])
+
+        assert result.exit_code == 0
+        assert "Total entries: 1" in result.output
+        assert (output_dir / "pattern.md").exists()
+
+
+def test_kb_export_without_init(runner: CliRunner, temp_project: Path) -> None:
+    """Test export fails without initialization."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        output_dir = temp_project / "docs"
+        result = runner.invoke(cli, ["kb", "export", str(output_dir)])
+
+        assert result.exit_code == 1
+        assert "Error: .clauxton/ not found" in result.output
+        assert "Run 'clauxton init' first" in result.output
+
+
+def test_kb_export_empty_kb(runner: CliRunner, temp_project: Path) -> None:
+    """Test export with empty Knowledge Base."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        output_dir = temp_project / "docs"
+        result = runner.invoke(cli, ["kb", "export", str(output_dir)])
+
+        # Should succeed but create no files
+        assert result.exit_code == 0
+        assert "Total entries: 0" in result.output
+        assert "Files created: 0" in result.output

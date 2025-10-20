@@ -461,6 +461,78 @@ def delete(entry_id: str, yes: bool) -> None:
         raise click.Abort()
 
 
+@kb.command()
+@click.argument("output_dir", type=click.Path())
+@click.option(
+    "--category",
+    "-c",
+    type=click.Choice(["architecture", "constraint", "decision", "pattern", "convention"]),
+    help="Export only entries from this category",
+)
+def export(output_dir: str, category: Optional[str]) -> None:
+    """
+    Export Knowledge Base entries to Markdown documentation files.
+
+    Creates one Markdown file per category (or a single file if category specified).
+    Decision entries use ADR (Architecture Decision Record) format.
+    Other categories use standard documentation format.
+
+    Examples:
+        $ clauxton kb export ./docs/kb                    # Export all categories
+        $ clauxton kb export ./docs/adr --category decision  # Export only decisions
+        $ clauxton kb export ~/project-docs/kb -c architecture
+    """
+    from clauxton.core.knowledge_base import KnowledgeBase
+    from clauxton.core.models import NotFoundError, ValidationError
+
+    root_dir = Path.cwd()
+
+    # Check if .clauxton exists
+    if not (root_dir / ".clauxton").exists():
+        click.echo(click.style("Error: .clauxton/ not found", fg="red"))
+        click.echo("Run 'clauxton init' first")
+        raise click.Abort()
+
+    kb_instance = KnowledgeBase(root_dir)
+    output_path = Path(output_dir)
+
+    try:
+        # Export to markdown
+        stats = kb_instance.export_to_markdown(output_path, category=category)
+
+        # Display success message
+        click.echo(click.style("✓ Export successful!", fg="green"))
+        click.echo(f"Output directory: {output_path.absolute()}")
+        click.echo(f"Total entries: {stats['total_entries']}")
+        click.echo(f"Files created: {stats['files_created']}")
+        click.echo(f"Categories: {', '.join(stats['categories'])}")
+
+        # List created files
+        click.echo("\nCreated files:")
+        for cat in stats["categories"]:
+            file_path = output_path / f"{cat}.md"
+            click.echo(f"  - {file_path}")
+
+        # Show tip for decisions
+        if "decision" in stats["categories"]:
+            click.echo(
+                click.style(
+                    "\nℹ Decision entries exported in ADR format",
+                    fg="blue",
+                )
+            )
+
+    except NotFoundError as e:
+        click.echo(click.style(f"Error: {e}", fg="red"))
+        raise click.Abort()
+    except ValidationError as e:
+        click.echo(click.style(f"Error: {e}", fg="red"))
+        raise click.Abort()
+    except Exception as e:
+        click.echo(click.style(f"Error: {e}", fg="red"))
+        raise click.Abort()
+
+
 # ============================================================================
 # Task Management Commands (Phase 1)
 # ============================================================================
