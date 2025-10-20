@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### v0.10.0 - Transparent Integration (In Development)
 **Target Release**: 2025-11-10
-**Status**: Week 2 Day 10 Complete (Backup Enhancement + Error Messages)
+**Status**: Week 2 Day 11 Complete (Configurable Confirmation Mode)
 
 #### Completed Features
 
@@ -107,7 +107,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `DuplicateError`: Suggest update or use different ID
   - `CycleDetectedError`: Show cycle path and how to break it
   - All error handlers use new format with context + suggestion + commands
-- **Configurable Confirmation Mode**: Set Human-in-the-Loop level (always/auto/never)
+- ✅ **Configurable Confirmation Mode** (Week 2 Day 11): Customizable Human-in-the-Loop level
+  - 29 tests (12 core + 17 CLI tests, 94% coverage of confirmation_manager.py)
+  - Features:
+    - 3 confirmation modes: "always" (100% HITL), "auto" (75% HITL, default), "never" (25% HITL)
+    - Configurable thresholds per operation type (task_import, task_delete, kb_delete, kb_import)
+    - Configuration stored in `.clauxton/config.yml`
+    - Automatic defaults: task_import=10, task_delete=5, kb_delete=3, kb_import=5
+  - Core: `ConfirmationManager` class with `get_mode()`, `set_mode()`, `should_confirm()`, `get_threshold()`, `set_threshold()`
+  - CLI commands:
+    - `clauxton config set confirmation_mode [always|auto|never]`
+    - `clauxton config get confirmation_mode`
+    - `clauxton config set task_import_threshold N`
+    - `clauxton config list` - View all configuration
+  - Safety: Invalid mode auto-resets to "auto", malformed config recovery
+  - Persistence: Configuration saved across sessions
+  - Use cases:
+    - Team development: "always" mode for maximum safety
+    - Individual development: "auto" mode for balanced workflow (default)
+    - Rapid prototyping: "never" mode with undo capability
 
 **📚 Documentation**:
 - YAML Format Guide: Complete specification
@@ -118,8 +136,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance Guide: `docs/performance-guide.md` (NEW)
 
 **🧪 Quality**:
-- +239 tests (390 → 629 tests)
-- 91% coverage maintained (98% for task_manager.py, 100% for task_validator.py, 97% for logger.py, 95% for KB/MCP, 89% for backup_manager.py)
+- +268 tests (390 → 658 tests)
+- 92% coverage maintained (98% for task_manager.py, 100% for task_validator.py, 97% for logger.py, 95% for KB/MCP, 94% for confirmation_manager.py, 89% for backup_manager.py)
 - Integration scenarios: Happy path, error recovery, undo flow, confirmation mode
 
 **Expected Impact**:

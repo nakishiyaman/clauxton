@@ -8,7 +8,7 @@
 [![PyPI Version](https://img.shields.io/pypi/v/clauxton)](https://pypi.org/project/clauxton/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/clauxton)](https://pypi.org/project/clauxton/)
 [![Development Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/nakishiyaman/clauxton)
-[![Test Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen.svg)](https://github.com/nakishiyaman/clauxton)
+[![Test Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen.svg)](https://github.com/nakishiyaman/clauxton)
 [![codecov](https://codecov.io/gh/nakishiyaman/clauxton/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/clauxton)
 
 > ✅ **Production Ready**: Clauxton v0.9.0-beta is stable and ready for production use. Phase 1-2 complete with TF-IDF search, task management, conflict detection, and MCP integration.
@@ -54,9 +54,15 @@ clauxton kb search "FastAPI authentication"
 # Get next recommended task (AI-powered)
 clauxton task next
 
-# Undo last operation (v0.10.0 feature - in development)
+# Undo last operation (v0.10.0 feature)
 clauxton undo                   # Undo with confirmation
 clauxton undo --history         # View operation history
+
+# Configure confirmation mode (v0.10.0 feature)
+clauxton config set confirmation_mode auto    # Balanced (default)
+clauxton config set confirmation_mode always  # Maximum safety
+clauxton config set confirmation_mode never   # Maximum speed
+clauxton config list            # View all configuration
 ```
 
 ### Install from Source (Development)
