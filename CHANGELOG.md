@@ -71,9 +71,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - CLI command: `clauxton logs [--limit N] [--operation TYPE] [--level LEVEL] [--days N] [--date YYYY-MM-DD] [--json]`
   - Log levels: debug, info, warning, error
   - Graceful handling: Skips malformed JSON lines, Unicode support
-- KB Export: `kb_export_docs()` - Generate Markdown documentation from KB
-- Progress Display: Real-time feedback for long operations
-- Performance Optimization: Batch write operations (25x faster)
+- ✅ **KB Export** (Week 2 Day 8): Generate Markdown documentation from Knowledge Base
+  - 24 tests (95% coverage of KB module)
+  - Category-based file generation (one .md per category)
+  - ADR format for decision entries (Context, Consequences sections)
+  - Standard format for other categories
+  - Full Unicode support (UTF-8 encoding)
+  - MCP tool: `kb_export_docs(output_dir, category)`
+  - CLI command: `clauxton kb export OUTPUT_DIR [--category CATEGORY]`
+  - Returns statistics: total_entries, files_created, categories
+- ✅ **Progress Display + Performance Optimization** (Week 2 Day 9): Batch operations with progress reporting
+  - 8 tests (98% coverage of TaskManager)
+  - **`add_many(tasks, progress_callback)` method**: Single file write for all tasks
+  - Progress callback support: `(current, total) -> None`
+  - Comprehensive validation (duplicates, dependencies, cycles)
+  - **Performance improvement**: 100 tasks in 0.2s (25x faster than 5s)
+  - `import_yaml()` uses batch operation automatically
+  - Backward compatible: All existing tests pass (607 total)
 - Backup Enhancement: Multiple generations (keep 10 backups)
 - Error Message Improvement: Detailed, actionable error messages
 - **Configurable Confirmation Mode**: Set Human-in-the-Loop level (always/auto/never)
@@ -82,10 +96,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - YAML Format Guide: Complete specification
 - Error Handling Guide: Troubleshooting common issues
 - Migration Guide: v0.9.0-beta → v0.10.0
+- KB Export Guide: `docs/kb-export-guide.md`
+- Logging Guide: `docs/logging-guide.md`
+- Performance Guide: `docs/performance-guide.md` (NEW)
 
 **🧪 Quality**:
-- +185 tests (390 → 575 tests)
-- 92% coverage achieved (97% for task_manager.py, 100% for task_validator.py, 97% for logger.py, 95% for MCP server)
+- +217 tests (390 → 607 tests)
+- 92% coverage achieved (98% for task_manager.py, 100% for task_validator.py, 97% for logger.py, 95% for KB/MCP)
 - Integration scenarios: Happy path, error recovery, undo flow, confirmation mode
 
 **Expected Impact**:

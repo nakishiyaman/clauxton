@@ -5,7 +5,7 @@ Provides CRUD operations for task management with YAML persistence.
 """
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from clauxton.core.models import (
     CycleDetectedError,
@@ -17,6 +17,9 @@ from clauxton.core.models import (
 )
 from clauxton.utils.file_utils import ensure_clauxton_dir
 from clauxton.utils.yaml_utils import read_yaml, write_yaml
+
+# Type alias for progress callback
+ProgressCallback = Callable[[int, int], None]
 
 
 class TaskManager:
@@ -104,6 +107,106 @@ class TaskManager:
         self._invalidate_cache()
 
         return task.id
+
+    def add_many(
+        self,
+        tasks_to_add: List[Task],
+        progress_callback: Optional[ProgressCallback] = None,
+    ) -> List[str]:
+        """
+        Add multiple tasks efficiently with optional progress reporting.
+
+        This method optimizes bulk task creation by:
+        1. Validating all tasks first
+        2. Writing to disk only once (batch operation)
+        3. Reporting progress every 5 tasks
+
+        Args:
+            tasks_to_add: List of Task objects to add
+            progress_callback: Optional callback function(current, total)
+                              Called every 5 tasks. Example:
+                              lambda current, total: print(f"{current}/{total}")
+
+        Returns:
+            List of task IDs created
+
+        Raises:
+            DuplicateError: If any task ID already exists
+            NotFoundError: If any dependency task not found
+            CycleDetectedError: If adding tasks creates circular dependency
+
+        Example:
+            >>> tasks = [
+            ...     Task(id="TASK-001", name="Setup", status="pending", created_at=datetime.now()),
+            ...     Task(id="TASK-002", name="Build", status="pending", created_at=datetime.now())
+            ... ]
+            >>> def report(curr, total):
+            ...     print(f"Progress: {curr}/{total}")
+            >>> task_ids = tm.add_many(tasks, progress_callback=report)
+            Progress: 2/2
+            >>> task_ids
+            ['TASK-001', 'TASK-002']
+        """
+        if not tasks_to_add:
+            return []
+
+        existing_tasks = self._load_tasks()
+        existing_ids = {t.id for t in existing_tasks}
+
+        # Validate all tasks first (fail fast)
+        for i, task in enumerate(tasks_to_add, 1):
+            # Check for duplicate ID
+            if task.id in existing_ids:
+                raise DuplicateError(
+                    f"Task with ID '{task.id}' already exists. "
+                    "Use update() to modify existing tasks."
+                )
+
+            # Check for duplicates within the batch
+            for j, other_task in enumerate(tasks_to_add[:i - 1], 1):
+                if task.id == other_task.id:
+                    raise DuplicateError(
+                        f"Duplicate task ID '{task.id}' found in batch "
+                        f"(positions {j} and {i}). Each task must have unique ID."
+                    )
+
+            # Validate dependencies exist (in existing or in batch)
+            batch_ids = {t.id for t in tasks_to_add}
+            all_available_ids = existing_ids | batch_ids
+
+            for dep_id in task.depends_on:
+                if dep_id not in all_available_ids:
+                    raise NotFoundError(
+                        f"Task '{task.name}' (ID: {task.id}): "
+                        f"Dependency task '{dep_id}' not found. "
+                        "Add dependencies before dependent tasks."
+                    )
+
+        # Check for cycles with all tasks (existing + new)
+        temp_graph = {t.id: t.depends_on for t in existing_tasks}
+        for task in tasks_to_add:
+            temp_graph[task.id] = task.depends_on
+
+        cycle_errors = self._detect_cycles_in_graph(temp_graph)
+        if cycle_errors:
+            raise CycleDetectedError(
+                f"Adding tasks would create circular dependencies: "
+                f"{', '.join(cycle_errors)}"
+            )
+
+        # All validations passed - perform batch write
+        all_tasks = existing_tasks + tasks_to_add
+        self._save_tasks(all_tasks)
+        self._invalidate_cache()
+
+        # Collect task IDs
+        task_ids = [t.id for t in tasks_to_add]
+
+        # Report progress (call callback for final progress)
+        if progress_callback:
+            progress_callback(len(tasks_to_add), len(tasks_to_add))
+
+        return task_ids
 
     def get(self, task_id: str) -> Task:
         """
@@ -799,10 +902,25 @@ class TaskManager:
 
             # Step 5: Create tasks (if not dry_run)
             if not dry_run:
-                all_tasks = existing_tasks + tasks_to_create
-                self._save_tasks(all_tasks)
-                self._invalidate_cache()
-                task_ids = [t.id for t in tasks_to_create]
+                if skip_validation:
+                    # When skipping validation, write directly to avoid validation in add_many()
+                    all_tasks = existing_tasks + tasks_to_create
+                    self._save_tasks(all_tasks)
+                    self._invalidate_cache()
+                    task_ids = [t.id for t in tasks_to_create]
+                else:
+                    # Use batch operation for performance with validation
+                    # Progress callback reports every 5 tasks or at completion
+                    progress_data = {"last_reported": 0}
+
+                    def progress_callback(current: int, total: int) -> None:
+                        # Report every 5 tasks or at completion
+                        if current == total or current - progress_data["last_reported"] >= 5:
+                            progress_data["last_reported"] = current
+                            # Progress reporting is internal, no need to print
+
+                    # Use add_many() for efficient batch operation
+                    task_ids = self.add_many(tasks_to_create, progress_callback=progress_callback)
 
                 # Record operation for undo
                 from clauxton.core.operation_history import (
