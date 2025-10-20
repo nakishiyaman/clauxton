@@ -61,6 +61,18 @@ cd clauxton
 pip install -e .
 ```
 
+### MCP Integration with Claude Code
+
+Set up Clauxton as MCP tools in Claude Code (15 tools available):
+
+```bash
+# Automatic setup (Linux/macOS)
+./setup-mcp.sh
+
+# Or see detailed guide
+docs/MCP_INTEGRATION_GUIDE.md
+```
+
 ---
 
 ## ✨ Features
@@ -394,14 +406,17 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 
 ### User Guides
 - [Quick Start Guide](docs/quick-start.md) - Get started in 5 minutes (CLI)
-- [Tutorial: Your First Knowledge Base](docs/tutorial-first-kb.md) - 30-minute beginner guide ✨ NEW
-- [Use Cases & Examples](docs/use-cases.md) - Real-world scenarios and implementations ✨ NEW
+- **[How to Use v0.9.0-beta](docs/HOW_TO_USE_v0.9.0-beta.md)** - Complete usage guide for current version ✨ NEW
+- **[MCP Integration Guide](docs/MCP_INTEGRATION_GUIDE.md)** - Step-by-step Claude Code integration (15 tools) ✨ NEW
+- [Tutorial: Your First Knowledge Base](docs/tutorial-first-kb.md) - 30-minute beginner guide
+- [Use Cases & Examples](docs/use-cases.md) - Real-world scenarios and implementations
 - [MCP Server Quick Start](docs/mcp-server-quickstart.md) - Get started with Claude Code
 - [Task Management Guide](docs/task-management-guide.md) - Complete task management documentation
 - [Search Algorithm](docs/search-algorithm.md) - TF-IDF search explanation
 - [Installation Guide](docs/installation.md) - Complete installation instructions
 - [YAML Format Reference](docs/yaml-format.md) - Complete Knowledge Base YAML specification
 - [MCP Server Guide](docs/mcp-server.md) - Complete MCP Server documentation
+- [Conflict Detection Guide](docs/conflict-detection.md) - Complete conflict detection documentation (40KB)
 
 ### Developer Guides
 - [Architecture Overview](docs/architecture.md) - System design and data flow
