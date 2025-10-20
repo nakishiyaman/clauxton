@@ -128,17 +128,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Rapid prototyping: "never" mode with undo capability
 
 **📚 Documentation**:
-- YAML Format Guide: Complete specification
-- Error Handling Guide: Troubleshooting common issues
-- Migration Guide: v0.9.0-beta → v0.10.0
-- KB Export Guide: `docs/kb-export-guide.md`
-- Logging Guide: `docs/logging-guide.md`
-- Performance Guide: `docs/performance-guide.md` (NEW)
+- **NEW**: `docs/ERROR_HANDLING_GUIDE.md` - Complete error resolution guide
+- **NEW**: `docs/MIGRATION_v0.10.0.md` - Migration guide from v0.9.0-beta
+- **NEW**: `docs/configuration-guide.md` - Configuration reference
+- Existing: `docs/YAML_TASK_FORMAT.md` - YAML format specification
+- Existing: `docs/kb-export-guide.md` - KB export guide
+- Existing: `docs/logging-guide.md` - Logging system guide
+- Existing: `docs/performance-guide.md` - Performance optimization guide
+- Existing: `docs/backup-guide.md` - Backup management guide
+- Updated: `README.md` - v0.10.0 features, 20 MCP tools, 666 tests
+- Updated: `CHANGELOG.md` - Complete v0.10.0 changelog
 
 **🧪 Quality**:
-- +268 tests (390 → 658 tests)
-- 92% coverage maintained (98% for task_manager.py, 100% for task_validator.py, 97% for logger.py, 95% for KB/MCP, 94% for confirmation_manager.py, 89% for backup_manager.py)
-- Integration scenarios: Happy path, error recovery, undo flow, confirmation mode
+- **+276 tests** (390 → **666 tests**)
+- **92% coverage** maintained (98% task_manager, 100% task_validator, 97% logger, 96% confirmation_manager, 95% KB/MCP, 89% backup_manager)
+- **20 MCP tools** (15 → 20, +5 tools)
+- **7 new CLI commands** (config set/get/list, logs, undo, task import, kb export)
+- Integration scenarios: Happy path, error recovery, undo flow, confirmation mode, performance testing
 
 **Expected Impact**:
 - User operations: 10 commands → 0 (fully automatic)

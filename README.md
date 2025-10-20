@@ -131,12 +131,6 @@ Claude Code: (Begins implementation)
 
 #### ✅ Task Management System
 - ✅ **Full CRUD**: Add, get, update, delete, list tasks
-- ✅ **YAML Bulk Import** (v0.10.0): Create multiple tasks from YAML file - 30x faster than manual
-- ✅ **Error Recovery** (v0.10.0): Transactional import with `rollback`/`skip`/`abort` strategies
-- ✅ **YAML Safety** (v0.10.0): Security checks to prevent code injection attacks
-- ✅ **Undo/Rollback** (v0.10.0): Reverse accidental operations with full history tracking
-- ✅ **Confirmation Prompts** (v0.10.0): Threshold-based warnings for bulk operations
-- ✅ **Enhanced Validation** (v0.10.0): Pre-Pydantic validation with clear error messages
 - ✅ **Smart Dependencies**: Auto-inferred from file overlap + manual dependencies
 - ✅ **DAG Validation**: Cycle detection prevents circular dependencies
 - ✅ **Priority Management**: 4 levels (Critical > High > Medium > Low)
@@ -144,14 +138,37 @@ Claude Code: (Begins implementation)
 - ✅ **Progress Tracking**: Track status (pending, in_progress, completed, blocked)
 - ✅ **Time Estimates**: Optional hour estimates for planning
 
-#### 🔌 MCP Server Integration (16 Tools)
-**Knowledge Base Tools** (6):
+#### 🚀 v0.10.0 Features (Transparent Integration)
+**Bulk Operations**:
+- ✅ **YAML Bulk Import**: Create multiple tasks from YAML file - 30x faster than manual
+- ✅ **KB Export**: Export Knowledge Base to Markdown documentation
+- ✅ **Progress Display**: Real-time progress bars for bulk operations (100+ items)
+
+**Safety & Recovery**:
+- ✅ **Undo/Rollback**: Reverse accidental operations with full history tracking
+- ✅ **Error Recovery**: Transactional import with `rollback`/`skip`/`abort` strategies
+- ✅ **YAML Safety**: Security checks to prevent code injection attacks
+- ✅ **Backup Enhancement**: Automatic backups before every write operation (last 10 kept)
+- ✅ **Enhanced Validation**: Pre-Pydantic validation with clear error messages
+
+**User Experience**:
+- ✅ **Confirmation Prompts**: Threshold-based warnings for bulk operations
+- ✅ **Configurable Confirmation Mode**: Set HITL level (always/auto/never)
+- ✅ **Operation Logging**: Structured logging with daily log files (30-day retention)
+- ✅ **Better Error Messages**: Actionable errors with context + suggestion + commands
+- ✅ **Performance Optimization**: 10x faster bulk operations
+
+**Total**: 13 new features in v0.10.0
+
+#### 🔌 MCP Server Integration (20 Tools)
+**Knowledge Base Tools** (7):
 - ✅ `kb_search` - TF-IDF relevance-ranked search
 - ✅ `kb_add` - Add new knowledge entry
 - ✅ `kb_list` - List all entries (filterable by category)
 - ✅ `kb_get` - Get entry by ID
 - ✅ `kb_update` - Update existing entry
 - ✅ `kb_delete` - Delete entry
+- ✅ `kb_export_docs` - **NEW v0.10.0**: Export KB to Markdown docs
 
 **Task Management Tools** (7):
 - ✅ `task_add` - Create task with auto-dependency inference
@@ -162,23 +179,34 @@ Claude Code: (Begins implementation)
 - ✅ `task_next` - Get AI-recommended next task
 - ✅ `task_delete` - Delete task
 
-**Conflict Detection Tools** (3) - v0.9.0-beta:
+**Conflict Detection Tools** (3):
 - ✅ `detect_conflicts` - Detect file conflicts for a task
 - ✅ `recommend_safe_order` - Get optimal task execution order
 - ✅ `check_file_conflicts` - Check if files are being edited
 
+**Operation Management Tools** (2) - **NEW v0.10.0**:
+- ✅ `undo_last_operation` - Reverse accidental operations
+- ✅ `get_recent_operations` - View operation history
+
+**Logging Tools** (1) - **NEW v0.10.0**:
+- ✅ `get_recent_logs` - View recent operation logs
+
 #### 📊 Quality Metrics
-- ✅ **575 Tests** - Comprehensive test coverage (+185 for v0.10.0 features):
-  - Week 1 Day 1-2: YAML Import (24 core + 6 MCP + 6 CLI)
-  - Week 1 Day 3: Undo/Rollback (24 tests)
+- ✅ **666 Tests** - Comprehensive test coverage (+276 for v0.10.0 features):
+  - Week 1 Day 1-2: YAML Import (24 core + 6 MCP + 6 CLI tests)
+  - Week 1 Day 3: Undo/Rollback (24 tests, 81% coverage)
   - Week 1 Day 4: Confirmation Prompts (14 tests)
   - Week 1 Day 5: Error Recovery + YAML Safety (33 tests)
   - Week 2 Day 6: Enhanced Validation (32 tests, 100% coverage)
   - Week 2 Day 7: Logging Functionality (47 tests, 97% coverage)
-- ✅ **92% Coverage** - High code quality maintained (97% task_manager, 100% task_validator, 97% logger, 95% MCP server)
+  - Week 2 Day 8: KB Export (24 tests, 95% coverage)
+  - Week 2 Day 9: Progress Display + Performance (11 tests)
+  - Week 2 Day 10: Backup Enhancement (18 tests, 89% coverage)
+  - Week 2 Day 11: Configurable Confirmation Mode (34 tests, 96% coverage)
+- ✅ **92% Coverage** - High code quality maintained (98% task_manager, 100% task_validator, 97% logger, 96% confirmation_manager, 95% KB/MCP)
 - ✅ **13 Integration Tests** - End-to-end workflow validation
 - ✅ **Type Safe** - Full Pydantic validation with strict mode
-- ✅ **Production Ready** - Stable v0.9.0-beta release, v0.10.0 Week 1 complete
+- ✅ **Production Ready** - Stable v0.9.0-beta release, **v0.10.0 Week 2 Day 11 complete**
 
 ### ✅ Phase 2: Conflict Detection (Complete in v0.9.0-beta)
 
