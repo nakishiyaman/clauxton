@@ -9,13 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### v0.10.0 - Transparent Integration (In Development)
-**Target Release**: 2025-11-10
-**Status**: Week 2 Day 11 Complete (Configurable Confirmation Mode)
+---
 
-#### Completed Features
+## [0.10.0] - 2025-10-21
 
-**🔴 Critical Features** (Safety & Core):
+### v0.10.0 - Transparent Integration
+**Release Date**: 2025-10-21
+**Status**: ✅ Released
+
+### Added
+
+**Bulk Operations**:
 - ✅ **YAML Bulk Import** (Week 1 Day 1-2): `task_import_yaml()` - Create multiple tasks in one operation
   - 20 tests, 100% backward compatible
   - Circular dependency detection, dry-run mode
@@ -45,12 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Blocks import before any processing (highest precedence)
   - Clear security error messages
 
-#### Planned Features
-
-**🔴 Critical Features** (Safety & Core):
-- None remaining for Week 1!
-
-**🟡 Important Features** (UX & Quality):
+**User Experience Improvements**:
 - ✅ **Enhanced Validation** (Week 2 Day 6): Pre-Pydantic validation for better error messages
   - 32 tests (100% coverage of task_validator.py)
   - Validates: task names, duplicate IDs, duplicate names (warning), priorities, statuses, dependencies, estimated hours, file paths
@@ -505,4 +504,6 @@ See `docs/design/REVISED_ROADMAP_v0.10.0.md` for complete roadmap.
 [Unreleased]: https://github.com/nakishiyaman/clauxton/compare/v0.8.0...HEAD
 [0.8.0]: https://github.com/nakishiyaman/clauxton/releases/tag/v0.8.0
 [0.1.0]: https://github.com/nakishiyaman/clauxton/releases/tag/v0.1.0
+[0.10.0]: https://github.com/nakishiyaman/clauxton/compare/v0.9.0...v0.10.0
+[0.9.0-beta]: https://github.com/nakishiyaman/clauxton/compare/v0.8.0...v0.9.0
 [0.0.1]: https://github.com/nakishiyaman/clauxton/releases/tag/v0.0.1
