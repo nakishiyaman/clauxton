@@ -235,6 +235,67 @@ class Task(BaseModel):
 
 
 # ============================================================================
+# Conflict Detection Models (Phase 2)
+# ============================================================================
+
+
+class ConflictReport(BaseModel):
+    """
+    Report of a detected conflict between tasks.
+
+    Conflicts occur when multiple tasks attempt to modify the same files,
+    creating potential merge conflicts or coordination issues.
+
+    Attributes:
+        task_a_id: ID of first task involved in conflict
+        task_b_id: ID of second task involved in conflict
+        conflict_type: Type of conflict (file_overlap, dependency_violation)
+        risk_level: Risk severity (low, medium, high)
+        risk_score: Numerical risk score (0.0-1.0)
+        overlapping_files: Files modified by both tasks
+        details: Human-readable conflict description
+        recommendation: Suggested action to resolve conflict
+
+    Example:
+        >>> conflict = ConflictReport(
+        ...     task_a_id="TASK-001",
+        ...     task_b_id="TASK-003",
+        ...     conflict_type="file_overlap",
+        ...     risk_level="high",
+        ...     risk_score=0.85,
+        ...     overlapping_files=["src/api/auth.py"],
+        ...     details="Both tasks edit src/api/auth.py",
+        ...     recommendation="Complete TASK-001 before starting TASK-003"
+        ... )
+        >>> conflict.risk_level
+        'high'
+    """
+
+    task_a_id: str = Field(
+        ..., pattern=r"^TASK-\d{3}$", description="First task ID"
+    )
+    task_b_id: str = Field(
+        ..., pattern=r"^TASK-\d{3}$", description="Second task ID"
+    )
+    conflict_type: Literal["file_overlap", "dependency_violation"] = Field(
+        ..., description="Type of conflict"
+    )
+    risk_level: Literal["low", "medium", "high"] = Field(
+        ..., description="Risk severity level"
+    )
+    risk_score: float = Field(
+        ..., ge=0.0, le=1.0, description="Numerical risk score (0.0-1.0)"
+    )
+    overlapping_files: List[str] = Field(
+        default_factory=list, description="Files modified by both tasks"
+    )
+    details: str = Field(..., min_length=1, description="Conflict description")
+    recommendation: str = Field(
+        ..., min_length=1, description="Suggested resolution"
+    )
+
+
+# ============================================================================
 # Helper Types
 # ============================================================================
 
@@ -242,3 +303,5 @@ class Task(BaseModel):
 CategoryType = Literal["architecture", "constraint", "decision", "pattern", "convention"]
 TaskStatusType = Literal["pending", "in_progress", "completed", "blocked"]
 TaskPriorityType = Literal["low", "medium", "high", "critical"]
+ConflictTypeType = Literal["file_overlap", "dependency_violation"]
+RiskLevelType = Literal["low", "medium", "high"]
