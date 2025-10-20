@@ -11,7 +11,8 @@
 [![Test Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen.svg)](https://github.com/nakishiyaman/clauxton)
 [![codecov](https://codecov.io/gh/nakishiyaman/clauxton/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/clauxton)
 
-> ✅ **Production Ready**: Clauxton v0.9.0-beta is stable and ready for production use. Phase 1 complete with TF-IDF search, task management, and MCP integration.
+> ✅ **Production Ready**: Clauxton v0.9.0-beta is stable and ready for production use. Phase 1-2 complete with TF-IDF search, task management, conflict detection, and MCP integration.
+> 🚀 **v0.10.0 Coming Soon** (2025-11-10): Transparent integration with Claude Code - natural conversation only, no manual commands!
 
 Clauxton is a Claude Code plugin that provides **persistent project context** to solve AI-assisted development pain points.
 
@@ -19,6 +20,7 @@ Clauxton is a Claude Code plugin that provides **persistent project context** to
 1. ✅ **Session Context Loss** → Persistent Knowledge Base with TF-IDF Search (Phase 0-1 - **Complete**)
 2. ✅ **Manual Dependency Tracking** → Auto-inferred task dependencies (Phase 1 - **Complete**)
 3. ✅ **Post-hoc Conflict Detection** → Pre-merge conflict prediction (Phase 2 - **Complete in v0.9.0-beta**)
+4. 🚀 **Manual CLI Operations** → Transparent Integration (Phase 3 - **In Progress, v0.10.0**)
 
 ---
 
@@ -72,6 +74,21 @@ Set up Clauxton as MCP tools in Claude Code (15 tools available):
 # Or see detailed guide
 docs/MCP_INTEGRATION_GUIDE.md
 ```
+
+**With v0.10.0 (Coming 2025-11-10)**, Claude Code will use Clauxton **transparently**:
+
+```
+You: "Build a Todo app with FastAPI"
+
+Claude Code: (Automatically creates 10 tasks via MCP, no manual commands needed)
+             "Created 10 tasks. Starting with TASK-001: FastAPI setup"
+
+You: "Sounds good!"
+
+Claude Code: (Begins implementation)
+```
+
+**No more manual CLI commands** - just natural conversation! See `CLAUDE.md` for details.
 
 ---
 
@@ -406,6 +423,7 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 
 ### User Guides
 - [Quick Start Guide](docs/quick-start.md) - Get started in 5 minutes (CLI)
+- **[Installation Guide](docs/INSTALLATION_GUIDE.md)** - Shell alias setup, virtual environment isolation explained ✨ NEW
 - **[How to Use v0.9.0-beta](docs/HOW_TO_USE_v0.9.0-beta.md)** - Complete usage guide for current version ✨ NEW
 - **[MCP Integration Guide](docs/MCP_INTEGRATION_GUIDE.md)** - Step-by-step Claude Code integration (15 tools) ✨ NEW
 - [Tutorial: Your First Knowledge Base](docs/tutorial-first-kb.md) - 30-minute beginner guide
@@ -413,7 +431,6 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 - [MCP Server Quick Start](docs/mcp-server-quickstart.md) - Get started with Claude Code
 - [Task Management Guide](docs/task-management-guide.md) - Complete task management documentation
 - [Search Algorithm](docs/search-algorithm.md) - TF-IDF search explanation
-- [Installation Guide](docs/installation.md) - Complete installation instructions
 - [YAML Format Reference](docs/yaml-format.md) - Complete Knowledge Base YAML specification
 - [MCP Server Guide](docs/mcp-server.md) - Complete MCP Server documentation
 - [Conflict Detection Guide](docs/conflict-detection.md) - Complete conflict detection documentation (40KB)

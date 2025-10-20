@@ -9,10 +9,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Phase 2 Features (Week 13-15)
-- Drift Detection: Track scope expansion in tasks
-- Event Logging: Complete audit trail with events.jsonl
-- Lifecycle Hooks: Pre-commit and post-edit hooks
+### v0.10.0 - Transparent Integration (In Development)
+**Target Release**: 2025-11-10
+**Status**: Planning Complete, Implementation Starting
+
+#### Planned Features
+
+**🔴 Critical Features** (Safety & Core):
+- YAML Bulk Import: `task_import_yaml()` - Create multiple tasks in one operation
+- Undo/Rollback: `undo_last_operation()` - Reverse accidental operations
+- Confirmation Prompts: Threshold-based confirmation (10+ tasks/5+ KB entries)
+- Error Recovery: Transactional import with rollback/skip/abort strategies
+- YAML Safety: Detect dangerous YAML patterns (code injection prevention)
+
+**🟡 Important Features** (UX & Quality):
+- Enhanced Validation: Detect empty names, duplicate files, invalid paths
+- Operation Logging: `.clauxton/logs/` - Track all operations for debugging
+- KB Export: `kb_export_docs()` - Generate Markdown documentation from KB
+- Progress Display: Real-time feedback for long operations
+- Performance Optimization: Batch write operations (25x faster)
+- Backup Enhancement: Multiple generations (keep 10 backups)
+- Error Message Improvement: Detailed, actionable error messages
+- **Configurable Confirmation Mode**: Set Human-in-the-Loop level (always/auto/never)
+
+**📚 Documentation**:
+- YAML Format Guide: Complete specification
+- Error Handling Guide: Troubleshooting common issues
+- Migration Guide: v0.9.0-beta → v0.10.0
+
+**🧪 Quality**:
+- +90 tests (390 → 480 tests)
+- 94% coverage maintained
+- Integration scenarios: Happy path, error recovery, undo flow, confirmation mode
+
+**Expected Impact**:
+- User operations: 10 commands → 0 (fully automatic)
+- Task registration: 5 minutes → 10 seconds (30x faster)
+- Error risk: 10-20% → <1%
+- Human-in-the-Loop: 50% → 75-100% (configurable)
+- Claude philosophy alignment: 70% → 95%
+
+See `docs/design/REVISED_ROADMAP_v0.10.0.md` for complete roadmap.
+
+---
+
+### Phase 3 Features (v0.11.0 and beyond)
+- Interactive Mode: Conversational YAML generation
+- Project Templates: Pre-built patterns for common projects
+- Repository Map: Automatic codebase indexing (like Aider/Devin)
+- Web Dashboard: Visual KB/Task/Conflict management
 
 ---
 

@@ -362,6 +362,387 @@ python -c "import yaml; yaml.safe_load(open('.clauxton/knowledge-base.yml'))"
 cp .clauxton/backups/knowledge-base.yml.bak .clauxton/knowledge-base.yml
 ```
 
+## Clauxton Integration Philosophy
+
+### Core Principle: "Transparent Yet Controllable"
+
+Clauxton follows Claude Code's philosophy:
+- **Do the Simple Thing First**: YAML + Markdown (human-readable, Git-friendly)
+- **Composable**: MCP integration (seamless with Claude Code)
+- **User Control**: CLI override always available
+- **Safety-First**: Read-only by default, explicit writes with undo capability
+- **Human-in-the-Loop**: Configurable confirmation levels (v0.10.0+)
+
+### When to Use Clauxton (Transparent Integration)
+
+#### 🔍 Phase 1: Requirements Gathering
+
+**Trigger**: User mentions constraints, tech stack, or design decisions
+
+**Action**: Automatically add to Knowledge Base via MCP
+
+**Examples**:
+
+| User Statement | MCP Call | Category |
+|----------------|----------|----------|
+| "FastAPIを使う" | `kb_add(title="FastAPI採用", category="architecture", ...)` | architecture |
+| "最大1000件まで" | `kb_add(title="データ上限", category="constraint", ...)` | constraint |
+| "JWTで認証" | `kb_add(title="JWT認証", category="decision", ...)` | decision |
+| "snake_case推奨" | `kb_add(title="命名規則", category="convention", ...)` | convention |
+
+**Implementation Pattern**:
+```python
+# When user mentions technical decisions
+if user_mentioned_tech_decision:
+    kb_add(
+        title=extract_title(user_message),
+        category=infer_category(user_message),
+        content=user_message,
+        tags=extract_tags(user_message)
+    )
+```
+
+---
+
+#### 📋 Phase 2: Task Planning
+
+**Trigger**: User requests feature implementation or breaks down work
+
+**Action**: Generate tasks and import via YAML (v0.10.0+)
+
+**Example Workflow**:
+
+```
+User: "Todoアプリを作りたい。FastAPIでバックエンド、Reactでフロントエンドを構築して。"
+
+↓ Claude Code思考プロセス ↓
+
+1. Feature breakdown:
+   - Backend: FastAPI初期化、API設計、DB設定
+   - Frontend: React初期化、UI実装
+   - Integration: API連携
+
+2. Generate YAML:
+   ```yaml
+   tasks:
+     - name: "FastAPI初期化"
+       description: "FastAPIプロジェクトをセットアップ"
+       priority: high
+       files_to_edit: [backend/main.py, backend/requirements.txt]
+       estimate: 1
+     - name: "API設計"
+       description: "Todo CRUD APIエンドポイントを定義"
+       priority: high
+       files_to_edit: [backend/api/todos.py]
+       depends_on: [TASK-001]
+       estimate: 2
+     ...
+   ```
+
+3. Import via MCP:
+   ```python
+   result = task_import_yaml(yaml_content)
+   # → 10 tasks created: TASK-001 to TASK-010
+   ```
+
+4. Verify:
+   ```python
+   tasks = task_list(status="pending")
+   # → Confirm all tasks registered
+   ```
+
+5. Start implementation:
+   ```python
+   next_task = task_next()
+   # → TASK-001 (FastAPI初期化)
+   ```
+
+↓ User sees ↓
+
+"10個のタスクを作成しました。TASK-001（FastAPI初期化）から始めます。"
+```
+
+**Key Points**:
+- User doesn't see YAML generation (transparent)
+- All tasks created in single operation (efficient)
+- Dependencies auto-inferred from file overlap
+- Claude Code manages workflow (user just confirms if needed)
+
+---
+
+#### ⚠️ Phase 3: Conflict Detection (Before Implementation)
+
+**Trigger**: Before starting a task
+
+**Action**: Check conflicts via MCP
+
+**Example Workflow**:
+
+```python
+# Before implementing TASK-003
+conflicts = detect_conflicts("TASK-003")
+
+if conflicts["risk"] == "HIGH":
+    # Warn user
+    print(f"⚠️ Warning: TASK-003 has HIGH conflict risk with TASK-002")
+    print(f"Files: {conflicts['files']}")
+    print(f"Recommendation: Complete TASK-002 first")
+
+    # Ask user
+    proceed = ask_user("Proceed anyway?")
+    if not proceed:
+        # Work on another task
+        next_task = task_next()
+```
+
+**Key Points**:
+- Automatic conflict checking (transparent)
+- User is warned if HIGH risk
+- User decides whether to proceed (control)
+
+---
+
+#### 🛠️ Phase 4: Implementation
+
+**During Implementation**: Update task status
+
+```python
+# Start task
+task_update("TASK-001", status="in_progress")
+
+# ... implementation ...
+
+# Complete task
+task_update("TASK-001", status="completed")
+
+# Move to next
+next_task = task_next()
+```
+
+---
+
+### Manual Override (User Control)
+
+**Important**: User can always override with CLI
+
+```bash
+# View all KB entries
+clauxton kb list
+
+# Add entry manually
+clauxton kb add --title "..." --category architecture
+
+# Delete incorrect entry
+clauxton kb delete KB-20251020-001
+
+# View all tasks
+clauxton task list
+
+# Manually update task
+clauxton task update TASK-001 --status completed
+
+# Check conflicts manually
+clauxton conflict detect TASK-003
+```
+
+**Philosophy**: Claude Code uses MCP (transparent), but user has CLI (control)
+
+---
+
+### Transparency & Inspection
+
+**User can inspect at any time**:
+
+```bash
+# View internal state
+cat .clauxton/knowledge-base.yml
+cat .clauxton/tasks.yml
+
+# Git diff
+git diff .clauxton/
+
+# Search
+clauxton kb search "authentication"
+clauxton task list --status pending
+```
+
+**Key Points**:
+- All data is human-readable (YAML)
+- All data is Git-friendly (version control)
+- User can manually edit if needed (last resort)
+
+---
+
+### Error Handling
+
+**If Clauxton operations fail**:
+
+```python
+try:
+    result = kb_add(...)
+except Exception as e:
+    # Graceful degradation
+    print(f"Failed to add to KB: {e}")
+    print("Continuing without KB registration...")
+    # Implementation continues
+```
+
+**Philosophy**: Clauxton is helpful but not blocking
+
+---
+
+### Human-in-the-Loop (v0.10.0+)
+
+**Configurable Confirmation Modes**:
+
+1. **"always" mode** (100% HITL):
+   - Every write operation requires confirmation
+   - Maximum safety, stricter workflow
+   - Use: Team development, production environments
+
+2. **"auto" mode** (75% HITL, default):
+   - Threshold-based confirmation (10+ tasks, 5+ KB entries)
+   - Balanced approach
+   - Use: Most development workflows
+
+3. **"never" mode** (25% HITL):
+   - No confirmation prompts
+   - Undo capability available
+   - Use: Rapid prototyping, personal projects
+
+**Configuration**:
+```bash
+# Set confirmation mode
+clauxton config set confirmation_mode always   # Strict
+clauxton config set confirmation_mode auto     # Balanced (default)
+clauxton config set confirmation_mode never    # Fast
+
+# View current mode
+clauxton config get confirmation_mode
+```
+
+**All modes include**:
+- ✅ Undo capability (`undo_last_operation()`)
+- ✅ Operation logging (`.clauxton/logs/`)
+- ✅ Automatic backups (`.clauxton/backups/`)
+
+---
+
+## 🎯 Best Practices
+
+### DO:
+✅ Use Clauxton transparently during natural conversation
+✅ Register decisions/constraints as they're mentioned
+✅ Generate tasks in bulk (YAML import, v0.10.0+)
+✅ Check conflicts before implementation
+✅ Update task status as you work
+✅ Trust user to inspect/override if needed
+✅ Respect user's confirmation_mode setting
+
+### DON'T:
+❌ Ask user to run CLI commands manually (breaks flow)
+❌ Show YAML generation details (too technical)
+❌ Skip conflict detection (causes merge issues)
+❌ Leave task status outdated (confuses workflow)
+❌ Override user's confirmation_mode preference
+
+---
+
+## 🔧 Technical Notes
+
+### MCP Tools Available
+
+**Knowledge Base** (6 tools):
+- `kb_search(query, limit)` - Search KB entries
+- `kb_add(title, category, content, tags)` - Add entry
+- `kb_list(category)` - List entries
+- `kb_get(entry_id)` - Get specific entry
+- `kb_update(entry_id, ...)` - Update entry
+- `kb_delete(entry_id)` - Delete entry
+
+**Task Management** (6 tools + 1 in v0.10.0):
+- `task_add(name, priority, files, ...)` - Add single task
+- `task_import_yaml(yaml_content)` - ⭐ Bulk import (v0.10.0+)
+- `task_list(status, priority)` - List tasks
+- `task_get(task_id)` - Get specific task
+- `task_update(task_id, status, ...)` - Update task
+- `task_next()` - Get AI-recommended next task
+- `task_delete(task_id)` - Delete task
+
+**Conflict Detection** (3 tools):
+- `detect_conflicts(task_id)` - Check conflicts for task
+- `recommend_safe_order(task_ids)` - Get safe execution order
+- `check_file_conflicts(file_paths)` - Check file availability
+
+**KB Export** (v0.10.0+):
+- `kb_export_docs(output_dir)` - ⭐ Export KB to Markdown docs
+
+**Undo/Configuration** (v0.10.0+):
+- `undo_last_operation()` - ⭐ Reverse last operation
+- `get_recent_logs()` - View operation history
+
+Total: **17 tools** (15 current + 2 new in v0.10.0)
+
+---
+
+## 📊 Expected Behavior Changes
+
+### Before Enhancement (Current v0.9.0-beta):
+
+```
+User: "Todoアプリを作りたい"
+↓
+Claude Code: "まず、以下のコマンドを実行してください：
+              clauxton task add --name 'FastAPI初期化' ...
+              clauxton task add --name 'API設計' ...
+              ...（10回繰り返し）"
+↓
+User: （手動で10回コマンド実行）
+↓
+Claude Code: "タスクを登録しました。始めましょう。"
+```
+
+**問題**: 会話フローが断絶、手間が多い
+
+---
+
+### After Enhancement (v0.10.0):
+
+```
+User: "Todoアプリを作りたい"
+↓
+Claude Code: （内部でYAML生成 → task_import_yaml()）
+             "10個のタスクを作成しました：
+              - TASK-001: FastAPI初期化
+              - TASK-002: API設計
+              - TASK-003: DB設定
+              ...
+              TASK-001から始めます。"
+↓
+User: "はい、お願いします"
+↓
+Claude Code: （実装開始）
+```
+
+**改善**: 自然な会話、手間なし、効率的
+
+---
+
+## 📈 Success Metrics
+
+**定量的指標**:
+- タスク登録時間: 5分 → 10秒（30倍高速化）
+- ユーザー操作回数: 10回 → 0回（完全自動化）
+- Claude哲学合致度: 70% → 95%（Composable + HITL実現）
+
+**定性的指標**:
+- ユーザーは自然な会話だけでタスク管理可能
+- Claude Codeが自律的にClauxtonを活用
+- 手動オーバーライドも常に可能（User Control）
+- 確認レベルをユーザーが選択可能（v0.10.0+）
+
+---
+
 ## Development Roadmap
 
 ### Phase 0: Foundation (Complete)
