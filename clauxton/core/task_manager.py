@@ -630,6 +630,36 @@ class TaskManager:
                     "next_task": None,
                 }
 
+            # Step 1.5: Enhanced validation (unless skipped)
+            if not skip_validation:
+                from clauxton.core.task_validator import TaskValidator
+
+                existing_tasks_temp = self._load_tasks()
+                existing_task_ids = set(existing_tasks_temp.keys())
+
+                validator = TaskValidator(self.root_dir)
+                validation_result = validator.validate_tasks(tasks_data, existing_task_ids)
+
+                # Add validation errors
+                if not validation_result.is_valid():
+                    errors.extend(validation_result.errors)
+
+                    if on_error == "rollback" or on_error == "abort":
+                        # Return immediately with validation errors
+                        return {
+                            "status": "error",
+                            "imported": 0,
+                            "task_ids": [],
+                            "errors": errors,
+                            "next_task": None,
+                        }
+                    # For skip mode, continue with warnings only
+
+                # Log warnings (these don't block import)
+                if validation_result.has_warnings():
+                    # Warnings are informational, not blocking
+                    pass
+
             # Step 2: Generate task IDs and validate
             existing_tasks = self._load_tasks()
             next_id_num = len(existing_tasks) + 1
