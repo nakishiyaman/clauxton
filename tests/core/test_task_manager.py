@@ -1060,7 +1060,8 @@ def test_import_yaml_large_batch(task_manager: TaskManager) -> None:
     )
     yaml_content = f"tasks:\n{tasks_yaml}"
 
-    result = task_manager.import_yaml(yaml_content)
+    # Skip confirmation for this test (50 tasks >= default threshold of 10)
+    result = task_manager.import_yaml(yaml_content, skip_confirmation=True)
 
     assert result["status"] == "success"
     assert result["imported"] == 50
@@ -1281,7 +1282,7 @@ tasks:
       - TASK-001
 """
 
-    result2 = task_manager.import_yaml(yaml_content2)
+    _ = task_manager.import_yaml(yaml_content2)
     # next_task might be TASK-002 or TASK-003 since they only depend on TASK-001
     # This test verifies the logic works, even if next_task is available
 

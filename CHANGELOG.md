@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### v0.10.0 - Transparent Integration (In Development)
 **Target Release**: 2025-11-10
-**Status**: Week 1 Day 3 Complete (Undo/Rollback)
+**Status**: Week 1 Day 4 Complete (Confirmation Prompts)
 
 #### Completed Features
 
@@ -24,11 +24,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - History stored in `.clauxton/history/operations.yml`
   - CLI: `clauxton undo`, `clauxton undo --history`
   - MCP tools: `undo_last_operation()`, `get_recent_operations()`
+- ✅ **Confirmation Prompts** (Week 1 Day 4): Threshold-based confirmation for bulk operations
+  - 14 tests, prevents accidental bulk operations
+  - Default threshold: 10 tasks (configurable)
+  - Preview generation: task count, estimated hours, priority/status breakdown
+  - Parameters: `skip_confirmation`, `confirmation_threshold`
+  - Returns `status: "confirmation_required"` with preview data
+  - Works with: YAML import, dry-run mode, validation errors
 
 #### Planned Features
 
 **🔴 Critical Features** (Safety & Core):
-- Confirmation Prompts: Threshold-based confirmation (10+ tasks/5+ KB entries)
 - Error Recovery: Transactional import with rollback/skip/abort strategies
 - YAML Safety: Detect dangerous YAML patterns (code injection prevention)
 

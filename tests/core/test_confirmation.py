@@ -2,8 +2,6 @@
 Tests for confirmation prompts functionality.
 """
 
-import pytest
-from pathlib import Path
 from clauxton.core.task_manager import TaskManager
 
 
@@ -231,3 +229,216 @@ class TestConfirmationPrompts:
         assert result["status"] == "success"
         assert result["imported"] == 0  # Nothing imported in dry run
         assert "confirmation_required" not in result
+
+    def test_validation_error_prevents_confirmation(self, tmp_path):
+        """Test that validation errors are caught before confirmation check."""
+        tm = TaskManager(tmp_path)
+
+        # Create YAML with 10 tasks, one with invalid dependency
+        yaml_content = """
+        tasks:
+          - name: "Task 1"
+            priority: high
+          - name: "Task 2"
+            priority: high
+            depends_on: [TASK-999]  # Non-existent dependency
+          - name: "Task 3"
+            priority: medium
+          - name: "Task 4"
+            priority: medium
+          - name: "Task 5"
+            priority: medium
+          - name: "Task 6"
+            priority: low
+          - name: "Task 7"
+            priority: low
+          - name: "Task 8"
+            priority: low
+          - name: "Task 9"
+            priority: low
+          - name: "Task 10"
+            priority: low
+        """
+
+        result = tm.import_yaml(yaml_content)
+
+        # Should return error status, not confirmation_required
+        assert result["status"] == "error"
+        assert result["imported"] == 0
+        assert "confirmation_required" not in result
+        assert any("TASK-999" in err for err in result["errors"])
+
+    def test_circular_dependency_prevents_confirmation(self, tmp_path):
+        """Test that circular dependency detection happens before confirmation."""
+        tm = TaskManager(tmp_path)
+
+        # Create YAML with 10 tasks that have circular dependencies
+        yaml_content = """
+        tasks:
+          - name: "Task 1"
+            priority: high
+            depends_on: [TASK-010]  # Depends on Task 10
+          - name: "Task 2"
+            priority: high
+          - name: "Task 3"
+            priority: medium
+          - name: "Task 4"
+            priority: medium
+          - name: "Task 5"
+            priority: medium
+          - name: "Task 6"
+            priority: low
+          - name: "Task 7"
+            priority: low
+          - name: "Task 8"
+            priority: low
+          - name: "Task 9"
+            priority: low
+          - name: "Task 10"
+            priority: low
+            depends_on: [TASK-001]  # Circular: 1 → 10 → 1
+        """
+
+        result = tm.import_yaml(yaml_content)
+
+        # Should return error status, not confirmation_required
+        assert result["status"] == "error"
+        assert result["imported"] == 0
+        assert "confirmation_required" not in result
+        assert any("Circular dependency" in err for err in result["errors"])
+
+    def test_preview_with_no_estimated_hours(self, tmp_path):
+        """Test preview generation when tasks have no estimated hours."""
+        tm = TaskManager(tmp_path)
+
+        # Create YAML with 10 tasks, none with estimated_hours
+        yaml_content = """
+        tasks:
+          - name: "Task 1"
+            priority: high
+          - name: "Task 2"
+            priority: high
+          - name: "Task 3"
+            priority: medium
+          - name: "Task 4"
+            priority: medium
+          - name: "Task 5"
+            priority: medium
+          - name: "Task 6"
+            priority: low
+          - name: "Task 7"
+            priority: low
+          - name: "Task 8"
+            priority: low
+          - name: "Task 9"
+            priority: low
+          - name: "Task 10"
+            priority: low
+        """
+
+        result = tm.import_yaml(yaml_content)
+
+        assert result["status"] == "confirmation_required"
+        preview = result["preview"]
+        assert preview["task_count"] == 10
+        assert preview["total_estimated_hours"] == 0  # All None → 0
+        assert len(preview["tasks_summary"]) == 5
+
+    def test_yaml_parsing_error_prevents_confirmation(self, tmp_path):
+        """Test that YAML parsing errors bypass confirmation."""
+        tm = TaskManager(tmp_path)
+
+        # Invalid YAML syntax
+        yaml_content = """
+        tasks:
+          - name: "Task 1"
+            priority: high
+          - name: "Task 2"
+            priority: [invalid: yaml: syntax
+        """
+
+        result = tm.import_yaml(yaml_content)
+
+        # Should return error status immediately
+        assert result["status"] == "error"
+        assert result["imported"] == 0
+        assert "confirmation_required" not in result
+        assert any("YAML parsing error" in err for err in result["errors"])
+
+    def test_empty_tasks_list_no_confirmation(self, tmp_path):
+        """Test that empty task list doesn't trigger confirmation."""
+        tm = TaskManager(tmp_path)
+
+        yaml_content = """
+        tasks: []
+        """
+
+        result = tm.import_yaml(yaml_content)
+
+        # Should succeed immediately without confirmation
+        assert result["status"] == "success"
+        assert result["imported"] == 0
+        assert "confirmation_required" not in result
+
+    def test_invalid_yaml_format_no_confirmation(self, tmp_path):
+        """Test that invalid YAML format returns error before confirmation."""
+        tm = TaskManager(tmp_path)
+
+        # Missing 'tasks' key
+        yaml_content = """
+        invalid_key:
+          - name: "Task 1"
+        """
+
+        result = tm.import_yaml(yaml_content)
+
+        # Should return error status
+        assert result["status"] == "error"
+        assert result["imported"] == 0
+        assert "confirmation_required" not in result
+        assert any("Expected 'tasks' key" in err for err in result["errors"])
+
+    def test_confirmation_threshold_exactly_at_limit(self, tmp_path):
+        """Test edge case: exactly at threshold triggers confirmation."""
+        tm = TaskManager(tmp_path)
+
+        # Create exactly 10 tasks (default threshold)
+        yaml_content = """
+        tasks:
+          - name: "Task 1"
+          - name: "Task 2"
+          - name: "Task 3"
+          - name: "Task 4"
+          - name: "Task 5"
+          - name: "Task 6"
+          - name: "Task 7"
+          - name: "Task 8"
+          - name: "Task 9"
+          - name: "Task 10"
+        """
+
+        result = tm.import_yaml(yaml_content)
+
+        # Should trigger confirmation (>=threshold)
+        assert result["status"] == "confirmation_required"
+        assert result["tasks_to_create"] == 10
+
+    def test_preview_summary_limits_to_five_tasks(self, tmp_path):
+        """Test that preview summary shows only first 5 tasks."""
+        tm = TaskManager(tmp_path)
+
+        # Create 15 tasks
+        tasks = [
+            f'          - name: "Task {i}"\n            priority: medium'
+            for i in range(1, 16)
+        ]
+        yaml_content = "        tasks:\n" + "\n".join(tasks)
+
+        result = tm.import_yaml(yaml_content)
+
+        assert result["status"] == "confirmation_required"
+        preview = result["preview"]
+        assert preview["task_count"] == 15
+        assert len(preview["tasks_summary"]) == 5  # Limited to 5
+        assert preview["tasks_summary"][0]["name"] == "Task 1"
+        assert preview["tasks_summary"][4]["name"] == "Task 5"

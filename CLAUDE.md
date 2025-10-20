@@ -10,7 +10,7 @@ Clauxton is a Claude Code plugin providing **persistent project context** throug
 - **Conflict Detection**: Pre-merge conflict prediction (Phase 2)
 
 **Status**: v0.9.0-beta - Production ready (94% test coverage, 390 tests)
-**v0.10.0 Progress**: Week 1 Day 3 Complete (406 tests, Undo/Rollback implemented)
+**v0.10.0 Progress**: Week 1 Day 4 Complete (466 tests, YAML Import + Undo + Confirmation implemented)
 
 ## Build/Test Commands
 
@@ -668,7 +668,11 @@ clauxton config get confirmation_mode
 
 **Task Management** (6 tools + 1 in v0.10.0):
 - `task_add(name, priority, files, ...)` - Add single task
-- `task_import_yaml(yaml_content)` - ⭐ Bulk import (v0.10.0+)
+- `task_import_yaml(yaml_content, skip_confirmation=False)` - ⭐ Bulk import (v0.10.0+)
+  - **Confirmation Prompts** (✅ Week 1 Day 4): 14 tests
+  - Returns `status: "confirmation_required"` when ≥10 tasks (configurable)
+  - Preview includes: task count, estimated hours, priority/status breakdown
+  - Use `skip_confirmation=True` for trusted operations
 - `task_list(status, priority)` - List tasks
 - `task_get(task_id)` - Get specific task
 - `task_update(task_id, status, ...)` - Update task

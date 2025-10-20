@@ -2,11 +2,8 @@
 Tests for Operation History and Undo/Rollback functionality.
 """
 
-import pytest
-from pathlib import Path
 from clauxton.core.operation_history import Operation, OperationHistory, OperationType
 from clauxton.core.task_manager import TaskManager
-from clauxton.core.models import Task
 
 
 class TestOperationHistory:
@@ -128,7 +125,8 @@ class TestUndoTaskImport:
         undo_result = history.undo_last_operation()
         if undo_result["status"] != "success":
             print(f"Undo failed: {undo_result}")
-        assert undo_result["status"] == "success", f"Undo failed: {undo_result.get('error', 'Unknown error')}"
+        error_msg = f"Undo failed: {undo_result.get('error', 'Unknown error')}"
+        assert undo_result["status"] == "success", error_msg
         assert undo_result["operation_type"] == OperationType.TASK_IMPORT
         print(f"Undo result: {undo_result}")
         assert undo_result["details"]["deleted_tasks"] == 2
@@ -292,7 +290,7 @@ class TestHistoryPersistence:
 
     def test_history_file_created(self, tmp_path):
         """Test that history file is created."""
-        history = OperationHistory(tmp_path)
+        _ = OperationHistory(tmp_path)
 
         history_file = tmp_path / ".clauxton" / "history" / "operations.yml"
         assert history_file.exists()
