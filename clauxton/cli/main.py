@@ -470,5 +470,14 @@ from clauxton.cli.tasks import task  # noqa: E402
 cli.add_command(task)
 
 
+# ============================================================================
+# Conflict Detection Commands (Phase 2)
+# ============================================================================
+
+from clauxton.cli.conflicts import conflict  # noqa: E402
+
+cli.add_command(conflict)
+
+
 if __name__ == "__main__":
     cli()
