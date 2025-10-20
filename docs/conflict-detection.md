@@ -409,18 +409,250 @@ See [MCP Server documentation](mcp-server.md) for complete MCP setup instruction
 
 ## CLI Commands
 
-> **Note**: CLI commands for conflict detection will be available in Week 12 Day 5.
+> **Status**: ✅ Available in v0.9.0 (Week 12 Day 5)
 
-Planned CLI commands:
+Clauxton provides three CLI commands for conflict detection:
+
+### 1. conflict detect
+
+Detect conflicts for a specific task.
+
+**Syntax**:
 ```bash
-# Detect conflicts for a task
-clauxton conflicts check TASK-001
+clauxton conflict detect TASK_ID [--verbose]
+```
 
-# Get recommended execution order
-clauxton conflicts order
+**Examples**:
+```bash
+# Basic conflict detection
+$ clauxton conflict detect TASK-002
 
-# Check file conflicts
-clauxton conflicts files src/api/auth.py src/models/user.py
+Conflict Detection Report
+Task: TASK-002 - Add OAuth support
+Files: 2 file(s)
+
+⚠ 1 conflict(s) detected
+
+Conflict 1:
+  Task: TASK-001 - Refactor JWT authentication
+  Risk: MEDIUM (67%)
+  Files: 1 overlapping
+  → Complete TASK-002 before starting TASK-001, or coordinate changes
+
+# Verbose output (shows file details)
+$ clauxton conflict detect TASK-002 --verbose
+
+Conflict Detection Report
+Task: TASK-002 - Add OAuth support
+Files: 2 file(s)
+
+⚠ 1 conflict(s) detected
+
+Conflict 1:
+  Task: TASK-001 - Refactor JWT authentication
+  Risk: MEDIUM (67%)
+  Files: 1 overlapping
+  Overlapping files:
+    - src/api/auth.py
+  Details: Both tasks edit: src/api/auth.py. Potential merge conflict.
+  → Complete TASK-002 before starting TASK-001, or coordinate changes
+```
+
+**Options**:
+- `--verbose`, `-v`: Show detailed conflict information (overlapping files, details)
+
+**Exit Codes**:
+- `0`: Success (conflicts detected or not)
+- `1`: Error (task not found, etc.)
+
+### 2. conflict order
+
+Recommend safe execution order for tasks.
+
+**Syntax**:
+```bash
+clauxton conflict order TASK_ID... [--details]
+```
+
+**Examples**:
+```bash
+# Basic order recommendation
+$ clauxton conflict order TASK-001 TASK-002 TASK-003
+
+Task Execution Order
+Tasks: 3 task(s)
+
+Order respects dependencies and minimizes conflicts
+
+Recommended Order:
+1. TASK-001 - Refactor authentication
+2. TASK-002 - Add OAuth support
+3. TASK-003 - Update user model
+
+💡 Execute tasks in this order to minimize conflicts
+
+# With details (shows priority, files, dependencies)
+$ clauxton conflict order TASK-001 TASK-002 TASK-003 --details
+
+Task Execution Order
+Tasks: 3 task(s)
+
+Order respects dependencies and minimizes conflicts
+
+Recommended Order:
+1. TASK-001 - Refactor authentication
+   Priority: HIGH
+   Files: 2 file(s)
+
+2. TASK-002 - Add OAuth support
+   Priority: MEDIUM
+   Files: 3 file(s)
+   Depends on: TASK-001
+
+3. TASK-003 - Update user model
+   Priority: LOW
+   Files: 1 file(s)
+   Depends on: TASK-002
+
+💡 Execute tasks in this order to minimize conflicts
+```
+
+**Options**:
+- `--details`, `-d`: Show task details (priority, file count, dependencies)
+
+**Exit Codes**:
+- `0`: Success
+- `1`: Error (task not found, etc.)
+
+### 3. conflict check
+
+Check which tasks are currently editing specific files.
+
+**Syntax**:
+```bash
+clauxton conflict check FILE... [--verbose]
+```
+
+**Examples**:
+```bash
+# Basic file check
+$ clauxton conflict check src/api/auth.py
+
+File Availability Check
+Files: 1 file(s)
+
+⚠ 1 task(s) editing these files
+
+Conflicting Tasks:
+  TASK-001 - Refactor authentication
+  Status: in_progress
+  Editing: 1 of your file(s)
+
+💡 Coordinate with task owners or wait until tasks complete
+
+# Multiple files
+$ clauxton conflict check src/api/auth.py src/models/user.py
+
+File Availability Check
+Files: 2 file(s)
+
+⚠ 2 task(s) editing these files
+
+Conflicting Tasks:
+  TASK-001 - Refactor authentication
+  Status: in_progress
+  Editing: 1 of your file(s)
+
+  TASK-003 - Update user model
+  Status: in_progress
+  Editing: 1 of your file(s)
+
+💡 Coordinate with task owners or wait until tasks complete
+
+# Verbose output (shows file-by-file status)
+$ clauxton conflict check src/api/auth.py src/models/user.py --verbose
+
+File Availability Check
+Files: 2 file(s)
+
+⚠ 2 task(s) editing these files
+
+Conflicting Tasks:
+  TASK-001 - Refactor authentication
+  Status: in_progress
+  Editing: 1 of your file(s)
+    - src/api/auth.py
+
+  TASK-003 - Update user model
+  Status: in_progress
+  Editing: 1 of your file(s)
+    - src/models/user.py
+
+File Status:
+  ✗ src/api/auth.py (locked by: TASK-001)
+  ✗ src/models/user.py (locked by: TASK-003)
+
+💡 Coordinate with task owners or wait until tasks complete
+
+# No conflicts
+$ clauxton conflict check src/api/posts.py
+
+File Availability Check
+Files: 1 file(s)
+
+✓ All 1 file(s) available for editing
+```
+
+**Options**:
+- `--verbose`, `-v`: Show detailed file status and which tasks are editing each file
+
+**Exit Codes**:
+- `0`: Success (conflicts found or not)
+- `1`: Error
+
+### Common Workflows
+
+#### Pre-Start Workflow
+Before starting work on a task:
+```bash
+# 1. Check if task has conflicts
+$ clauxton conflict detect TASK-005
+
+✓ No conflicts detected
+This task is safe to start working on.
+
+# 2. Start the task
+$ clauxton task update TASK-005 --status in_progress
+```
+
+#### Sprint Planning Workflow
+Plan execution order for multiple tasks:
+```bash
+# 1. List pending tasks
+$ clauxton task list --status pending
+
+# 2. Get recommended order
+$ clauxton conflict order TASK-010 TASK-011 TASK-012 --details
+
+# 3. Execute tasks in recommended order
+$ clauxton task update TASK-010 --status in_progress
+```
+
+#### File Coordination Workflow
+Check if files are available before editing:
+```bash
+# 1. Check file availability
+$ clauxton conflict check src/api/auth.py src/models/user.py
+
+⚠ 1 task(s) editing these files
+  TASK-008 (in_progress)
+
+# 2. Decide: wait, coordinate, or work on different files
+$ clauxton conflict check src/api/posts.py
+
+✓ All files available for editing
+
+# 3. Safe to edit available files
 ```
 
 ---
@@ -722,6 +954,163 @@ class ConflictReport(BaseModel):
 
 ---
 
+## Performance Tuning
+
+### Performance Characteristics
+
+Based on comprehensive benchmarking (Week 12 Day 3-4):
+
+| Operation | Scale | Typical Time | Max Time |
+|-----------|-------|--------------|----------|
+| detect_conflicts | 50 tasks | ~5-10ms | <100ms |
+| recommend_safe_order | 50 tasks | ~50-100ms | <200ms |
+| check_file_conflicts | 100 files | ~30-50ms | <100ms |
+
+All operations perform well within target constraints (sub-second response times).
+
+### Optimization Tips
+
+#### 1. Reduce Task Count in `in_progress`
+
+**Problem**: `detect_conflicts` must check every `in_progress` task
+```python
+# Slower: 20 tasks in_progress
+detector.detect_conflicts("TASK-050")  # Checks 20 tasks
+
+# Faster: 5 tasks in_progress
+detector.detect_conflicts("TASK-050")  # Checks 5 tasks
+```
+
+**Solution**: Complete or block tasks regularly
+```python
+# Complete finished tasks
+tm.update("TASK-001", {"status": "completed"})
+
+# Block tasks waiting on dependencies
+tm.update("TASK-005", {"status": "blocked"})
+```
+
+#### 2. Minimize Files Per Task
+
+**Problem**: Risk scoring is O(n × m) where n, m are file counts
+
+**Example**:
+```python
+# Slower: 20 files per task
+task = Task(
+    files_to_edit=["src/file1.py", "src/file2.py", ..., "src/file20.py"]
+)
+
+# Faster: 3-5 files per task (split into sub-tasks)
+task1 = Task(files_to_edit=["src/file1.py", "src/file2.py"])
+task2 = Task(files_to_edit=["src/file3.py", "src/file4.py"])
+```
+
+**Best Practice**: Keep tasks focused (5-10 files max)
+
+#### 3. Batch Operations
+
+**Problem**: Multiple separate API calls increase overhead
+
+**Example**:
+```python
+# Slower: Separate calls
+for task_id in ["TASK-001", "TASK-002", "TASK-003"]:
+    detect_conflicts(task_id)
+
+# Faster: Use recommend_safe_order (one call)
+recommend_safe_order(["TASK-001", "TASK-002", "TASK-003"])
+```
+
+#### 4. Cache Detection Results
+
+**Problem**: Repeated conflict detection for same task
+
+**Solution**: Cache results until task status changes
+```python
+from functools import lru_cache
+
+# Cache decorator (invalidate on update)
+@lru_cache(maxsize=128)
+def detect_conflicts_cached(task_id: str, status_hash: int):
+    return detector.detect_conflicts(task_id)
+
+# Use with status hash for cache invalidation
+task = tm.get("TASK-001")
+status_hash = hash(task.status + str(task.files_to_edit))
+conflicts = detect_conflicts_cached("TASK-001", status_hash)
+```
+
+### Performance Benchmarks
+
+Based on integration tests (tests/integration/test_conflict_e2e.py):
+
+#### Scenario 1: 50 Tasks, 10 in_progress
+- **Operation**: detect_conflicts("TASK-025")
+- **Result**: ~5-10ms
+- **Files per task**: 2-3
+- **Verdict**: ✅ Excellent
+
+#### Scenario 2: 50 Tasks, Topological Sort
+- **Operation**: recommend_safe_order(50 task IDs)
+- **Result**: ~50-100ms
+- **Dependencies**: Chain of 5 dependency levels
+- **Verdict**: ✅ Good
+
+#### Scenario 3: 100 Files, 20 in_progress Tasks
+- **Operation**: check_file_conflicts(100 files)
+- **Result**: ~30-50ms
+- **Files per task**: 5
+- **Verdict**: ✅ Excellent
+
+### Scaling Guidelines
+
+| Tasks | Files/Task | in_progress | Expected Time |
+|-------|------------|-------------|---------------|
+| 10 | 5 | 2-3 | <5ms |
+| 50 | 5 | 10 | <20ms |
+| 100 | 10 | 20 | <100ms |
+| 500 | 10 | 50 | <500ms |
+
+**Rule of Thumb**: Keep `in_progress * files_per_task < 500` for sub-100ms response times.
+
+### Troubleshooting Slow Performance
+
+#### Symptom: detect_conflicts takes >100ms
+
+**Diagnosis**:
+```python
+# Count in_progress tasks
+in_progress = tm.list_all(status="in_progress")
+print(f"In progress: {len(in_progress)}")
+
+# Check files per task
+for task in in_progress:
+    print(f"{task.id}: {len(task.files_to_edit)} files")
+```
+
+**Solutions**:
+1. Complete finished tasks: `tm.update(task_id, {"status": "completed"})`
+2. Split large tasks into smaller sub-tasks
+3. Use `blocked` status for waiting tasks
+
+#### Symptom: recommend_safe_order takes >200ms
+
+**Diagnosis**:
+```python
+# Check dependency graph complexity
+tasks = [tm.get(tid) for tid in task_ids]
+avg_deps = sum(len(t.depends_on) for t in tasks) / len(tasks)
+print(f"Avg dependencies: {avg_deps}")
+```
+
+**Solutions**:
+1. Simplify dependency graph (avoid unnecessary dependencies)
+2. Process tasks in smaller batches
+3. Consider parallel execution for independent tasks
+
+---
+
 ## Limitations
 
 ### Current Limitations (Week 12 Day 1)
@@ -752,8 +1141,9 @@ class ConflictReport(BaseModel):
 
 ### Week 12 (Current)
 - ✅ Day 1: ConflictDetector core + file overlap detection
-- ⏳ Day 2-3: MCP tools for conflict detection
-- ⏳ Day 4-5: CLI commands
+- ✅ Day 2: MCP tools for conflict detection
+- ✅ Day 3-4: Integration tests + performance benchmarks + MCP enhancements
+- ✅ Day 5: CLI commands for conflict detection
 - ⏳ Day 6-7: Tests, documentation, polish
 
 ### Week 13 (Next)
@@ -783,5 +1173,5 @@ class ConflictReport(BaseModel):
 ---
 
 **Last Updated**: 2025-10-20
-**Version**: Week 12 Day 1 (ConflictDetector core implementation)
-**Status**: In Progress (MCP tools and CLI coming in Day 2-5)
+**Version**: Week 12 Day 5 (CLI Commands implementation)
+**Status**: In Progress (Final polish in Day 6-7)

@@ -201,7 +201,10 @@ def test_recommend_safe_order_tool_basic(
     assert len(result["recommended_order"]) == 3
     assert set(result["recommended_order"]) == set(task_ids)
     assert "message" in result
-    assert "minimize conflicts" in result["message"]
+    assert "task_details" in result
+    assert len(result["task_details"]) == 3
+    # Check message contains "minimize" or "minimizes"
+    assert "minim" in result["message"].lower()
 
 
 def test_recommend_safe_order_tool_with_dependencies(
@@ -329,7 +332,7 @@ def test_check_file_conflicts_tool_no_conflicts(
 
     assert result["file_count"] == 1
     assert result["conflicting_tasks"] == []
-    assert "No conflicts" in result["message"]
+    assert result["all_available"] is True
     assert "available" in result["message"]
 
 

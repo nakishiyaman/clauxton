@@ -482,11 +482,16 @@ def detect_conflicts(task_id: str) -> dict[str, Any]:
         >>> detect_conflicts("TASK-002")
         {
             "task_id": "TASK-002",
+            "task_name": "Add OAuth support",
             "conflict_count": 1,
+            "status": "conflicts_detected",
+            "summary": "Found 1 conflict with in_progress tasks",
+            "max_risk_level": "medium",
             "conflicts": [
                 {
                     "task_a_id": "TASK-002",
                     "task_b_id": "TASK-001",
+                    "task_b_name": "Refactor JWT authentication",
                     "conflict_type": "file_overlap",
                     "risk_level": "medium",
                     "risk_score": 0.67,
@@ -500,15 +505,42 @@ def detect_conflicts(task_id: str) -> dict[str, Any]:
     tm = TaskManager(Path.cwd())
     detector = ConflictDetector(tm)
 
+    # Get task to include its name in response
+    task = tm.get(task_id)
     conflicts = detector.detect_conflicts(task_id)
+
+    # Calculate max risk level
+    max_risk = "low"
+    if conflicts:
+        risk_levels = [c.risk_level for c in conflicts]
+        if "high" in risk_levels:
+            max_risk = "high"
+        elif "medium" in risk_levels:
+            max_risk = "medium"
+
+    # Determine status and summary message
+    if not conflicts:
+        status = "no_conflicts"
+        summary = "No conflicts detected. Safe to start working on this task."
+    else:
+        status = "conflicts_detected"
+        summary = (
+            f"Found {len(conflicts)} conflict(s) with in_progress tasks. "
+            f"Max risk: {max_risk}."
+        )
 
     return {
         "task_id": task_id,
+        "task_name": task.name,
         "conflict_count": len(conflicts),
+        "status": status,
+        "summary": summary,
+        "max_risk_level": max_risk,
         "conflicts": [
             {
                 "task_a_id": c.task_a_id,
                 "task_b_id": c.task_b_id,
+                "task_b_name": tm.get(c.task_b_id).name,  # Include conflicting task name
                 "conflict_type": c.conflict_type,
                 "risk_level": c.risk_level,
                 "risk_score": c.risk_score,
@@ -540,6 +572,12 @@ def recommend_safe_order(task_ids: List[str]) -> dict[str, Any]:
         {
             "task_count": 3,
             "recommended_order": ["TASK-001", "TASK-002", "TASK-003"],
+            "task_details": [
+                {"id": "TASK-001", "name": "Task 1", "priority": "high"},
+                {"id": "TASK-002", "name": "Task 2", "priority": "medium"},
+                {"id": "TASK-003", "name": "Task 3", "priority": "low"}
+            ],
+            "has_dependencies": true,
             "message": "Execute tasks in the order shown to minimize conflicts"
         }
     """
@@ -548,10 +586,34 @@ def recommend_safe_order(task_ids: List[str]) -> dict[str, Any]:
 
     order = detector.recommend_safe_order(task_ids)
 
+    # Get task details for better context
+    task_details = []
+    has_dependencies = False
+    for task_id in order:
+        task = tm.get(task_id)
+        task_details.append({
+            "id": task.id,
+            "name": task.name,
+            "priority": task.priority,
+            "files_count": len(task.files_to_edit),
+        })
+        if task.depends_on:
+            has_dependencies = True
+
+    # Create descriptive message
+    if not order:
+        message = "No tasks to order"
+    elif has_dependencies:
+        message = "Execution order respects dependencies and minimizes conflicts"
+    else:
+        message = "Execution order minimizes file conflicts (no dependencies found)"
+
     return {
         "task_count": len(order),
         "recommended_order": order,
-        "message": "Execute tasks in the order shown to minimize conflicts",
+        "task_details": task_details,
+        "has_dependencies": has_dependencies,
+        "message": message,
     }
 
 
@@ -567,7 +629,7 @@ def check_file_conflicts(files: List[str]) -> dict[str, Any]:
         files: List of file paths to check (e.g., ["src/api/auth.py"])
 
     Returns:
-        Dictionary with conflicting task IDs
+        Dictionary with conflicting task IDs and details
 
     Example:
         >>> check_file_conflicts(["src/api/auth.py", "src/models/user.py"])
@@ -575,6 +637,15 @@ def check_file_conflicts(files: List[str]) -> dict[str, Any]:
             "file_count": 2,
             "files": ["src/api/auth.py", "src/models/user.py"],
             "conflicting_tasks": ["TASK-001", "TASK-003"],
+            "task_details": [
+                {"id": "TASK-001", "name": "Refactor auth", "files": ["src/api/auth.py"]},
+                {"id": "TASK-003", "name": "Update model", "files": ["src/models/user.py"]}
+            ],
+            "file_map": {
+                "src/api/auth.py": ["TASK-001"],
+                "src/models/user.py": ["TASK-003"]
+            },
+            "all_available": false,
             "message": "2 in_progress task(s) are editing these files"
         }
     """
@@ -583,15 +654,47 @@ def check_file_conflicts(files: List[str]) -> dict[str, Any]:
 
     conflicting_tasks = detector.check_file_conflicts(files)
 
+    # Get task details for conflicting tasks
+    task_details = []
+    file_map: dict[str, list[str]] = {file: [] for file in files}
+
+    for task_id in conflicting_tasks:
+        task = tm.get(task_id)
+        # Find which files this task is editing from the checked files
+        task_files = [f for f in files if f in task.files_to_edit]
+        task_details.append({
+            "id": task.id,
+            "name": task.name,
+            "files": task_files,
+            "priority": task.priority,
+        })
+        # Update file map
+        for file in task_files:
+            file_map[file].append(task.id)
+
+    # Determine status
+    all_available = len(conflicting_tasks) == 0
+
+    # Create descriptive message
+    if not files:
+        message = "No files specified"
+    elif all_available:
+        message = f"All {len(files)} file(s) are available for editing"
+    else:
+        locked_count = len([f for f in files if file_map[f]])
+        message = (
+            f"{len(conflicting_tasks)} in_progress task(s) "
+            f"editing {locked_count}/{len(files)} file(s)"
+        )
+
     return {
         "file_count": len(files),
         "files": files,
         "conflicting_tasks": conflicting_tasks,
-        "message": (
-            f"{len(conflicting_tasks)} in_progress task(s) are editing these files"
-            if conflicting_tasks
-            else "No conflicts - files are available"
-        ),
+        "task_details": task_details,
+        "file_map": file_map,
+        "all_available": all_available,
+        "message": message,
     }
 
 
