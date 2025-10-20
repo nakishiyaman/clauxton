@@ -7,7 +7,6 @@ Tests verify performance remains within acceptable bounds:
 """
 
 import time
-from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -438,7 +437,7 @@ def test_performance_summary(initialized_project: Path) -> None:
 """
 
     start = time.perf_counter()
-    result = task_import_yaml(yaml_content, skip_confirmation=True)
+    task_import_yaml(yaml_content, skip_confirmation=True)
     elapsed = (time.perf_counter() - start) * 1000
     results["Bulk import (100 tasks)"] = elapsed
     print(f"\n1. Bulk import (100 tasks):     {elapsed:7.2f}ms (target: < 1000ms)")

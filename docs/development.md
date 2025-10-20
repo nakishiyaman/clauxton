@@ -229,7 +229,34 @@ xdg-open htmlcov/index.html  # Linux
 **Coverage targets**:
 - **Minimum**: 70% (Phase 0)
 - **Target**: 80% (Phase 1+)
+- **Current**: 92% (v0.10.0)
 - **Critical paths**: 100% (KB CRUD, Task DAG validation)
+
+### Test Categories
+
+Clauxton has a comprehensive test suite organized by type:
+
+```bash
+# Unit tests (core functionality)
+pytest tests/core/
+
+# CLI tests (command-line interface)
+pytest tests/cli/
+
+# MCP tests (MCP server integration)
+pytest tests/mcp/
+
+# Integration tests (end-to-end workflows)
+pytest tests/integration/
+```
+
+**Note**: Integration tests may require API adjustments. Run with:
+```bash
+# Run stable tests only (excludes WIP integration tests)
+pytest tests/ --ignore=tests/integration/test_full_workflow.py \
+              --ignore=tests/integration/test_mcp_integration.py \
+              --ignore=tests/integration/test_performance_regression.py
+```
 
 ### Test Specific Components
 

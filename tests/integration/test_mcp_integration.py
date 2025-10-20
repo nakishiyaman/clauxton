@@ -7,7 +7,6 @@ Tests cover MCP server integration:
 - Logging integration for all operations
 """
 
-import json
 from datetime import datetime
 from pathlib import Path
 
@@ -15,9 +14,6 @@ import pytest
 from click.testing import CliRunner
 
 from clauxton.cli.main import cli
-from clauxton.core.knowledge_base import KnowledgeBase
-from clauxton.core.models import Task
-from clauxton.core.task_manager import TaskManager
 from clauxton.mcp.server import (
     check_file_conflicts,
     detect_conflicts,
@@ -368,9 +364,9 @@ def test_mcp_logging_integration(initialized_project: Path) -> None:
     result = task_update(task_id, status="completed")
     operations.append(("task_update", task_id))
 
-    # Config operations
-    result = config_set("confirmation_mode", "never")
-    operations.append(("config_set", "confirmation_mode"))
+    # Config operations - TODO: Add when config MCP tools are implemented
+    # result = config_set("confirmation_mode", "never")
+    # operations.append(("config_set", "confirmation_mode"))
 
     # Verify logs exist
     logs_dir = Path(".clauxton/logs")
@@ -482,13 +478,13 @@ def test_mcp_conflict_detection_integration(initialized_project: Path) -> None:
     os.chdir(initialized_project)
 
     # Create multiple tasks with overlapping files
-    task1 = task_add(
-        name="Refactor auth", priority="high", files_to_edit=["src/auth.py"]
+    task_add(name="Refactor auth", priority="high", files_to_edit=["src/auth.py"])
+    task_add(
+        name="Add OAuth",
+        priority="medium",
+        files_to_edit=["src/auth.py", "src/oauth.py"],
     )
-    task2 = task_add(
-        name="Add OAuth", priority="medium", files_to_edit=["src/auth.py", "src/oauth.py"]
-    )
-    task3 = task_add(
+    task_add(
         name="Update tests", priority="low", files_to_edit=["tests/test_auth.py"]
     )
 

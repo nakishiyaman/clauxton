@@ -13,7 +13,6 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
-import yaml
 from click.testing import CliRunner
 
 from clauxton.cli.main import cli
@@ -484,10 +483,19 @@ def test_kb_full_lifecycle(runner: CliRunner, tmp_path: Path) -> None:
         # Step 1: Add multiple KB entries
         entries = [
             ("REST API Design\narchitecture\nUse RESTful principles.\napi,rest\n"),
-            ("GraphQL Alternative\ndecision\nChose REST over GraphQL.\napi,graphql\n"),
+            (
+                "GraphQL Alternative\ndecision\n"
+                "Chose REST over GraphQL.\napi,graphql\n"
+            ),
             ("Rate Limiting\nconstraint\nMax 1000 requests/min.\napi,limit\n"),
-            ("Repository Pattern\npattern\nUse repository pattern for data access.\npattern,data\n"),
-            ("Code Review Process\nconvention\nAll PRs require 2 approvals.\nprocess,review\n"),
+            (
+                "Repository Pattern\npattern\n"
+                "Use repository pattern for data access.\npattern,data\n"
+            ),
+            (
+                "Code Review Process\nconvention\n"
+                "All PRs require 2 approvals.\nprocess,review\n"
+            ),
         ]
 
         entry_ids = []
