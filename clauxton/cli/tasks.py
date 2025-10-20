@@ -103,6 +103,94 @@ def add_task(
         raise click.Abort()
 
 
+@task.command("import")
+@click.argument("yaml_file", type=click.Path(exists=True))
+@click.option("--dry-run", is_flag=True, help="Validate without creating tasks")
+@click.option("--skip-validation", is_flag=True, help="Skip dependency validation")
+def import_tasks(yaml_file: str, dry_run: bool, skip_validation: bool) -> None:
+    """
+    Import multiple tasks from YAML file.
+
+    This command enables bulk task creation from YAML format,
+    with automatic validation and circular dependency detection.
+
+    Example:
+        $ clauxton task import tasks.yml
+        $ clauxton task import tasks.yml --dry-run
+        $ clauxton task import tasks.yml --skip-validation
+
+    YAML Format:
+        tasks:
+          - name: "Setup FastAPI"
+            priority: high
+            files_to_edit:
+              - main.py
+              - config.py
+          - name: "Create API endpoints"
+            priority: high
+            depends_on:
+              - TASK-001
+            files_to_edit:
+              - api/users.py
+    """
+    root_dir = Path.cwd()
+
+    # Check if .clauxton exists
+    if not (root_dir / ".clauxton").exists():
+        click.echo(click.style("Error: .clauxton/ not found", fg="red"))
+        click.echo("Run 'clauxton init' first")
+        raise click.Abort()
+
+    tm = TaskManager(root_dir)
+
+    # Read YAML file
+    try:
+        yaml_path = Path(yaml_file)
+        yaml_content = yaml_path.read_text(encoding="utf-8")
+    except Exception as e:
+        click.echo(click.style(f"Error reading file: {e}", fg="red"))
+        raise click.Abort()
+
+    # Import tasks
+    try:
+        result = tm.import_yaml(
+            yaml_content=yaml_content,
+            dry_run=dry_run,
+            skip_validation=skip_validation,
+        )
+
+        if result["status"] == "error":
+            click.echo(click.style("✗ Import failed", fg="red"))
+            click.echo()
+            for error in result["errors"]:
+                click.echo(click.style(f"  • {error}", fg="red"))
+            raise click.Abort()
+
+        # Success
+        if dry_run:
+            click.echo(click.style("✓ Validation successful (dry-run)", fg="green"))
+            click.echo(f"  Would import {len(result['task_ids'])} tasks:")
+            for task_id in result["task_ids"]:
+                click.echo(f"    - {task_id}")
+        else:
+            click.echo(click.style(f"✓ Imported {result['imported']} tasks", fg="green"))
+            click.echo()
+            for task_id in result["task_ids"]:
+                click.echo(f"  • {task_id}")
+
+            if result.get("next_task"):
+                click.echo()
+                click.echo(click.style("📋 Next task to work on:", bold=True))
+                click.echo(f"  {result['next_task']}")
+                click.echo()
+                click.echo("  Start working:")
+                click.echo(f"    clauxton task update {result['next_task']} --status in_progress")
+
+    except Exception as e:
+        click.echo(click.style(f"Error: {e}", fg="red"))
+        raise click.Abort()
+
+
 @task.command("list")
 @click.option(
     "--status",

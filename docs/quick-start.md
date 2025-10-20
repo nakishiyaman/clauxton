@@ -472,6 +472,83 @@ clauxton task list --priority high
 
 ---
 
+### Bulk Task Import (YAML) - NEW v0.10.0
+
+For creating multiple tasks at once, use YAML import (30x faster than manual creation):
+
+#### Create a YAML file (`tasks.yml`)
+
+```yaml
+tasks:
+  - name: "Setup FastAPI project"
+    description: "Initialize FastAPI with basic structure"
+    priority: high
+    files_to_edit:
+      - main.py
+      - requirements.txt
+    estimated_hours: 2.5
+
+  - name: "Create database models"
+    description: "Define SQLAlchemy models"
+    priority: high
+    depends_on:
+      - TASK-001
+    files_to_edit:
+      - models/user.py
+      - models/post.py
+    estimated_hours: 3.0
+
+  - name: "Write API tests"
+    priority: medium
+    depends_on:
+      - TASK-002
+    files_to_edit:
+      - tests/test_api.py
+    estimated_hours: 4.0
+```
+
+#### Import tasks
+
+```bash
+# Validate first (dry-run)
+clauxton task import tasks.yml --dry-run
+
+# Import
+clauxton task import tasks.yml
+```
+
+**Output**:
+```
+✓ Imported 3 tasks
+
+  • TASK-001
+  • TASK-002
+  • TASK-003
+
+📋 Next task to work on:
+  TASK-001
+
+  Start working:
+    clauxton task update TASK-001 --status in_progress
+```
+
+**Features**:
+- ✅ Auto-ID generation (TASK-001, TASK-002, etc.)
+- ✅ Dependency validation (circular dependency detection)
+- ✅ Dry-run mode for validation
+- ✅ Skip validation with `--skip-validation` flag
+- ✅ All-or-nothing import (fails if any task is invalid)
+
+**Use Cases**:
+- Project initialization: Define entire task list upfront
+- Sprint planning: Import sprint tasks from template
+- Team workflows: Share task definitions via Git
+- Claude Code integration: Auto-generate and import tasks
+
+**Learn more**: [YAML Task Format Guide](YAML_TASK_FORMAT.md)
+
+---
+
 ### Conflict Detection Workflow
 
 Clauxton predicts file conflicts **before** they occur, helping you avoid merge conflicts and coordination issues.

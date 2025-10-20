@@ -552,3 +552,125 @@ def test_check_file_conflicts_tool_output_format(tmp_path: Path) -> None:
             # Should contain list of conflicting tasks
             if "conflicting_tasks" in result:
                 assert isinstance(result["conflicting_tasks"], list)
+
+
+# ============================================================================
+# task_import_yaml Tool Tests (v0.10.0)
+# ============================================================================
+
+
+def test_task_import_yaml_tool_callable(tmp_path: Path) -> None:
+    """Test task_import_yaml tool is callable."""
+    from clauxton.mcp.server import task_import_yaml
+
+    assert callable(task_import_yaml)
+
+
+def test_task_import_yaml_tool_basic(tmp_path: Path) -> None:
+    """Test basic YAML import via MCP tool."""
+    (tmp_path / ".clauxton").mkdir()
+
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        from clauxton.mcp.server import task_import_yaml
+
+        yaml_content = """
+tasks:
+  - name: "Task A"
+    priority: high
+  - name: "Task B"
+    priority: medium
+"""
+
+        result = task_import_yaml(yaml_content=yaml_content)
+
+        assert result["status"] == "success"
+        assert result["imported"] == 2
+        assert len(result["task_ids"]) == 2
+
+
+def test_task_import_yaml_tool_dry_run(tmp_path: Path) -> None:
+    """Test dry-run mode via MCP tool."""
+    (tmp_path / ".clauxton").mkdir()
+
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        from clauxton.mcp.server import task_import_yaml
+
+        yaml_content = """
+tasks:
+  - name: "Task A"
+"""
+
+        result = task_import_yaml(yaml_content=yaml_content, dry_run=True)
+
+        assert result["status"] == "success"
+        assert result["imported"] == 0  # Nothing imported in dry-run
+        assert len(result["task_ids"]) == 1  # But IDs are shown
+
+
+def test_task_import_yaml_tool_validation_errors(tmp_path: Path) -> None:
+    """Test validation errors via MCP tool."""
+    (tmp_path / ".clauxton").mkdir()
+
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        from clauxton.mcp.server import task_import_yaml
+
+        yaml_content = """
+tasks:
+  - name: ""
+"""
+
+        result = task_import_yaml(yaml_content=yaml_content)
+
+        assert result["status"] == "error"
+        assert result["imported"] == 0
+        assert len(result["errors"]) > 0
+
+
+def test_task_import_yaml_tool_circular_dependency(tmp_path: Path) -> None:
+    """Test circular dependency detection via MCP tool."""
+    (tmp_path / ".clauxton").mkdir()
+
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        from clauxton.mcp.server import task_import_yaml
+
+        yaml_content = """
+tasks:
+  - id: TASK-001
+    name: "Task A"
+    depends_on:
+      - TASK-002
+  - id: TASK-002
+    name: "Task B"
+    depends_on:
+      - TASK-001
+"""
+
+        result = task_import_yaml(yaml_content=yaml_content)
+
+        assert result["status"] == "error"
+        assert result["imported"] == 0
+        assert "Circular dependency" in result["errors"][0]
+
+
+def test_task_import_yaml_tool_skip_validation(tmp_path: Path) -> None:
+    """Test skip_validation parameter via MCP tool."""
+    (tmp_path / ".clauxton").mkdir()
+
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        from clauxton.mcp.server import task_import_yaml
+
+        yaml_content = """
+tasks:
+  - name: "Task A"
+    depends_on:
+      - TASK-999
+"""
+
+        # Without skip_validation, should fail
+        result1 = task_import_yaml(yaml_content=yaml_content, skip_validation=False)
+        assert result1["status"] == "error"
+
+        # With skip_validation, should succeed
+        result2 = task_import_yaml(yaml_content=yaml_content, skip_validation=True)
+        assert result2["status"] == "success"
+        assert result2["imported"] == 1

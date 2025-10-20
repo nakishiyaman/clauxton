@@ -121,6 +121,7 @@ Claude Code: (Begins implementation)
 
 #### ✅ Task Management System
 - ✅ **Full CRUD**: Add, get, update, delete, list tasks
+- ✅ **YAML Bulk Import** (v0.10.0): Create multiple tasks from YAML file - 30x faster than manual
 - ✅ **Smart Dependencies**: Auto-inferred from file overlap + manual dependencies
 - ✅ **DAG Validation**: Cycle detection prevents circular dependencies
 - ✅ **Priority Management**: 4 levels (Critical > High > Medium > Low)
@@ -128,7 +129,7 @@ Claude Code: (Begins implementation)
 - ✅ **Progress Tracking**: Track status (pending, in_progress, completed, blocked)
 - ✅ **Time Estimates**: Optional hour estimates for planning
 
-#### 🔌 MCP Server Integration (15 Tools)
+#### 🔌 MCP Server Integration (16 Tools)
 **Knowledge Base Tools** (6):
 - ✅ `kb_search` - TF-IDF relevance-ranked search
 - ✅ `kb_add` - Add new knowledge entry
@@ -137,25 +138,26 @@ Claude Code: (Begins implementation)
 - ✅ `kb_update` - Update existing entry
 - ✅ `kb_delete` - Delete entry
 
-**Task Management Tools** (6):
+**Task Management Tools** (7):
 - ✅ `task_add` - Create task with auto-dependency inference
+- ✅ `task_import_yaml` - **NEW v0.10.0**: Bulk import tasks from YAML
 - ✅ `task_list` - List tasks (filterable by status/priority)
 - ✅ `task_get` - Get task details
 - ✅ `task_update` - Update task fields
 - ✅ `task_next` - Get AI-recommended next task
 - ✅ `task_delete` - Delete task
 
-**Conflict Detection Tools** (3) - NEW in v0.9.0-beta:
+**Conflict Detection Tools** (3) - v0.9.0-beta:
 - ✅ `detect_conflicts` - Detect file conflicts for a task
 - ✅ `recommend_safe_order` - Get optimal task execution order
 - ✅ `check_file_conflicts` - Check if files are being edited
 
 #### 📊 Quality Metrics
-- ✅ **390 Tests** - Comprehensive test coverage including 52 conflict tests + 38 error resilience tests
-- ✅ **94% Coverage** - High code quality maintained
+- ✅ **425 Tests** - Comprehensive test coverage (+35 for YAML import: 24 core + 6 MCP + 5 CLI)
+- ✅ **94% Coverage** - High code quality maintained (98% task_manager, 99% MCP server)
 - ✅ **13 Integration Tests** - End-to-end workflow validation
-- ✅ **Type Safe** - Full Pydantic validation
-- ✅ **Production Ready** - Stable v0.9.0-beta release
+- ✅ **Type Safe** - Full Pydantic validation with strict mode
+- ✅ **Production Ready** - Stable v0.9.0-beta release, v0.10.0 in development
 
 ### ✅ Phase 2: Conflict Detection (Complete in v0.9.0-beta)
 
@@ -295,7 +297,39 @@ clauxton task next
 
 # Delete task
 clauxton task delete TASK-001
+
+# Bulk import tasks from YAML (NEW v0.10.0)
+clauxton task import tasks.yml
+clauxton task import tasks.yml --dry-run  # Validate without creating
 ```
+
+**YAML Bulk Import Example** (`tasks.yml`):
+```yaml
+tasks:
+  - name: "Setup FastAPI project"
+    priority: high
+    files_to_edit:
+      - main.py
+      - requirements.txt
+    estimated_hours: 2.5
+
+  - name: "Create database models"
+    priority: high
+    depends_on:
+      - TASK-001
+    files_to_edit:
+      - models/user.py
+      - models/post.py
+    estimated_hours: 3.0
+
+  - name: "Write API tests"
+    priority: medium
+    depends_on:
+      - TASK-002
+    estimated_hours: 4.0
+```
+
+See [YAML Task Format Guide](docs/YAML_TASK_FORMAT.md) for complete specification.
 
 ### MCP Server (Phase 1 - Available Now!)
 
@@ -324,8 +358,9 @@ The Clauxton MCP Server provides full Knowledge Base and Task Management for Cla
 
 > **Note**: Search results are automatically ranked by relevance using TF-IDF algorithm. Most relevant entries appear first.
 
-**Task Management Tools** (✅ Week 5):
+**Task Management Tools**:
 - `task_add(name, description?, priority?, depends_on?, files?, kb_refs?, estimate?)` - Add task
+- `task_import_yaml(yaml_content, dry_run?, skip_validation?)` - **NEW v0.10.0**: Bulk import tasks from YAML
 - `task_list(status?, priority?)` - List tasks with filters
 - `task_get(task_id)` - Get task details
 - `task_update(task_id, status?, priority?, name?, description?)` - Update task

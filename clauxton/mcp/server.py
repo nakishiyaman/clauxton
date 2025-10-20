@@ -459,6 +459,81 @@ def task_delete(task_id: str) -> dict[str, str]:
     }
 
 
+@mcp.tool()
+def task_import_yaml(
+    yaml_content: str,
+    dry_run: bool = False,
+    skip_validation: bool = False,
+) -> dict[str, Any]:
+    """
+    Import multiple tasks from YAML content.
+
+    This tool enables bulk task creation from YAML format, with automatic
+    validation, dependency checking, and circular dependency detection.
+
+    Args:
+        yaml_content: YAML string containing tasks
+        dry_run: If True, validate only without creating tasks (default: False)
+        skip_validation: If True, skip dependency validation (default: False)
+
+    Returns:
+        Dictionary with:
+            - status: "success" | "error"
+            - imported: Number of tasks imported (0 if dry_run)
+            - task_ids: List of created task IDs
+            - errors: List of error messages (if any)
+            - next_task: Recommended next task ID
+
+    Example:
+        >>> yaml_content = '''
+        ... tasks:
+        ...   - name: "Setup FastAPI"
+        ...     priority: high
+        ...     files_to_edit:
+        ...       - main.py
+        ...   - name: "Create API"
+        ...     priority: high
+        ...     depends_on:
+        ...       - TASK-001
+        ... '''
+        >>> task_import_yaml(yaml_content)
+        {
+            "status": "success",
+            "imported": 2,
+            "task_ids": ["TASK-001", "TASK-002"],
+            "errors": [],
+            "next_task": "TASK-001"
+        }
+
+    YAML Format:
+        tasks:
+          - name: "Task name" (required)
+            description: "Detailed description" (optional)
+            priority: high | medium | low | critical (optional, default: medium)
+            depends_on:  (optional)
+              - TASK-001
+            files_to_edit:  (optional)
+              - src/file1.py
+              - src/file2.py
+            related_kb:  (optional)
+              - KB-20251019-001
+            estimated_hours: 4.5 (optional)
+
+    Notes:
+        - Task IDs are auto-generated (TASK-001, TASK-002, etc.)
+        - Circular dependencies are automatically detected
+        - Dependencies are validated to exist
+        - Use dry_run=True to validate before creating tasks
+    """
+    tm = TaskManager(Path.cwd())
+    result = tm.import_yaml(
+        yaml_content=yaml_content,
+        dry_run=dry_run,
+        skip_validation=skip_validation,
+    )
+    return result
+
+
 # ============================================================================
 # Conflict Detection Tools (Phase 2)
 # ============================================================================

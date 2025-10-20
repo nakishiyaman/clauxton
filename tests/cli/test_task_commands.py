@@ -685,3 +685,117 @@ def test_task_next_with_description_and_estimate(
     assert "Next Task to Work On" in result.output
     assert "This is a detailed description" in result.output
     assert "8.0" in result.output or "Estimated" in result.output
+
+
+# ============================================================================
+# task import Tests (v0.10.0)
+# ============================================================================
+
+
+def test_task_import_basic(runner: CliRunner, initialized_project: Path) -> None:
+    """Test basic YAML task import via CLI."""
+    # Create YAML file
+    yaml_file = initialized_project / "tasks.yml"
+    yaml_file.write_text(
+        """
+tasks:
+  - name: "Task A"
+    priority: high
+  - name: "Task B"
+    priority: medium
+"""
+    )
+
+    result = runner.invoke(
+        cli,
+        ["task", "import", str(yaml_file)],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    assert "✓ Imported 2 tasks" in result.output
+    assert "TASK-001" in result.output
+    assert "TASK-002" in result.output
+
+
+def test_task_import_dry_run(runner: CliRunner, initialized_project: Path) -> None:
+    """Test dry-run mode for import."""
+    yaml_file = initialized_project / "tasks.yml"
+    yaml_file.write_text(
+        """
+tasks:
+  - name: "Task A"
+"""
+    )
+
+    result = runner.invoke(
+        cli,
+        ["task", "import", str(yaml_file), "--dry-run"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    assert "✓ Validation successful (dry-run)" in result.output
+    assert "Would import 1 tasks" in result.output
+
+    # Verify no tasks were created
+    list_result = runner.invoke(cli, ["task", "list"])
+    assert "No tasks found" in list_result.output
+
+
+def test_task_import_with_errors(runner: CliRunner, initialized_project: Path) -> None:
+    """Test import with validation errors."""
+    yaml_file = initialized_project / "tasks.yml"
+    yaml_file.write_text(
+        """
+tasks:
+  - name: "Valid Task"
+  - name: ""
+"""
+    )
+
+    result = runner.invoke(
+        cli,
+        ["task", "import", str(yaml_file)],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 1
+    assert "✗ Import failed" in result.output
+
+
+def test_task_import_nonexistent_file(runner: CliRunner, initialized_project: Path) -> None:
+    """Test import with nonexistent file."""
+    result = runner.invoke(
+        cli,
+        ["task", "import", "nonexistent.yml"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code != 0
+
+
+def test_task_import_with_next_task_recommendation(
+    runner: CliRunner, initialized_project: Path
+) -> None:
+    """Test import shows next task recommendation."""
+    yaml_file = initialized_project / "tasks.yml"
+    yaml_file.write_text(
+        """
+tasks:
+  - name: "Low priority"
+    priority: low
+  - name: "High priority"
+    priority: high
+"""
+    )
+
+    result = runner.invoke(
+        cli,
+        ["task", "import", str(yaml_file)],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    assert "Next task to work on:" in result.output
+    assert "TASK-002" in result.output  # Should recommend high priority task

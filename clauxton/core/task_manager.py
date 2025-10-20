@@ -507,3 +507,252 @@ class TaskManager:
 
         # Update with combined dependencies
         return self.update(task_id, {"depends_on": combined_deps})
+
+    def import_yaml(
+        self,
+        yaml_content: str,
+        dry_run: bool = False,
+        skip_validation: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Import multiple tasks from YAML content.
+
+        This method enables bulk task creation from YAML format,
+        with validation and circular dependency detection.
+
+        Args:
+            yaml_content: YAML string containing tasks
+            dry_run: If True, validate only without creating tasks
+            skip_validation: If True, skip dependency validation
+
+        Returns:
+            Dictionary with:
+                - status: "success" | "error"
+                - imported: Number of tasks imported (0 if dry_run)
+                - task_ids: List of created task IDs
+                - errors: List of error messages (if any)
+                - next_task: Recommended next task ID
+
+        Raises:
+            No exceptions raised; errors returned in result dict
+
+        Example:
+            >>> yaml_content = '''
+            ... tasks:
+            ...   - name: "Setup FastAPI"
+            ...     priority: high
+            ...     files_to_edit: [main.py]
+            ...   - name: "Create API"
+            ...     priority: high
+            ...     depends_on: [TASK-001]
+            ... '''
+            >>> result = tm.import_yaml(yaml_content)
+            >>> result
+            {
+                "status": "success",
+                "imported": 2,
+                "task_ids": ["TASK-001", "TASK-002"],
+                "next_task": "TASK-001"
+            }
+        """
+        import yaml
+        from datetime import datetime, timezone
+
+        errors: List[str] = []
+        task_ids: List[str] = []
+
+        try:
+            # Step 1: Parse YAML
+            data = yaml.safe_load(yaml_content)
+            if not isinstance(data, dict) or "tasks" not in data:
+                return {
+                    "status": "error",
+                    "imported": 0,
+                    "task_ids": [],
+                    "errors": [
+                        "Invalid YAML format. Expected 'tasks' key at root. "
+                        "Example: tasks:\n  - name: 'Task name'"
+                    ],
+                    "next_task": None,
+                }
+
+            tasks_data = data["tasks"]
+            if not isinstance(tasks_data, list):
+                return {
+                    "status": "error",
+                    "imported": 0,
+                    "task_ids": [],
+                    "errors": ["'tasks' must be a list of task objects"],
+                    "next_task": None,
+                }
+
+            if len(tasks_data) == 0:
+                return {
+                    "status": "success",
+                    "imported": 0,
+                    "task_ids": [],
+                    "errors": [],
+                    "next_task": None,
+                }
+
+            # Step 2: Generate task IDs and validate
+            existing_tasks = self._load_tasks()
+            next_id_num = len(existing_tasks) + 1
+            tasks_to_create: List[Task] = []
+
+            for i, task_data in enumerate(tasks_data, start=1):
+                try:
+                    # Add required fields if missing
+                    if "id" not in task_data:
+                        task_data["id"] = f"TASK-{next_id_num:03d}"
+                        next_id_num += 1
+
+                    if "status" not in task_data:
+                        task_data["status"] = "pending"
+
+                    if "created_at" not in task_data:
+                        task_data["created_at"] = datetime.now(timezone.utc)
+
+                    if "depends_on" not in task_data:
+                        task_data["depends_on"] = []
+
+                    if "files_to_edit" not in task_data:
+                        task_data["files_to_edit"] = []
+
+                    if "priority" not in task_data:
+                        task_data["priority"] = "medium"
+
+                    # Validate with Pydantic
+                    task = Task(**task_data)
+                    tasks_to_create.append(task)
+
+                except Exception as e:
+                    errors.append(f"Task {i} ('{task_data.get('name', 'unnamed')}'): {str(e)}")
+
+            if errors:
+                return {
+                    "status": "error",
+                    "imported": 0,
+                    "task_ids": [],
+                    "errors": errors,
+                    "next_task": None,
+                }
+
+            # Step 3: Check dependencies (if not skipped)
+            if not skip_validation:
+                existing_ids = {t.id for t in existing_tasks}
+                new_ids = {t.id for t in tasks_to_create}
+                all_ids = existing_ids | new_ids
+
+                for task in tasks_to_create:
+                    for dep_id in task.depends_on:
+                        if dep_id not in all_ids:
+                            errors.append(
+                                f"Task '{task.name}' (ID: {task.id}): "
+                                f"Depends on non-existent task '{dep_id}'"
+                            )
+
+                if errors:
+                    return {
+                        "status": "error",
+                        "imported": 0,
+                        "task_ids": [],
+                        "errors": errors,
+                        "next_task": None,
+                    }
+
+            # Step 4: Detect circular dependencies
+            temp_graph = {t.id: t.depends_on for t in existing_tasks}
+            for task in tasks_to_create:
+                temp_graph[task.id] = task.depends_on
+
+            cycle_errors = self._detect_cycles_in_graph(temp_graph)
+            if cycle_errors:
+                return {
+                    "status": "error",
+                    "imported": 0,
+                    "task_ids": [],
+                    "errors": cycle_errors,
+                    "next_task": None,
+                }
+
+            # Step 5: Create tasks (if not dry_run)
+            if not dry_run:
+                all_tasks = existing_tasks + tasks_to_create
+                self._save_tasks(all_tasks)
+                self._invalidate_cache()
+                task_ids = [t.id for t in tasks_to_create]
+
+            # Step 6: Get next task
+            next_task_id = None
+            if task_ids and not dry_run:
+                try:
+                    next_task = self.get_next_task()
+                    next_task_id = next_task.id if next_task else None
+                except Exception:
+                    # If get_next_task fails, just use first task
+                    next_task_id = task_ids[0] if task_ids else None
+
+            return {
+                "status": "success",
+                "imported": len(tasks_to_create) if not dry_run else 0,
+                "task_ids": task_ids if not dry_run else [t.id for t in tasks_to_create],
+                "errors": [],
+                "next_task": next_task_id,
+            }
+
+        except yaml.YAMLError as e:
+            return {
+                "status": "error",
+                "imported": 0,
+                "task_ids": [],
+                "errors": [f"YAML parsing error: {str(e)}"],
+                "next_task": None,
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "imported": 0,
+                "task_ids": [],
+                "errors": [f"Unexpected error: {str(e)}"],
+                "next_task": None,
+            }
+
+    def _detect_cycles_in_graph(self, graph: Dict[str, List[str]]) -> List[str]:
+        """
+        Detect circular dependencies in a dependency graph using DFS.
+
+        Args:
+            graph: Dictionary mapping task IDs to lists of dependency IDs
+
+        Returns:
+            List of error messages describing cycles (empty if no cycles)
+        """
+        visited: set[str] = set()
+        rec_stack: set[str] = set()
+        cycles: List[str] = []
+
+        def dfs(node: str, path: List[str]) -> None:
+            if node in rec_stack:
+                # Cycle detected
+                cycle_start = path.index(node)
+                cycle_path = " → ".join(path[cycle_start:] + [node])
+                cycles.append(f"Circular dependency detected: {cycle_path}")
+                return
+
+            if node in visited:
+                return
+
+            visited.add(node)
+            rec_stack.add(node)
+
+            for neighbor in graph.get(node, []):
+                dfs(neighbor, path + [node])
+
+            rec_stack.remove(node)
+
+        for node in graph:
+            if node not in visited:
+                dfs(node, [])
+
+        return cycles
