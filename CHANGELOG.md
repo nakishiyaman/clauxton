@@ -11,13 +11,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### v0.10.0 - Transparent Integration (In Development)
 **Target Release**: 2025-11-10
-**Status**: Planning Complete, Implementation Starting
+**Status**: Week 1 Day 3 Complete (Undo/Rollback)
+
+#### Completed Features
+
+**🔴 Critical Features** (Safety & Core):
+- ✅ **YAML Bulk Import** (Week 1 Day 1-2): `task_import_yaml()` - Create multiple tasks in one operation
+  - 20 tests, 100% backward compatible
+  - Circular dependency detection, dry-run mode
+- ✅ **Undo/Rollback** (Week 1 Day 3): `undo_last_operation()` - Reverse accidental operations
+  - 24 tests (81% coverage), supports 7 operation types
+  - History stored in `.clauxton/history/operations.yml`
+  - CLI: `clauxton undo`, `clauxton undo --history`
+  - MCP tools: `undo_last_operation()`, `get_recent_operations()`
 
 #### Planned Features
 
 **🔴 Critical Features** (Safety & Core):
-- YAML Bulk Import: `task_import_yaml()` - Create multiple tasks in one operation
-- Undo/Rollback: `undo_last_operation()` - Reverse accidental operations
 - Confirmation Prompts: Threshold-based confirmation (10+ tasks/5+ KB entries)
 - Error Recovery: Transactional import with rollback/skip/abort strategies
 - YAML Safety: Detect dangerous YAML patterns (code injection prevention)

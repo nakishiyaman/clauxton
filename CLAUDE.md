@@ -10,6 +10,7 @@ Clauxton is a Claude Code plugin providing **persistent project context** throug
 - **Conflict Detection**: Pre-merge conflict prediction (Phase 2)
 
 **Status**: v0.9.0-beta - Production ready (94% test coverage, 390 tests)
+**v0.10.0 Progress**: Week 1 Day 3 Complete (406 tests, Undo/Rollback implemented)
 
 ## Build/Test Commands
 
@@ -81,6 +82,11 @@ clauxton task delete TASK-001
 clauxton conflict detect TASK-001           # Check conflicts for a task
 clauxton conflict order TASK-001 TASK-002   # Get safe execution order
 clauxton conflict check src/api/users.py    # Check file availability
+
+# Undo commands (v0.10.0 - Week 1 Day 3)
+clauxton undo                               # Undo last operation (with confirmation)
+clauxton undo --history                     # Show operation history
+clauxton undo --history --limit 20          # Show last 20 operations
 ```
 
 ## High-Level Architecture
@@ -677,11 +683,14 @@ clauxton config get confirmation_mode
 **KB Export** (v0.10.0+):
 - `kb_export_docs(output_dir)` - ⭐ Export KB to Markdown docs
 
-**Undo/Configuration** (v0.10.0+):
-- `undo_last_operation()` - ⭐ Reverse last operation
-- `get_recent_logs()` - View operation history
+**Undo/History** (v0.10.0+ - ✅ Implemented in Week 1 Day 3):
+- `undo_last_operation()` - ⭐ Reverse last operation (24 tests, 81% coverage)
+- `get_recent_operations(limit)` - View operation history
 
-Total: **17 tools** (15 current + 2 new in v0.10.0)
+**Configuration** (v0.10.0+ - Week 2):
+- `get_recent_logs()` - View operation logs (planned)
+
+Total: **17 tools** (15 current + 2 implemented in v0.10.0)
 
 ---
 

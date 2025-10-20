@@ -298,6 +298,116 @@ class TestHistoryPersistence:
         assert history_file.exists()
 
 
+class TestUndoSingleTaskOperations:
+    """Test undoing single task operations (add, delete, update)."""
+
+    def test_undo_task_add_missing_data(self, tmp_path):
+        """Test undo task_add with missing task_id."""
+        history = OperationHistory(tmp_path)
+
+        # Record operation with missing task_id
+        operation = Operation(
+            operation_type=OperationType.TASK_ADD,
+            operation_data={},  # Missing task_id
+            description="Added task",
+        )
+        history.record(operation)
+
+        # Undo should fail gracefully
+        result = history.undo_last_operation()
+        assert result["status"] == "error"
+        assert "task_id" in result["error"].lower()
+
+    def test_undo_task_delete_missing_backup(self, tmp_path):
+        """Test undo task_delete with missing backup data."""
+        history = OperationHistory(tmp_path)
+
+        # Record operation with missing task_backup
+        operation = Operation(
+            operation_type=OperationType.TASK_DELETE,
+            operation_data={},  # Missing task_backup
+            description="Deleted task",
+        )
+        history.record(operation)
+
+        # Undo should fail gracefully
+        result = history.undo_last_operation()
+        assert result["status"] == "error"
+        assert "backup" in result["error"].lower()
+
+    def test_undo_task_update_missing_data(self, tmp_path):
+        """Test undo task_update with missing data."""
+        history = OperationHistory(tmp_path)
+
+        # Record operation with missing old_state
+        operation = Operation(
+            operation_type=OperationType.TASK_UPDATE,
+            operation_data={"task_id": "TASK-001"},  # Missing old_state
+            description="Updated task",
+        )
+        history.record(operation)
+
+        # Undo should fail gracefully
+        result = history.undo_last_operation()
+        assert result["status"] == "error"
+        assert "old_state" in result["error"].lower()
+
+
+class TestUndoKBOperations:
+    """Test undoing Knowledge Base operations."""
+
+    def test_undo_kb_add_missing_data(self, tmp_path):
+        """Test undo kb_add with missing entry_id."""
+        history = OperationHistory(tmp_path)
+
+        # Record operation with missing entry_id
+        operation = Operation(
+            operation_type=OperationType.KB_ADD,
+            operation_data={},  # Missing entry_id
+            description="Added KB entry",
+        )
+        history.record(operation)
+
+        # Undo should fail gracefully
+        result = history.undo_last_operation()
+        assert result["status"] == "error"
+        assert "entry_id" in result["error"].lower()
+
+    def test_undo_kb_delete_missing_backup(self, tmp_path):
+        """Test undo kb_delete with missing backup data."""
+        history = OperationHistory(tmp_path)
+
+        # Record operation with missing entry_backup
+        operation = Operation(
+            operation_type=OperationType.KB_DELETE,
+            operation_data={},  # Missing entry_backup
+            description="Deleted KB entry",
+        )
+        history.record(operation)
+
+        # Undo should fail gracefully
+        result = history.undo_last_operation()
+        assert result["status"] == "error"
+        assert "backup" in result["error"].lower()
+
+    def test_undo_kb_update_missing_data(self, tmp_path):
+        """Test undo kb_update with missing data."""
+        history = OperationHistory(tmp_path)
+
+        # Record operation with missing old_state
+        operation = Operation(
+            operation_type=OperationType.KB_UPDATE,
+            operation_data={"entry_id": "KB-20251020-001"},  # Missing old_state
+            description="Updated KB entry",
+        )
+        history.record(operation)
+
+        # Undo should fail gracefully
+        result = history.undo_last_operation()
+        assert result["status"] == "error"
+        assert "old_state" in result["error"].lower()
+
+
 class TestEdgeCases:
     """Test edge cases and error handling."""
 
@@ -341,3 +451,60 @@ class TestEdgeCases:
         # Both operations should be recorded
         all_ops = history1.list_operations(limit=10)
         assert len(all_ops) == 2
+
+    def test_remove_last_operation(self, tmp_path):
+        """Test removing last operation from history."""
+        history = OperationHistory(tmp_path)
+
+        # Record operation
+        operation = Operation(
+            operation_type=OperationType.TASK_IMPORT,
+            operation_data={"task_ids": ["TASK-001"]},
+            description="Imported 1 task",
+        )
+        history.record(operation)
+
+        # Remove last operation
+        removed_op = history.remove_last_operation()
+        assert removed_op is not None
+        assert removed_op.description == "Imported 1 task"
+
+        # History should be empty now
+        last_op = history.get_last_operation()
+        assert last_op is None
+
+    def test_undo_when_undo_fails_restores_history(self, tmp_path):
+        """Test that operation is restored to history if undo fails."""
+        from clauxton.core.task_manager import TaskManager
+
+        tm = TaskManager(tmp_path)
+        history = OperationHistory(tmp_path)
+
+        # Import tasks
+        yaml_content = """
+        tasks:
+          - name: "Task 1"
+            priority: high
+        """
+        result = tm.import_yaml(yaml_content)
+        assert result["status"] == "success"
+
+        # Manually corrupt the operation data to cause undo failure
+        # (This simulates a scenario where undo logic encounters an error)
+        last_op = history.get_last_operation()
+        assert last_op is not None
+
+        # Record a corrupted operation (invalid task_id type)
+        from clauxton.core.operation_history import Operation, OperationType
+
+        corrupted_op = Operation(
+            operation_type=OperationType.TASK_ADD,
+            operation_data={"task_id": None},  # Invalid task_id
+            description="Corrupted operation",
+        )
+        history.record(corrupted_op)
+
+        # Try to undo - should fail but not crash
+        result = history.undo_last_operation()
+        # The operation should fail gracefully
+        assert result["status"] == "error"

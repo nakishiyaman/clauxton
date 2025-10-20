@@ -53,6 +53,10 @@ clauxton kb search "FastAPI authentication"
 
 # Get next recommended task (AI-powered)
 clauxton task next
+
+# Undo last operation (v0.10.0 feature - in development)
+clauxton undo                   # Undo with confirmation
+clauxton undo --history         # View operation history
 ```
 
 ### Install from Source (Development)
