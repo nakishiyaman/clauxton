@@ -464,6 +464,7 @@ def task_import_yaml(
     yaml_content: str,
     dry_run: bool = False,
     skip_validation: bool = False,
+    skip_confirmation: bool = False,
 ) -> dict[str, Any]:
     """
     Import multiple tasks from YAML content.
@@ -475,14 +476,17 @@ def task_import_yaml(
         yaml_content: YAML string containing tasks
         dry_run: If True, validate only without creating tasks (default: False)
         skip_validation: If True, skip dependency validation (default: False)
+        skip_confirmation: If True, skip confirmation prompt (default: False)
 
     Returns:
         Dictionary with:
-            - status: "success" | "error"
+            - status: "success" | "error" | "confirmation_required"
             - imported: Number of tasks imported (0 if dry_run)
             - task_ids: List of created task IDs
             - errors: List of error messages (if any)
             - next_task: Recommended next task ID
+            - confirmation_required: True if confirmation needed (optional)
+            - preview: Preview of tasks to import (optional)
 
     Example:
         >>> yaml_content = '''
@@ -530,6 +534,7 @@ def task_import_yaml(
         yaml_content=yaml_content,
         dry_run=dry_run,
         skip_validation=skip_validation,
+        skip_confirmation=skip_confirmation,
     )
     return result
 

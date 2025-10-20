@@ -513,6 +513,8 @@ class TaskManager:
         yaml_content: str,
         dry_run: bool = False,
         skip_validation: bool = False,
+        skip_confirmation: bool = False,
+        confirmation_threshold: int = 10,
     ) -> Dict[str, Any]:
         """
         Import multiple tasks from YAML content.
@@ -524,14 +526,18 @@ class TaskManager:
             yaml_content: YAML string containing tasks
             dry_run: If True, validate only without creating tasks
             skip_validation: If True, skip dependency validation
+            skip_confirmation: If True, skip confirmation prompt (default: False)
+            confirmation_threshold: Number of tasks to trigger confirmation (default: 10)
 
         Returns:
             Dictionary with:
-                - status: "success" | "error"
+                - status: "success" | "error" | "confirmation_required"
                 - imported: Number of tasks imported (0 if dry_run)
                 - task_ids: List of created task IDs
                 - errors: List of error messages (if any)
                 - next_task: Recommended next task ID
+                - confirmation_required: True if confirmation needed (optional)
+                - preview: Preview of tasks to import (optional)
 
         Raises:
             No exceptions raised; errors returned in result dict
@@ -555,8 +561,9 @@ class TaskManager:
                 "next_task": "TASK-001"
             }
         """
-        import yaml
         from datetime import datetime, timezone
+
+        import yaml
 
         errors: List[str] = []
         task_ids: List[str] = []
@@ -676,6 +683,27 @@ class TaskManager:
                     "next_task": None,
                 }
 
+            # Step 4.5: Check if confirmation is required
+            needs_confirmation = (
+                not skip_confirmation
+                and not dry_run
+                and len(tasks_to_create) >= confirmation_threshold
+            )
+            if needs_confirmation:
+                # Generate preview
+                preview = self._generate_import_preview(tasks_to_create)
+
+                return {
+                    "status": "confirmation_required",
+                    "imported": 0,
+                    "task_ids": [],
+                    "errors": [],
+                    "next_task": None,
+                    "confirmation_required": True,
+                    "preview": preview,
+                    "tasks_to_create": len(tasks_to_create),
+                }
+
             # Step 5: Create tasks (if not dry_run)
             if not dry_run:
                 all_tasks = existing_tasks + tasks_to_create
@@ -684,7 +712,11 @@ class TaskManager:
                 task_ids = [t.id for t in tasks_to_create]
 
                 # Record operation for undo
-                from clauxton.core.operation_history import Operation, OperationHistory, OperationType
+                from clauxton.core.operation_history import (
+                    Operation,
+                    OperationHistory,
+                    OperationType,
+                )
 
                 history = OperationHistory(self.root_dir)
                 operation = Operation(
@@ -728,6 +760,60 @@ class TaskManager:
                 "errors": [f"Unexpected error: {str(e)}"],
                 "next_task": None,
             }
+
+    def _generate_import_preview(self, tasks: List[Task]) -> Dict[str, Any]:
+        """
+        Generate a preview of tasks to be imported.
+
+        Args:
+            tasks: List of Task objects to preview
+
+        Returns:
+            Dictionary with preview information
+
+        Example:
+            >>> preview = tm._generate_import_preview(tasks)
+            >>> print(preview)
+            {
+                "task_count": 10,
+                "total_estimated_hours": 25.5,
+                "by_priority": {"critical": 2, "high": 5, "medium": 3},
+                "by_status": {"pending": 10},
+                "tasks_summary": [
+                    {"id": "TASK-001", "name": "Setup FastAPI", "priority": "high"},
+                    ...
+                ]
+            }
+        """
+        from collections import Counter
+
+        # Count by priority
+        by_priority = Counter(t.priority for t in tasks)
+
+        # Count by status
+        by_status = Counter(t.status for t in tasks)
+
+        # Calculate total estimated hours
+        total_hours = sum(t.estimated_hours or 0 for t in tasks)
+
+        # Create task summaries (first 5 tasks)
+        tasks_summary = [
+            {
+                "id": t.id,
+                "name": t.name,
+                "priority": t.priority,
+                "estimated_hours": t.estimated_hours,
+            }
+            for t in tasks[:5]
+        ]
+
+        return {
+            "task_count": len(tasks),
+            "total_estimated_hours": total_hours,
+            "by_priority": dict(by_priority),
+            "by_status": dict(by_status),
+            "tasks_summary": tasks_summary,
+        }
 
     def _detect_cycles_in_graph(self, graph: Dict[str, List[str]]) -> List[str]:
         """
