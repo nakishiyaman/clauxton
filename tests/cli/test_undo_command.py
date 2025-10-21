@@ -14,7 +14,6 @@ import pytest
 from click.testing import CliRunner
 
 from clauxton.cli.main import cli
-from clauxton.core.operation_history import OperationHistory
 
 
 @pytest.fixture
@@ -161,7 +160,10 @@ def test_undo_history_workflow(runner: CliRunner, temp_project: Path) -> None:
         # View history
         history_result = runner.invoke(cli, ["undo", "--history", "--limit", "10"])
         assert history_result.exit_code == 0
-        assert "Operation History" in history_result.output or "No operations in history" in history_result.output
+        assert (
+            "Operation History" in history_result.output
+            or "No operations in history" in history_result.output
+        )
 
         # Try undo
         undo_result = runner.invoke(cli, ["undo"], input="n\n")
@@ -179,7 +181,10 @@ def test_undo_with_various_operations(runner: CliRunner, temp_project: Path) -> 
         history_result = runner.invoke(cli, ["undo", "--history"])
         assert history_result.exit_code == 0
         # History is shown or empty
-        assert "Operation History" in history_result.output or "No operations in history" in history_result.output
+        assert (
+            "Operation History" in history_result.output
+            or "No operations in history" in history_result.output
+        )
 
 
 # ============================================================================
