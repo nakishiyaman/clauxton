@@ -163,11 +163,11 @@ clauxton config set kb_bulk_add_threshold 5
 **Developer → Claude Code:**
 
 ```
-「TodoアプリをFastAPI + Reactで作りたい。
-- バックエンド: FastAPI、PostgreSQL、JWT認証
-- フロントエンド: React 18、Vite、TailwindCSS
-- 最大1000件のTodo、ページネーション必須
-- 命名規則はsnake_case（Python）、camelCase（JS）」
+"I want to build a Todo app with FastAPI + React.
+- Backend: FastAPI, PostgreSQL, JWT authentication
+- Frontend: React 18, Vite, TailwindCSS
+- Max 1000 todos, pagination required
+- Naming: snake_case (Python), camelCase (JS)"
 ```
 
 ### Transparent KB Registration
@@ -177,27 +177,27 @@ Claude Code automatically registers requirements to Knowledge Base:
 ```python
 # 1. Architecture decision
 kb_add(
-    title="FastAPI + React構成",
+    title="FastAPI + React Architecture",
     category="architecture",
-    content="FastAPIバックエンド + Reactフロントエンド...",
+    content="FastAPI backend + React frontend with PostgreSQL and JWT auth",
     tags=["fastapi", "react", "postgresql", "jwt"]
 )
 # → KB-20251021-001
 
 # 2. Constraint
 kb_add(
-    title="Todoデータ上限",
+    title="Todo Data Limit",
     category="constraint",
-    content="最大1000件のTodo。ページネーション必須（20件/page）。",
+    content="Max 1000 todos. Pagination required (20 items/page).",
     tags=["constraint", "performance"]
 )
 # → KB-20251021-002
 
 # 3. Convention
 kb_add(
-    title="命名規則",
+    title="Naming Convention",
     category="convention",
-    content="Python: snake_case、JavaScript: camelCase",
+    content="Python: snake_case, JavaScript: camelCase",
     tags=["style", "convention"]
 )
 # → KB-20251021-003
@@ -206,14 +206,14 @@ kb_add(
 ### Developer Sees
 
 ```
-了解しました！TodoアプリをFastAPI + Reactで構築します。
-以下の構成で進めます：
-- バックエンド: FastAPI + PostgreSQL + JWT認証
-- フロントエンド: React 18 + Vite + TailwindCSS
-- 制約: 最大1000件、ページネーション（20件/page）
-- 命名規則: Python=snake_case、JS=camelCase
+Got it! I'll build a Todo app with FastAPI + React.
+Here's the configuration:
+- Backend: FastAPI + PostgreSQL + JWT authentication
+- Frontend: React 18 + Vite + TailwindCSS
+- Constraints: Max 1000 items, pagination (20 items/page)
+- Naming: Python=snake_case, JS=camelCase
 
-Knowledge Baseに3件登録しました。タスクを作成しますか？
+Registered 3 entries to Knowledge Base. Should I create tasks?
 ```
 
 ### KB Categories
@@ -248,7 +248,7 @@ Knowledge Baseに3件登録しました。タスクを作成しますか？
 **Developer → Claude Code:**
 
 ```
-「はい、お願いします」
+"Yes, please proceed"
 ```
 
 ### Transparent YAML Generation
@@ -258,8 +258,8 @@ Claude Code analyzes the project and generates tasks internally:
 ```yaml
 # Generated YAML (not shown to user)
 tasks:
-  - name: "FastAPI初期化"
-    description: "FastAPIプロジェクトをセットアップ"
+  - name: "FastAPI Initialization"
+    description: "Set up FastAPI project structure"
     priority: high
     files_to_edit:
       - backend/main.py
@@ -267,8 +267,8 @@ tasks:
       - backend/config.py
     estimate: 1
 
-  - name: "PostgreSQLデータベース設計"
-    description: "Todoテーブル、Userテーブルを設計"
+  - name: "PostgreSQL Database Design"
+    description: "Design Todo and User tables with migrations"
     priority: high
     files_to_edit:
       - backend/models.py
@@ -307,7 +307,7 @@ If 10+ tasks are being created, user confirmation is required:
 ⚠️  Confirmation Required
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-10個のタスクをインポートしようとしています。
+Attempting to import 10 tasks.
 
 📊 Summary:
 ─────────────────────────────────────────────────
@@ -325,18 +325,18 @@ If 10+ tasks are being created, user confirmation is required:
 
 📋 Tasks Preview:
 ─────────────────────────────────────────────────
-  TASK-001: FastAPI初期化 (high, 1h)
-  TASK-002: PostgreSQLデータベース設計 (high, 2h)
-  TASK-003: Todo CRUD APIエンドポイント実装 (high, 3h)
-  TASK-004: JWT認証実装 (critical, 2h)
-  TASK-005: ページネーション実装 (medium, 1h)
-  TASK-006: React + Vite初期化 (high, 1h)
-  TASK-007: Todo一覧コンポーネント実装 (high, 2h)
-  TASK-008: Todo追加・編集フォーム実装 (medium, 2h)
-  TASK-009: API連携・認証フロー実装 (critical, 3h)
-  TASK-010: E2Eテスト実装 (medium, 2h)
+  TASK-001: FastAPI Initialization (high, 1h)
+  TASK-002: PostgreSQL Database Design (high, 2h)
+  TASK-003: Todo CRUD API Implementation (high, 3h)
+  TASK-004: JWT Authentication Implementation (critical, 2h)
+  TASK-005: Pagination Implementation (medium, 1h)
+  TASK-006: React + Vite Initialization (high, 1h)
+  TASK-007: Todo List Component Implementation (high, 2h)
+  TASK-008: Todo Add/Edit Form Implementation (medium, 2h)
+  TASK-009: API Integration  Auth Flow Implementation (critical, 3h)
+  TASK-010: E2E Test Implementation (medium, 2h)
 
-続行しますか？ [y/N]
+Continue? [y/N]
 ```
 
 **Developer Response:** `y`
@@ -344,26 +344,26 @@ If 10+ tasks are being created, user confirmation is required:
 ### Task Import Result
 
 ```
-✅ 10個のタスクを作成しました：
+✅ Created 10 tasks:
 
 📋 Backend Tasks (TASK-001 ~ TASK-005):
 ─────────────────────────────────────────────────
-  TASK-001: FastAPI初期化 (1h)
-  TASK-002: PostgreSQLデータベース設計 (2h)
-  TASK-003: Todo CRUD APIエンドポイント実装 (3h)
-  TASK-004: JWT認証実装 (2h)
-  TASK-005: ページネーション実装 (1h)
+  TASK-001: FastAPI Initialization (1h)
+  TASK-002: PostgreSQL Database Design (2h)
+  TASK-003: Todo CRUD API Implementation (3h)
+  TASK-004: JWT Authentication Implementation (2h)
+  TASK-005: Pagination Implementation (1h)
 
 📋 Frontend Tasks (TASK-006 ~ TASK-009):
 ─────────────────────────────────────────────────
-  TASK-006: React + Vite初期化 (1h)
-  TASK-007: Todo一覧コンポーネント実装 (2h)
-  TASK-008: Todo追加・編集フォーム実装 (2h)
-  TASK-009: API連携・認証フロー実装 (3h)
+  TASK-006: React + Vite Initialization (1h)
+  TASK-007: Todo List Component Implementation (2h)
+  TASK-008: Todo Add/Edit Form Implementation (2h)
+  TASK-009: API Integration  Auth Flow Implementation (3h)
 
 📋 Integration Tasks (TASK-010):
 ─────────────────────────────────────────────────
-  TASK-010: E2Eテスト実装 (2h)
+  TASK-010: E2E Test Implementation (2h)
 
 📊 Dependency Graph:
 ─────────────────────────────────────────────────
@@ -548,15 +548,15 @@ safe_order = recommend_safe_order(["TASK-001", "TASK-002", "TASK-003"])
 task_update("TASK-001", status="in_progress")
 
 # 2. Search KB for relevant information
-kb_results = kb_search("FastAPI 初期化")
-# → Returns KB-20251021-001 (FastAPI + React構成)
+kb_results = kb_search("FastAPI Initialization")
+# → Returns KB-20251021-001 (FastAPI + React Architecture)
 
 # 3. Implementation
-print("TASK-001 (FastAPI初期化) を実装します。")
+print("TASK-001 (FastAPI Initialization) Implementation.")
 print()
-print("KB-20251021-001より：")
-print("- FastAPI + PostgreSQL + JWT認証を使用")
-print("- 命名規則: snake_case")
+print("From KB-20251021-001:")
+print("- FastAPI + PostgreSQL + JWT authentication using")
+print("- Naming convention: snake_case")
 print()
 
 # Create files...
@@ -572,19 +572,19 @@ task_update("TASK-001", status="completed")
 
 # 6. Get next task
 next_task = task_next()
-# → TASK-002 (PostgreSQLデータベース設計)
+# → TASK-002 (PostgreSQL Database Design)
 ```
 
 ### Developer Sees
 
 ```
-🚀 TASK-001 (FastAPI初期化) を実装します
+🚀 TASK-001 (FastAPI Initialization) Implementation
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📚 Knowledge Base参照:
-  KB-20251021-001: FastAPI + React構成
-    • FastAPI + PostgreSQL + JWT認証を使用
-    • 命名規則: snake_case
+📚 Knowledge Base Reference:
+  KB-20251021-001: FastAPI + React Architecture
+    • FastAPI + PostgreSQL + JWT authentication using
+    • Naming convention: snake_case
 
 📝 Creating Files:
   ✅ backend/main.py (FastAPI application)
@@ -597,13 +597,13 @@ next_task = task_next()
 
   All tests passed!
 
-✅ TASK-001 完了！ (1h actual)
+✅ TASK-001 Complete! (1h actual)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📋 Progress: 1/10 tasks completed (10%)
 ⏱️  Time Spent: 1h / 19h estimated
 
-🚀 Next Task: TASK-002 (PostgreSQLデータベース設計)
+🚀 Next Task: TASK-002 (PostgreSQL Database Design)
 ```
 
 ### KB-Driven Implementation
@@ -647,7 +647,7 @@ All operations are logged to `.clauxton/logs/YYYY-MM-DD.log`:
 {"timestamp": "2025-10-21T10:00:00", "operation": "task_import_yaml", "level": "info", "details": {"count": 10, "duration": "0.2s"}}
 {"timestamp": "2025-10-21T10:15:00", "operation": "task_update", "level": "info", "details": {"task_id": "TASK-001", "changes": {"status": "pending → in_progress"}}}
 {"timestamp": "2025-10-21T10:45:00", "operation": "task_update", "level": "info", "details": {"task_id": "TASK-001", "changes": {"status": "in_progress → completed"}}}
-{"timestamp": "2025-10-21T11:00:00", "operation": "kb_search", "level": "debug", "details": {"query": "FastAPI 初期化", "results": 1}}
+{"timestamp": "2025-10-21T11:00:00", "operation": "kb_search", "level": "debug", "details": {"query": "FastAPI Initialization", "results": 1}}
 ```
 
 ### View Logs
@@ -741,7 +741,7 @@ clauxton undo
 # → Confirmation prompt
 
 # Or via Claude Code
-「今の操作を取り消して」
+"Undo the last operation"
 ```
 
 ### Undo Confirmation
@@ -751,11 +751,11 @@ clauxton undo
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Operation: task_delete
-Task: TASK-001 (FastAPI初期化)
+Task: TASK-001 (FastAPI Initialization)
 Timestamp: 2025-10-21 11:30:00
 
 ⚠️  This will restore TASK-001 with all its data:
-  • Name: FastAPI初期化
+  • Name: FastAPI Initialization
   • Status: completed
   • Priority: high
   • Files: backend/main.py, backend/requirements.txt, backend/config.py
@@ -770,16 +770,16 @@ Proceed with undo? [Y/n]
 ### Undo Result
 
 ```
-✅ Undo成功！
+✅ Undo Successful!
 
-復元内容:
+Restored Content:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  TASK-001: FastAPI初期化
+  TASK-001: FastAPI Initialization
   Status: completed
   Files: 3 files restored
   Dependencies: TASK-002 dependency link restored
 
-現在のタスク状況:
+Current task status:
   ✅ TASK-001: completed
   ⏳ TASK-002: pending
   ... (other tasks)
@@ -883,10 +883,10 @@ Requirements often change during development. Clauxton handles three types of ch
 **Developer → Claude Code:**
 
 ```
-「やっぱりTodoにタグ機能を追加したい。
-- 各Todoにマルチタグをつけられるようにしたい
-- タグで絞り込み検索できるようにしたい
-- タグは最大10個まで」
+"Actually, I want to add tag functionality to todos.
+- Enable multi-tags for each todo
+- Enable filtering by tags
+- Max 10 tags per todo"
 ```
 
 **Impact Analysis:**
@@ -895,10 +895,10 @@ Requirements often change during development. Clauxton handles three types of ch
 📋 Requirement Change: Feature Addition
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-New Feature: Todoタグ機能
+New Feature: Todo Tag Feature
 
 📚 KB Changes:
-  ✅ KB-20251021-004 (New): Todoタグ機能の仕様
+  ✅ KB-20251021-004 (New): Todo Tag Feature Specification
 
 ⚠️  Affected Tasks: 4 tasks
 
@@ -923,7 +923,7 @@ New Feature: Todoタグ機能
      Estimate: 2h → 3h
 
 📋 New Tasks:
-  • TASK-011: タグ絞り込み検索API実装 (2h)
+  • TASK-011: Tag Filtering Search API Implementation (2h)
     Priority: medium
     Depends on: TASK-003
 
@@ -949,9 +949,9 @@ Your choice [A/B/C]:
 ```python
 # 1. Add new KB entry
 kb_add(
-    title="Todoタグ機能",
+    title="Todo Tag Feature",
     category="decision",
-    content="各Todoにマルチタグ（最大10個）を追加...",
+    content="Add multi-tags (max 10) to each todo...",
     tags=["feature", "todo", "tags"]
 )
 # → KB-20251021-004
@@ -959,13 +959,13 @@ kb_add(
 # 2. Reopen completed task
 task_update("TASK-002",
     status="pending",
-    description="PostgreSQL DB設計 + タグテーブル追加",
+    description="PostgreSQL DB Design + Add Tags Table",
     files_to_edit=[..., "alembic/versions/002_add_tags.py"]
 )
 
 # 3. Update in_progress task
 task_update("TASK-003",
-    description="Todo CRUD API + タグAPI実装",
+    description="Todo CRUD API + Tag API Implementation",
     files_to_edit=[..., "backend/api/tags.py", "backend/schemas/tag.py"],
     estimate=4
 )
@@ -977,7 +977,7 @@ task_update("TASK-007", ...)
 # 5. Add new task
 task_import_yaml("""
 tasks:
-  - name: "タグ絞り込み検索API実装"
+  - name: "Tag Filtering Search API Implementation"
     priority: medium
     depends_on: [TASK-003]
     estimate: 2
@@ -1021,8 +1021,8 @@ Continue? [Y/n]
 **Developer → Claude Code:**
 
 ```
-「やっぱりTodoの上限を1000件じゃなくて5000件にしたい。
-ページネーションは50件/pageに変更。」
+"Actually, I want to change the todo limit from 1000 to 5000.
+Change pagination to 50 items/page."
 ```
 
 **Impact Analysis:**
@@ -1031,12 +1031,12 @@ Continue? [Y/n]
 📋 Requirement Change: Specification Update
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Changed Spec: Todoデータ上限
+Changed Spec: Todo Data Limit
 
 📚 KB Changes:
   ✏️  KB-20251021-002 (Updated):
-     Old: 最大1000件、20件/page
-     New: 最大5000件、50件/page
+     Old: Max 1000 items, 20 items/page
+     New: Max 5000 items, 50 items/page
 
 ⚠️  Affected Tasks: 3 tasks
 
@@ -1090,8 +1090,8 @@ Development continues with updated specs.
 **Developer → Claude Code:**
 
 ```
-「やっぱりJWT認証はやめて、OAuth2（Google認証）にしたい。
-JWT関連のタスクは全部削除して、OAuth2タスクに置き換えて。」
+"Actually, I want to switch from JWT to OAuth2 (Google auth).
+Delete all JWT-related tasks and replace with OAuth2 tasks."
 ```
 
 **Impact Analysis:**
@@ -1100,24 +1100,24 @@ JWT関連のタスクは全部削除して、OAuth2タスクに置き換えて�
 📋 Requirement Change: Feature Replacement
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Change: JWT認証 → OAuth2 Google認証
+Change: JWT Authentication → OAuth2 Google Authentication
 
 📚 KB Changes:
-  ❌ KB-20251021-001 (Deleted): JWT認証の記述
-  ✅ KB-20251021-005 (New): OAuth2 Google認証
+  ❌ KB-20251021-001 (Deleted): JWT authentication description
+  ✅ KB-20251021-005 (New): OAuth2 Google Authentication
 
 ⚠️  Affected Tasks: 2 tasks
 
   ❌ TASK-004 (pending) → To be deleted
-     • JWT認証実装タスクは不要
+     • JWT Authentication Implementation task is no longer needed
      ⚠️  Warning: TASK-010 depends on TASK-004
 
   ✏️  TASK-009 (pending) → To be modified
-     • OAuth2認証フローに変更
+     • Change to OAuth2 authentication flow
      Files: +frontend/src/components/GoogleLoginButton.jsx
 
 📋 New Tasks:
-  • TASK-012: OAuth2 Google認証実装 (3h)
+  • TASK-012: OAuth2 Google Authentication Implementation (3h)
     Priority: critical
     Depends on: TASK-002
     Files: backend/core/oauth.py, backend/api/auth.py
@@ -1149,9 +1149,9 @@ kb_delete("KB-20251021-001")
 
 # 2. Add new KB entry
 kb_add(
-    title="OAuth2 Google認証採用",
+    title="Adopt OAuth2 Google Authentication",
     category="decision",
-    content="JWT → OAuth2に変更。理由: UX向上、パスワード管理不要",
+    content="Change from JWT to OAuth2. Reason: Better UX, no password management",
     tags=["oauth2", "google", "authentication"]
 )
 # → KB-20251021-005
@@ -1162,7 +1162,7 @@ task_delete("TASK-004")
 # 4. Create new task
 task_import_yaml("""
 tasks:
-  - name: "OAuth2 Google認証実装"
+  - name: "OAuth2 Google Authentication Implementation"
     priority: critical
     depends_on: [TASK-002]
     files_to_edit:
@@ -1175,7 +1175,7 @@ tasks:
 
 # 5. Update dependent tasks
 task_update("TASK-009",
-    description="OAuth2認証フロー実装（Google認証）",
+    description="OAuth2 Authentication Flow Implementation (Google Auth)",
     files_to_edit=[..., "frontend/src/components/GoogleLoginButton.jsx"]
 )
 
@@ -1194,13 +1194,13 @@ recalculate_dependencies()
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📚 KB Changes:
-  ❌ KB-20251021-001 (Deleted): JWT認証
-  ✅ KB-20251021-005 (Added): OAuth2 Google認証
+  ❌ KB-20251021-001 (Deleted): JWT Authentication
+  ✅ KB-20251021-005 (Added): OAuth2 Google Authentication
 
 📋 Task Changes:
-  ❌ TASK-004 (Deleted): JWT認証実装
-  ✅ TASK-012 (Added): OAuth2 Google認証実装
-  ✏️  TASK-009 (Updated): OAuth2認証フロー実装
+  ❌ TASK-004 (Deleted): JWT Authentication Implementation
+  ✅ TASK-012 (Added): OAuth2 Google Authentication Implementation
+  ✏️  TASK-009 (Updated): OAuth2 Authentication Flow Implementation
   ✏️  TASK-010 (Updated): Dependency changed
 
 Updated Dependency Graph:
@@ -1229,7 +1229,7 @@ Next: Complete TASK-003, then work on TASK-012.
 **Developer → Claude Code:**
 
 ```
-「やっぱりJWT認証のままで良かった。OAuth2は取り消して。」
+"Actually, JWT auth was fine. Cancel the OAuth2 change."
 ```
 
 **Undo Process:**
@@ -1262,7 +1262,7 @@ Recent Operations (in reverse order):
   ✅ Undo #5: KB-20251021-005 deleted
   ✅ Undo #6: KB-20251021-001 restored
 
-✅ Undo Complete! JWT構成に戻しました。
+✅ Undo Complete! Reverted to JWT configuration.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📚 KB:
@@ -1270,9 +1270,9 @@ Recent Operations (in reverse order):
   ❌ KB-20251021-005 (Deleted): OAuth2 Google
 
 📋 Tasks:
-  ✅ TASK-004 (Restored): JWT認証実装
-  ❌ TASK-012 (Deleted): OAuth2実装
-  ✅ TASK-009 (Restored): Original API連携
+  ✅ TASK-004 (Restored): JWT Authentication Implementation
+  ❌ TASK-012 (Deleted): OAuth2 Implementation
+  ✅ TASK-009 (Restored): Original API Integration
   ✅ TASK-010 (Restored): Original dependencies
 
 Dependency Graph:
