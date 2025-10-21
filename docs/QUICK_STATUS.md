@@ -58,27 +58,37 @@
 
 ## 📋 What's Next (Session 11)
 
-### Remaining Tasks for v0.10.0
+### Planned for Session 11 (2025-10-22)
 
-**MCP Integration Tests** (Deferred from Session 10):
-- MCP KB tools (kb_add, kb_search, kb_update, kb_delete)
-- MCP Task tools (task_add, task_import_yaml, task_next)
-- MCP Conflict tools (detect_conflicts, recommend_safe_order)
-- Error handling across MCP tools
-- **Estimated**: 8-10 tests, 1.5-2 hours
+**CRITICAL: MCP Server Coverage** (Current: 25%, Target: 60%+):
+- Add missing integration tests for all MCP tools
+- KB tools: kb_add, kb_update, kb_delete, kb_export_docs
+- Task tools: task_add, task_import_yaml, task_update, task_delete
+- Conflict tools: detect_conflicts, recommend_safe_order
+- Server lifecycle tests
+- **Estimated**: 15-20 tests, 2-2.5 hours
 
-**Performance & Stress Testing**:
-- Large dataset performance (1000+ entries)
-- Concurrent access patterns
-- Memory usage profiling
-- **Estimated**: 5-7 tests, 1-1.5 hours
+**HIGH: CLI Coverage Improvement** (Current: ~18%, Target: 40%+):
+- Core commands: init, kb add, task add, task import
+- Error handling: invalid args, permission errors, corrupted data
+- **Estimated**: 10-12 tests, 1-1.5 hours
 
-**Documentation Updates**:
+**MEDIUM: Performance Testing**:
+- Large dataset tests (1000+ entries)
+- Memory profiling (100+ tasks)
+- Document performance baselines
+- **Estimated**: 5-7 tests, 1 hour
+
+**LOW: Documentation**:
+- Create TEST_WRITING_GUIDE.md
 - Update CLAUDE.md with test patterns
-- Create test writing guide
 - **Estimated**: 30 min
 
 **Total Estimated**: 3-4 hours for Session 11
+
+**Expected Outcome**: v0.10.0 100% ready for release! 🚀
+
+**Detailed Plan**: See `docs/SESSION_11_PLAN.md`
 
 ---
 
@@ -91,12 +101,12 @@
 - **📝 Latest Session**: docs/SESSION_10_SUMMARY.md ⭐ NEW
 
 ### Recent Docs (Session 9-11)
-1. **SESSION_10_SUMMARY.md** - Session 10 comprehensive results ⭐ NEW
-2. **SESSION_10_PLAN.md** - Integration testing plan
-3. **SESSION_9_SUMMARY.md** - Session 9 verification
-4. **SESSION_9_COMPLETENESS_REVIEW.md** - Detailed analysis
-5. **PROJECT_ROADMAP.md** - Complete roadmap
-6. **SESSION_TIMELINE.md** - Visual timeline
+1. **SESSION_11_PLAN.md** - Session 11 detailed plan ⭐ NEW
+2. **SESSION_10_COMPLETENESS_REVIEW.md** - Session 10 final evaluation
+3. **SESSION_10_SUMMARY.md** - Session 10 comprehensive results
+4. **SESSION_10_PLAN.md** - Integration testing plan
+5. **SESSION_9_SUMMARY.md** - Session 9 verification
+6. **PROJECT_ROADMAP.md** - Complete roadmap
 7. **QUICK_STATUS.md** - This page
 
 ---
@@ -208,6 +218,6 @@ Session 9 discovered they **all had 80%+ coverage**!
 
 ---
 
-**Updated**: 2025-10-21 (Session 10 Complete)
-**Next Update**: When Session 11 starts
-**Status**: ✅ Session 10 Complete - Excellent Progress!
+**Updated**: 2025-10-22 (Session 11 Planned)
+**Next Update**: When Session 11 completes
+**Status**: ✅ Session 10 Complete - Session 11 Ready!
