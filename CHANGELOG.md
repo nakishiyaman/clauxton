@@ -11,6 +11,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.10.1] - 2025-10-22
+
+### Fixed
+- **CRITICAL**: Path vs str type incompatibility in `KnowledgeBase` and `TaskManager`
+  - Now accepts both `Path` and `str` for `root_dir` parameter (clauxton/core/knowledge_base.py:59, clauxton/core/task_manager.py:45)
+  - Fixes `TypeError: unsupported operand type(s) for /: 'str' and 'str'` when passing string paths
+  - Affects: `KnowledgeBase()`, `TaskManager()`, `ensure_clauxton_dir()`
+  - Example: `kb = KnowledgeBase('.clauxton')` now works (previously required `Path('.clauxton')`)
+- Japanese text in `search-algorithm.md` example ("使い方" → "Tutorial")
+
+### Documentation
+- Added `TEST_WRITING_GUIDE.md` for contributors (comprehensive testing guide with examples)
+- Replaced Japanese `technical-design.md` with English version (v2.0, updated for v0.10.0)
+  - Japanese version archived at `docs/archive/planning/technical-design-ja.md`
+- PyPI project page now shows updated README.md (removed Phase/beta references from v0.10.0)
+
+### Tests
+- Added 9 tests for Path/str compatibility (3 for each: `file_utils.py`, `knowledge_base.py`, `task_manager.py`)
+- Test coverage maintained at 91% (767 tests total, +9 from v0.10.0)
+
+---
+
 ## [0.10.0] - 2025-10-22
 
 ### v0.10.0 - Production Ready

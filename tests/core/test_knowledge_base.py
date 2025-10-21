@@ -1090,3 +1090,54 @@ def test_initialization_edge_cases(tmp_path: Path) -> None:
 
     # Verify added
     assert kb.get("KB-20251021-001") is not None
+
+
+# ============================================================================
+# Path/str Compatibility Tests (v0.10.1 Bug Fix)
+# ============================================================================
+
+
+def test_knowledge_base_accepts_string_path(tmp_path: Path) -> None:
+    """Test that KnowledgeBase accepts string paths (v0.10.1 bug fix)."""
+    # Should not raise TypeError
+    kb = KnowledgeBase(str(tmp_path))
+    assert kb.root_dir == tmp_path
+    assert kb.kb_file.exists()
+
+
+def test_knowledge_base_accepts_path_object(tmp_path: Path) -> None:
+    """Test that KnowledgeBase accepts Path objects."""
+    kb = KnowledgeBase(tmp_path)
+    assert kb.root_dir == tmp_path
+    assert kb.kb_file.exists()
+
+
+def test_knowledge_base_string_path_operations(tmp_path: Path) -> None:
+    """Test that KnowledgeBase with string path can perform operations."""
+    kb = KnowledgeBase(str(tmp_path))
+
+    # Add entry
+    entry = KnowledgeBaseEntry(
+        id="KB-20251022-001",
+        title="Test Entry",
+        category="architecture",
+        content="Test content",
+        tags=["test"],
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+    entry_id = kb.add(entry)
+    assert entry_id == "KB-20251022-001"
+
+    # Get entry
+    retrieved = kb.get(entry_id)
+    assert retrieved is not None
+    assert retrieved.title == "Test Entry"
+
+    # List entries
+    entries = kb.list_entries()
+    assert len(entries) == 1
+
+    # Delete entry
+    kb.delete(entry_id)
+    assert kb.get(entry_id) is None

@@ -1311,3 +1311,54 @@ tasks:
     assert "multiline description" in task.description
     assert "Multiple paragraphs" in task.description
     assert "日本語" in task.description
+
+
+# ============================================================================
+# Path/str Compatibility Tests (v0.10.1 Bug Fix)
+# ============================================================================
+
+
+def test_task_manager_accepts_string_path(tmp_path: Path) -> None:
+    """Test that TaskManager accepts string paths (v0.10.1 bug fix)."""
+    # Should not raise TypeError
+    tm = TaskManager(str(tmp_path))
+    assert tm.root_dir == tmp_path
+    assert tm.tasks_file.exists()
+
+
+def test_task_manager_accepts_path_object(tmp_path: Path) -> None:
+    """Test that TaskManager accepts Path objects."""
+    tm = TaskManager(tmp_path)
+    assert tm.root_dir == tmp_path
+    assert tm.tasks_file.exists()
+
+
+def test_task_manager_string_path_operations(tmp_path: Path) -> None:
+    """Test that TaskManager with string path can perform operations."""
+    tm = TaskManager(str(tmp_path))
+
+    # Add task
+    task = Task(
+        id="TASK-001",
+        name="Test Task",
+        description="Test description",
+        status="pending",
+        priority="medium",
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+    task_id = tm.add(task)
+    assert task_id == "TASK-001"
+
+    # Get task
+    retrieved = tm.get(task_id)
+    assert retrieved is not None
+    assert retrieved.name == "Test Task"
+
+    # List tasks
+    tasks = tm.list_tasks()
+    assert len(tasks) == 1
+
+    # Delete task
+    tm.delete(task_id)
+    assert tm.get(task_id) is None

@@ -56,17 +56,18 @@ class KnowledgeBase:
         KB-20251019-001
     """
 
-    def __init__(self, root_dir: Path) -> None:
+    def __init__(self, root_dir: Path | str) -> None:
         """
         Initialize Knowledge Base at root_dir.
 
         Args:
-            root_dir: Project root directory
+            root_dir: Project root directory (Path or str)
 
         Example:
             >>> kb = KnowledgeBase(Path("."))
+            >>> kb = KnowledgeBase(".")  # str also works
         """
-        self.root_dir: Path = root_dir
+        self.root_dir: Path = Path(root_dir) if isinstance(root_dir, str) else root_dir
         clauxton_dir = ensure_clauxton_dir(root_dir)
         self.kb_file: Path = clauxton_dir / "knowledge-base.yml"
         self._entries_cache: Optional[List[KnowledgeBaseEntry]] = None

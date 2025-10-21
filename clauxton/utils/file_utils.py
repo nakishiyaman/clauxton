@@ -13,7 +13,7 @@ import os
 from pathlib import Path
 
 
-def ensure_clauxton_dir(root_dir: Path) -> Path:
+def ensure_clauxton_dir(root_dir: Path | str) -> Path:
     """
     Create .clauxton/ directory with proper permissions.
 
@@ -21,7 +21,7 @@ def ensure_clauxton_dir(root_dir: Path) -> Path:
     Creates directory if it doesn't exist.
 
     Args:
-        root_dir: Project root directory
+        root_dir: Project root directory (Path or str)
 
     Returns:
         Path to .clauxton/ directory
@@ -32,8 +32,12 @@ def ensure_clauxton_dir(root_dir: Path) -> Path:
         True
         >>> oct(clauxton_dir.stat().st_mode)[-3:]
         '700'
+        >>> clauxton_dir = ensure_clauxton_dir("/path/to/project")  # str also works
+        >>> clauxton_dir.exists()
+        True
     """
-    clauxton_dir = root_dir / ".clauxton"
+    root_path = Path(root_dir) if isinstance(root_dir, str) else root_dir
+    clauxton_dir = root_path / ".clauxton"
 
     # Create directory if it doesn't exist
     clauxton_dir.mkdir(parents=True, exist_ok=True)

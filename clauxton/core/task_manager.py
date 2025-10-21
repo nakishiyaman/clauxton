@@ -42,14 +42,14 @@ class TaskManager:
         'TASK-001'
     """
 
-    def __init__(self, root_dir: Path) -> None:
+    def __init__(self, root_dir: Path | str) -> None:
         """
         Initialize TaskManager.
 
         Args:
-            root_dir: Project root directory containing .clauxton/
+            root_dir: Project root directory containing .clauxton/ (Path or str)
         """
-        self.root_dir: Path = root_dir
+        self.root_dir: Path = Path(root_dir) if isinstance(root_dir, str) else root_dir
         clauxton_dir = ensure_clauxton_dir(root_dir)
         self.tasks_file: Path = clauxton_dir / "tasks.yml"
         self._tasks_cache: Optional[List[Task]] = None
