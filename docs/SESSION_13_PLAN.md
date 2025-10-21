@@ -50,7 +50,7 @@
 
 **Documentation**:
 2. ❌ **docs/technical-design.md** contains 2143 Japanese characters
-   - Currently linked from README.md, quick-start.md, roadmap.md
+   - Currently linked from README.md, quick-start.md
    - Needs English version
 
 3. ❌ **PyPI project page** shows outdated README.md
@@ -177,7 +177,7 @@ mypy clauxton
    - Security considerations
    - Testing approach
 3. Update content to reflect v0.10.0 (17 tools, undo, config, etc.)
-4. Verify links from README.md, quick-start.md, roadmap.md
+4. Verify links from README.md, quick-start.md
 
 **Acceptance Criteria**:
 - ✅ No Japanese text in docs/technical-design.md
