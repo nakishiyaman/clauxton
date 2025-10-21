@@ -80,39 +80,27 @@
 
 ---
 
-## 📋 What's Next (Session 11)
+## 📋 What's Next (Session 12)
 
-### Planned for Session 11 (2025-10-22)
+### Planned for Session 12 (v0.10.0 Release)
 
-**CRITICAL: MCP Server Coverage** (Current: 25%, Target: 60%+):
-- Add missing integration tests for all MCP tools
-- KB tools: kb_add, kb_update, kb_delete, kb_export_docs
-- Task tools: task_add, task_import_yaml, task_update, task_delete
-- Conflict tools: detect_conflicts, recommend_safe_order
-- Server lifecycle tests
-- **Estimated**: 15-20 tests, 2-2.5 hours
+**CRITICAL: Release to PyPI** 🚀
+- Create RELEASE_NOTES_v0.10.0.md (30 min)
+- Update CHANGELOG.md (15 min)
+- Update version numbers (15 min)
+- Build and upload to PyPI (30 min)
+- Create GitHub release and tag (15 min)
+- **Estimated**: 1-2 hours
 
-**HIGH: CLI Coverage Improvement** (Current: ~18%, Target: 40%+):
-- Core commands: init, kb add, task add, task import
-- Error handling: invalid args, permission errors, corrupted data
-- **Estimated**: 10-12 tests, 1-1.5 hours
+**HIGH: v0.10.1 Planning**:
+- Create SESSION_13_PLAN.md (15 min)
+- Update PROJECT_ROADMAP.md (5 min)
 
-**MEDIUM: Performance Testing**:
-- Large dataset tests (1000+ entries)
-- Memory profiling (100+ tasks)
-- Document performance baselines
-- **Estimated**: 5-7 tests, 1 hour
+**Total Estimated**: 1-2 hours for Session 12
 
-**LOW: Documentation**:
-- Create TEST_WRITING_GUIDE.md
-- Update CLAUDE.md with test patterns
-- **Estimated**: 30 min
+**Expected Outcome**: v0.10.0 live on PyPI! 🎉
 
-**Total Estimated**: 3-4 hours for Session 11
-
-**Expected Outcome**: v0.10.0 100% ready for release! 🚀
-
-**Detailed Plan**: See `docs/SESSION_11_PLAN.md`
+**Detailed Plan**: See `docs/SESSION_12_PLAN.md` ⭐ NEW
 
 ---
 
@@ -124,12 +112,12 @@
 - **📅 Timeline**: docs/SESSION_TIMELINE.md (visual)
 - **📝 Latest Session**: docs/SESSION_10_SUMMARY.md ⭐ NEW
 
-### Recent Docs (Session 9-11)
-1. **SESSION_11_SUMMARY.md** - Session 11 comprehensive results ⭐ NEW
-2. **SESSION_11_GAP_ANALYSIS.md** - Comprehensive gap analysis ⭐ NEW
-3. **SESSION_11_PLAN.md** - Session 11 detailed plan
-4. **SESSION_10_COMPLETENESS_REVIEW.md** - Session 10 final evaluation
-5. **SESSION_10_SUMMARY.md** - Session 10 comprehensive results
+### Recent Docs (Session 9-12)
+1. **SESSION_12_PLAN.md** - v0.10.0 release plan ⭐ NEW
+2. **SESSION_11_SUMMARY.md** - Session 11 comprehensive results
+3. **SESSION_11_GAP_ANALYSIS.md** - Comprehensive gap analysis
+4. **SESSION_11_PLAN.md** - Session 11 detailed plan
+5. **SESSION_10_COMPLETENESS_REVIEW.md** - Session 10 final evaluation
 6. **PROJECT_ROADMAP.md** - Complete roadmap
 7. **QUICK_STATUS.md** - This page ⭐ UPDATED
 
