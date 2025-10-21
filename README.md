@@ -9,19 +9,19 @@
 [![PyPI Version](https://img.shields.io/pypi/v/clauxton)](https://pypi.org/project/clauxton/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/clauxton)](https://pypi.org/project/clauxton/)
 [![Development Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/nakishiyaman/clauxton)
-[![Test Coverage](https://img.shields.io/badge/coverage-70%25-yellow.svg)](https://github.com/nakishiyaman/clauxton)
+[![Test Coverage](https://img.shields.io/badge/coverage-91%25-brightgreen.svg)](https://github.com/nakishiyaman/clauxton)
 [![codecov](https://codecov.io/gh/nakishiyaman/clauxton/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/clauxton)
 
-> ✅ **Production Ready**: Clauxton v0.9.0-beta is stable and ready for production use. Phase 1-2 complete with TF-IDF search, task management, conflict detection, and MCP integration.
-> 🚀 **v0.10.0 Coming Soon** (2025-11-10): Transparent integration with Claude Code - natural conversation only, no manual commands!
+> ✅ **Production Ready**: Clauxton v0.10.0 is stable and ready for production use. Phase 1-3 complete with TF-IDF search, task management, conflict detection, and comprehensive testing (758 tests, 91% coverage).
+> 🚀 **NEW v0.10.0** (2025-10-22): Bulk operations, undo functionality, human-in-the-loop confirmations, and 17 MCP tools!
 
 Clauxton is a Claude Code plugin that provides **persistent project context** to solve AI-assisted development pain points.
 
 **Vision** (Roadmap):
 1. ✅ **Session Context Loss** → Persistent Knowledge Base with TF-IDF Search (Phase 0-1 - **Complete**)
 2. ✅ **Manual Dependency Tracking** → Auto-inferred task dependencies (Phase 1 - **Complete**)
-3. ✅ **Post-hoc Conflict Detection** → Pre-merge conflict prediction (Phase 2 - **Complete in v0.9.0-beta**)
-4. 🚀 **Manual CLI Operations** → Transparent Integration (Phase 3 - **In Progress, v0.10.0**)
+3. ✅ **Post-hoc Conflict Detection** → Pre-merge conflict prediction (Phase 2 - **Complete**)
+4. ✅ **Manual CLI Operations** → Enhanced UX with Bulk Operations & Undo (Phase 3 - **Complete in v0.10.0**)
 
 ---
 
@@ -34,7 +34,7 @@ Clauxton is a Claude Code plugin that provides **persistent project context** to
 pip install clauxton
 
 # Verify installation
-clauxton --version  # Should show: clauxton, version 0.9.0-beta
+clauxton --version  # Should show: clauxton, version 0.10.0
 ```
 
 ### Basic Usage
@@ -76,7 +76,7 @@ pip install -e .
 
 ### MCP Integration with Claude Code
 
-Set up Clauxton as MCP tools in Claude Code (15 tools available):
+Set up Clauxton as MCP tools in Claude Code (17 tools available):
 
 ```bash
 # Automatic setup (Linux/macOS)
@@ -86,7 +86,7 @@ Set up Clauxton as MCP tools in Claude Code (15 tools available):
 docs/MCP_INTEGRATION_GUIDE.md
 ```
 
-**With v0.10.0 (Coming 2025-11-10)**, Claude Code will use Clauxton **transparently**:
+**With v0.10.0 (Released 2025-10-22)**, Claude Code uses Clauxton with enhanced features:
 
 ```
 You: "Build a Todo app with FastAPI"
@@ -161,7 +161,7 @@ Claude Code: (Begins implementation)
 
 **Total**: 13 new features in v0.10.0
 
-#### 🔌 MCP Server Integration (20 Tools)
+#### 🔌 MCP Server Integration (17 Tools)
 **Knowledge Base Tools** (7):
 - ✅ `kb_search` - TF-IDF relevance-ranked search
 - ✅ `kb_add` - Add new knowledge entry
@@ -193,7 +193,7 @@ Claude Code: (Begins implementation)
 - ✅ `get_recent_logs` - View recent operation logs
 
 #### 📊 Quality Metrics
-- ✅ **666 Tests** - Comprehensive test coverage (+276 for v0.10.0 features):
+- ✅ **758 Tests** - Comprehensive test coverage (+368 from v0.9.0-beta):
   - Week 1 Day 1-2: YAML Import (24 core + 6 MCP + 6 CLI tests)
   - Week 1 Day 3: Undo/Rollback (24 tests, 81% coverage)
   - Week 1 Day 4: Confirmation Prompts (14 tests)
@@ -204,10 +204,9 @@ Claude Code: (Begins implementation)
   - Week 2 Day 9: Progress Display + Performance (11 tests)
   - Week 2 Day 10: Backup Enhancement (18 tests, 89% coverage)
   - Week 2 Day 11: Configurable Confirmation Mode (34 tests, 96% coverage)
-- ✅ **92% Coverage** - High code quality maintained (98% task_manager, 100% task_validator, 97% logger, 96% confirmation_manager, 95% KB/MCP)
-- ✅ **13 Integration Tests** - End-to-end workflow validation
+- ✅ **91% Coverage** - High code quality (99% MCP server, 84-100% CLI, 87-96% core modules)
 - ✅ **Type Safe** - Full Pydantic validation with strict mode
-- ✅ **Production Ready** - Stable v0.9.0-beta release, **v0.10.0 Week 2 Day 11 complete**
+- ✅ **Production Ready** - Stable v0.10.0 release (2025-10-22)
 
 ### ✅ Phase 2: Conflict Detection (Complete in v0.9.0-beta)
 
@@ -236,7 +235,7 @@ Claude Code: (Begins implementation)
 pip install clauxton
 
 # Verify installation
-clauxton --version  # Should show: clauxton, version 0.9.0-beta
+clauxton --version  # Should show: clauxton, version 0.10.0
 
 # Install specific version
 pip install clauxton==0.8.0
@@ -246,8 +245,8 @@ pip install clauxton==0.8.0
 - ✅ Knowledge Base management (CRUD + TF-IDF search)
 - ✅ Task Management system with auto-dependencies
 - ✅ Conflict Detection (pre-merge conflict prediction)
-- ✅ MCP Server (15 tools for Claude Code)
-- ✅ All dependencies (scikit-learn, numpy, pydantic, click, pyyaml, mcp)
+- ✅ MCP Server (17 tools for Claude Code)
+- ✅ All dependencies (scikit-learn, numpy, pydantic, click, pyyaml, gitpython, mcp)
 
 ### Development Installation
 
@@ -552,8 +551,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 |-------|--------|------------|---------|
 | **Phase 0: Foundation** | ✅ Complete | 100% | v0.1.0 |
 | **Phase 1: Core Engine** | ✅ Complete | 100% | v0.8.0 |
-| **Phase 2: Conflict Detection** | ✅ Complete | 100% | **v0.9.0-beta** |
-| Phase 3: Advanced Features | 📋 Planned | 0% | v0.10.0 (target) |
+| **Phase 2: Conflict Detection** | ✅ Complete | 100% | v0.9.0-beta |
+| **Phase 3: Enhanced UX** | ✅ Complete | 100% | **v0.10.0** |
 | Beta Testing | 🔄 In Progress | 0% | - |
 | v1.0 Public Launch | 📋 Planned | 0% | v1.0.0 (target) |
 
@@ -575,6 +574,17 @@ MIT License - see [LICENSE](LICENSE) for details.
 - 🆕 **390 tests (+123), 94% coverage maintained**
 - 🆕 Comprehensive migration guide
 - 🆕 **Production ready, beta release**
+
+**Phase 3 Complete** (v0.10.0 - Released 2025-10-22) ✅:
+- 🆕 Bulk Task Import/Export (YAML format, 30x faster)
+- 🆕 Undo Functionality (reverse operations, view history)
+- 🆕 Human-in-the-Loop Confirmations (3 modes: always/auto/never)
+- 🆕 KB Documentation Export (Markdown generation)
+- 🆕 Enhanced Validation (YAML safety, dependency validation)
+- 🆕 2 new MCP Tools (17 tools total: undo_last_operation, get_recent_operations)
+- 🆕 **758 tests (+368), 91% coverage achieved**
+- 🆕 **13 comprehensive documentation files**
+- 🆕 **Production ready, stable release**
 
 See [docs/PHASE_1_COMPLETE.md](docs/PHASE_1_COMPLETE.md) for full Phase 1 summary.
 See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
