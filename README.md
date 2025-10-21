@@ -218,11 +218,12 @@ Claude Code: (Begins implementation)
 - ✅ **CLI Commands**: `conflict detect`, `conflict order`, `conflict check`
 - ✅ **MCP Tools**: Full integration for Claude Code
 
-### 🔄 Phase 3: Advanced Conflict Prevention (Planned)
-- 🔄 **Line-Level Conflict Detection**: Detect conflicts at code line level
-- 🔄 **Drift Detection**: Track scope expansion in tasks
-- 🔄 **Event Logging**: Complete audit trail with events.jsonl
-- 🔄 **Lifecycle Hooks**: Pre-commit and post-edit hooks
+### 🔮 Future Enhancements (Post v0.10.0)
+- 📋 **Line-Level Conflict Detection**: Detect conflicts at code line level
+- 📋 **Drift Detection**: Track scope expansion in tasks
+- 📋 **Enhanced Event Logging**: Complete audit trail with events.jsonl
+- 📋 **Lifecycle Hooks**: Pre-commit and post-edit hooks
+- 📋 **Web Dashboard**: Browser-based UI for task/KB management
 
 ---
 
@@ -474,30 +475,38 @@ See [YAML Format Reference](docs/yaml-format.md) for complete schema documentati
 
 ## 🏗️ Architecture
 
-### Current (Phase 0-1)
+### Current Architecture (v0.10.0)
 
 ```
 clauxton/
-├── core/
-│   ├── models.py          # Pydantic data models ✅
-│   └── knowledge_base.py  # KB CRUD operations ✅
-├── utils/
-│   ├── yaml_utils.py      # Safe YAML I/O ✅
-│   └── file_utils.py      # Secure file operations ✅
-├── cli/
-│   └── main.py            # CLI commands ✅
-└── mcp/
-    └── server.py          # MCP Server ✅ (Phase 1, Week 3)
+├── core/                      # Core business logic
+│   ├── models.py              # Pydantic data models ✅
+│   ├── knowledge_base.py      # KB CRUD operations ✅
+│   ├── task_manager.py        # Task lifecycle + DAG validation ✅
+│   ├── search.py              # TF-IDF search implementation ✅
+│   ├── conflict_detector.py   # Conflict detection ✅
+│   ├── operation_history.py   # Undo/history tracking ✅
+│   └── confirmation_manager.py # HITL confirmations ✅
+├── utils/                     # Utility modules
+│   ├── yaml_utils.py          # Safe YAML I/O ✅
+│   ├── file_utils.py          # Secure file operations ✅
+│   ├── backup_manager.py      # Backup management ✅
+│   └── logger.py              # Operation logging ✅
+├── cli/                       # CLI interface
+│   ├── main.py                # Main CLI + KB commands ✅
+│   ├── tasks.py               # Task management commands ✅
+│   ├── conflicts.py           # Conflict detection commands ✅
+│   └── config.py              # Configuration commands ✅
+└── mcp/                       # MCP Server integration
+    └── server.py              # 17 MCP tools ✅
 ```
 
-**Storage**: `.clauxton/knowledge-base.yml` (YAML format)
-
-### Planned (Phase 1-2)
-
-- **Task Management MCP Tools**: task_add, task_list, task_next (Week 4)
-- **Dependency Analysis**: Auto-inference, DAG validation (Week 5-6)
-- **Enhanced Search**: TF-IDF relevance (Week 7)
-- **Conflict Detection**: Pre-merge conflict analysis (Phase 2)
+**Storage**:
+- `.clauxton/knowledge-base.yml` - Knowledge Base entries
+- `.clauxton/tasks.yml` - Task definitions
+- `.clauxton/operation-history.jsonl` - Operation history (undo)
+- `.clauxton/logs/` - Daily operation logs
+- `.clauxton/backups/` - Automatic backups (last 10)
 
 See [docs/architecture.md](docs/architecture.md) for complete design.
 
@@ -507,29 +516,30 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 
 ### User Guides
 - [Quick Start Guide](docs/quick-start.md) - Get started in 5 minutes (CLI)
-- **[Developer Workflow Guide](docs/DEVELOPER_WORKFLOW_GUIDE.md)** - Complete development workflow with examples and diagrams ✨ NEW v0.10.0
-- **[Installation Guide](docs/INSTALLATION_GUIDE.md)** - Shell alias setup, virtual environment isolation explained ✨ NEW
-- **[How to Use v0.9.0-beta](docs/HOW_TO_USE_v0.9.0-beta.md)** - Complete usage guide for current version ✨ NEW
-- **[MCP Integration Guide](docs/MCP_INTEGRATION_GUIDE.md)** - Step-by-step Claude Code integration (20 tools) ✨ NEW
+- **[Developer Workflow Guide](docs/DEVELOPER_WORKFLOW_GUIDE.md)** - Complete development workflow with examples and diagrams ✨ v0.10.0
+- **[Installation Guide](docs/INSTALLATION_GUIDE.md)** - Shell alias setup, virtual environment isolation explained
+- **[MCP Integration Guide](docs/MCP_INTEGRATION_GUIDE.md)** - Step-by-step Claude Code integration (17 tools)
 - [Tutorial: Your First Knowledge Base](docs/tutorial-first-kb.md) - 30-minute beginner guide
 - [Use Cases & Examples](docs/use-cases.md) - Real-world scenarios and implementations
 - [MCP Server Quick Start](docs/mcp-server-quickstart.md) - Get started with Claude Code
 - [Task Management Guide](docs/task-management-guide.md) - Complete task management documentation
+- [YAML Task Format Guide](docs/YAML_TASK_FORMAT.md) - YAML bulk import specification ✨ v0.10.0
 - [Search Algorithm](docs/search-algorithm.md) - TF-IDF search explanation
 - [YAML Format Reference](docs/yaml-format.md) - Complete Knowledge Base YAML specification
 - [MCP Server Guide](docs/mcp-server.md) - Complete MCP Server documentation
-- [Conflict Detection Guide](docs/conflict-detection.md) - Complete conflict detection documentation (40KB)
+- [Conflict Detection Guide](docs/conflict-detection.md) - Complete conflict detection documentation
+- [Configuration Guide](docs/configuration-guide.md) - Configuration management ✨ v0.10.0
+- [Logging Guide](docs/logging-guide.md) - Operation logging system ✨ v0.10.0
+- [Backup Guide](docs/backup-guide.md) - Backup management ✨ v0.10.0
 
 ### Developer Guides
 - [Architecture Overview](docs/architecture.md) - System design and data flow
 - [Development Guide](docs/development.md) - Setup and contribution guide
 - [Technical Design](docs/technical-design.md) - Implementation details
-- [Roadmap](docs/roadmap.md) - 16-week development plan
+- [Error Handling Guide](docs/ERROR_HANDLING_GUIDE.md) - Error handling patterns ✨ v0.10.0
+- [Performance Guide](docs/performance-guide.md) - Performance optimization ✨ v0.10.0
+- [Troubleshooting Guide](docs/troubleshooting.md) - Common issues and solutions ✨ v0.10.0
 - [Contributing](CONTRIBUTING.md) - Contribution guidelines
-
-### Coming Soon
-- API Reference (Phase 1)
-- Configuration Guide (Phase 1)
 
 ---
 
@@ -552,8 +562,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 | **Phase 0: Foundation** | ✅ Complete | 100% | v0.1.0 |
 | **Phase 1: Core Engine** | ✅ Complete | 100% | v0.8.0 |
 | **Phase 2: Conflict Detection** | ✅ Complete | 100% | v0.9.0-beta |
-| **Phase 3: Enhanced UX** | ✅ Complete | 100% | **v0.10.0** |
-| Beta Testing | 🔄 In Progress | 0% | - |
+| **Phase 3: Enhanced UX** | ✅ Complete | 100% | **v0.10.0** (Released 2025-10-22) |
+| Polish & Documentation | 📋 Planned | 0% | v0.10.1 (target) |
 | v1.0 Public Launch | 📋 Planned | 0% | v1.0.0 (target) |
 
 **Phase 1 Complete** (v0.8.0 - Released 2025-10-19) ✅:
