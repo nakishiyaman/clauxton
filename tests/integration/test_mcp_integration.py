@@ -366,11 +366,12 @@ def test_mcp_logging_integration(initialized_project: Path) -> None:
 
         if log_file.exists():
             # Read log file and verify entries
-            log_content = log_file.read_text()
+            # log_content = log_file.read_text()
 
             # Should contain operation types (optional check)
             # assert "kb_add" in log_content or "add" in log_content.lower()
             # assert "task_add" in log_content or "task" in log_content.lower()
+            pass  # Log file exists but validation is optional in test env
 
     # Test get_recent_logs MCP tool
     result = get_recent_logs()
@@ -454,7 +455,7 @@ def test_mcp_kb_task_integration(initialized_project: Path) -> None:
     assert any(r["id"] == kb_id for r in search_results)
 
     # Complete task
-    update_result = task_update(task_id, status="completed")
+    task_update(task_id, status="completed")
     # task_update returns dict with task_id, not wrapped task
     # Need to verify differently - get task again
     task_info = task_get(task_id)
