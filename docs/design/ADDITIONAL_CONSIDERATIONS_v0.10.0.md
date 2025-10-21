@@ -1,49 +1,49 @@
 # Additional Considerations for v0.10.0
 **Date**: 2025-10-20
-**Purpose**: 見落としがちな重要事項、追加検討事項、リスク対策
+**Purpose**: 見落としがちな重要事項, 追加検討事項, リスク対策
 **Status**: Complete
 
 ---
 
 ## Executive Summary
 
-v0.10.0実装計画は **方向性は正しい** が、以下の重要事項が未検討：
+v0.10.0実装計画は **方向性は正しい** が, 以下の重要事項が未検討: 
 
-**🔴 Critical（実装前に必須）**:
-1. Undo/Rollback機能（透過的操作の取り消し）
-2. 確認プロンプト（重要な操作の前）
-3. Dry-runモード（実際に実行せず確認）
-4. エラーリカバリー（部分失敗時の対処）
+**🔴 Critical(実装前に必須)**:
+1. Undo/Rollback機能(透過的操作の取り消し)
+2. 確認プロンプト(重要な操作の前)
+3. Dry-runモード(実際に実行せず確認)
+4. エラーリカバリー(部分失敗時の対処)
 
-**🟡 Important（v0.10.0に含めるべき）**:
-5. ログ機能（何が起こったか追跡）
-6. 進捗表示（長時間操作のフィードバック）
-7. バリデーション強化（YAML品質チェック）
-8. パフォーマンス最適化（大量タスク対応）
+**🟡 Important(v0.10.0に含めるべき)**:
+5. ログ機能(何が起こったか追跡)
+6. 進捗表示(長時間操作のフィードバック)
+7. バリデーション強化(YAML品質チェック)
+8. パフォーマンス最適化(大量タスク対応)
 
-**🟢 Nice-to-have（v0.11.0以降）**:
-9. インタラクティブモード（対話的なYAML生成）
-10. テンプレート機能（よくあるプロジェクトパターン）
+**🟢 Nice-to-have(v0.11.0以降)**:
+9. インタラクティブモード(対話的なYAML生成)
+10. テンプレート機能(よくあるプロジェクトパターン)
 
 ---
 
-## 1. Critical Issues（実装前に必須）
+## 1. Critical Issues(実装前に必須)
 
 ### 1.1 Undo/Rollback機能
 
 #### 問題
 
-**透過的操作は便利だが、取り消せないと危険**
+**透過的操作は便利だが, 取り消せないと危険**
 
 ```
 User: "Todoアプリを作りたい"
 ↓
-Claude Code: （内部で kb_add() × 3, task_import_yaml()）
+Claude Code: (内部で kb_add() × 3, task_import_yaml())
               "✅ 10個のタスクを作成しました"
 ↓
-User: "あ、待って！違うプロジェクトだった！"
+User: "あ, 待って!違うプロジェクトだった!"
 ↓
-Claude Code: "..."（元に戻せない）
+Claude Code: "..."(元に戻せない)
 ```
 
 **影響**:
@@ -53,7 +53,7 @@ Claude Code: "..."（元に戻せない）
 
 ---
 
-#### 解決策1: Operation History（操作履歴）
+#### 解決策1: Operation History(操作履歴)
 
 **設計**:
 
@@ -164,32 +164,32 @@ User: "Todoアプリを作りたい"
 ↓
 Claude Code: "✅ 10個のタスクを作成しました"
 ↓
-User: "待って、違うプロジェクトだった"
+User: "待って, 違うプロジェクトだった"
 ↓
-Claude Code: （内部で undo_last_operation()）
-             "了解しました。先ほどの操作を取り消しました。
-              - 削除したタスク: 10個（TASK-001〜TASK-010）
+Claude Code: (内部で undo_last_operation())
+             "了解しました.先ほどの操作を取り消しました.
+              - 削除したタスク: 10個(TASK-001~TASK-010)
               - 削除したKBエントリ: 3個
 
-              改めて、どのプロジェクトですか？"
+              改めて, どのプロジェクトですか?"
 ```
 
-**優先度**: 🔴 **CRITICAL**（v0.10.0に必須）
+**優先度**: 🔴 **CRITICAL**(v0.10.0に必須)
 **実装時間**: 4時間
 
 ---
 
-### 1.2 確認プロンプト（Confirmation Prompt）
+### 1.2 確認プロンプト(Confirmation Prompt)
 
 #### 問題
 
-**大量の操作を透過的に実行すると、ユーザーが制御感を失う**
+**大量の操作を透過的に実行すると, ユーザーが制御感を失う**
 
 ```
-Claude Code: （内部で task_import_yaml()）
+Claude Code: (内部で task_import_yaml())
              "✅ 50個のタスクを作成しました"
 ↓
-User: "えっ、50個も？多すぎる..."
+User: "えっ, 50個も?多すぎる..."
 ```
 
 **影響**:
@@ -277,8 +277,8 @@ async def task_import_yaml(
 ```
 User: "大規模なEコマースサイトを作りたい"
 ↓
-Claude Code: （内部でタスク生成）
-             "タスクを作成する準備ができました。
+Claude Code: (内部でタスク生成)
+             "タスクを作成する準備ができました.
 
              📊 Preview:
                 Task count: 45 tasks
@@ -288,28 +288,28 @@ Claude Code: （内部でタスク生成）
                   - Infrastructure: 10 tasks (15h)
                 Total estimate: 78 hours
 
-             この45個のタスクを作成してよろしいですか？"
+             この45個のタスクを作成してよろしいですか?"
 ↓
-User: "45個は多すぎる。重要なものだけにして"
+User: "45個は多すぎる.重要なものだけにして"
 ↓
-Claude Code: "承知しました。優先度HIGHのタスクのみ（15個）に絞ります。"
+Claude Code: "承知しました.優先度HIGHのタスクのみ(15個)に絞ります."
 ```
 
-**優先度**: 🔴 **CRITICAL**（v0.10.0に必須）
+**優先度**: 🔴 **CRITICAL**(v0.10.0に必須)
 **実装時間**: 3時間
 
 ---
 
-### 1.3 Dry-run Mode（実行せず確認）
+### 1.3 Dry-run Mode(実行せず確認)
 
 #### 問題
 
-**実際に実行する前に、何が起こるか確認したい**
+**実際に実行する前に, 何が起こるか確認したい**
 
 ```
 User: "このYAMLファイルをインポートしたい"
 ↓
-Claude Code: （いきなりインポート）
+Claude Code: (いきなりインポート)
              "✅ 20個のタスクを作成しました"
 ↓
 User: "その前に内容を確認したかった..."
@@ -319,7 +319,7 @@ User: "その前に内容を確認したかった..."
 
 #### 解決策: Dry-run Flag
 
-**実装済み（計画に含まれている）**:
+**実装済み(計画に含まれている)**:
 
 ```python
 @server.call_tool("task_import_yaml")
@@ -345,10 +345,10 @@ async def task_import_yaml(
 **使用例**:
 
 ```
-User: "tasks.ymlをインポートしたい（まず確認）"
+User: "tasks.ymlをインポートしたい(まず確認)"
 ↓
-Claude Code: （内部で dry_run=True）
-             "📋 Dry-run結果：
+Claude Code: (内部で dry_run=True)
+             "📋 Dry-run結果: 
 
              ✅ Validation passed
              Would create: 20 tasks
@@ -361,35 +361,35 @@ Claude Code: （内部で dry_run=True）
              Dependencies: All valid
              Circular dependencies: None
 
-             実際にインポートしますか？"
+             実際にインポートしますか?"
 ↓
 User: "はい"
 ↓
-Claude Code: （実際にインポート）
+Claude Code: (実際にインポート)
 ```
 
-**優先度**: 🔴 **CRITICAL**（v0.10.0に必須、既に計画済み）
-**実装時間**: 0時間（既に設計に含まれている）
+**優先度**: 🔴 **CRITICAL**(v0.10.0に必須, 既に計画済み)
+**実装時間**: 0時間(既に設計に含まれている)
 
 ---
 
-### 1.4 エラーリカバリー（部分失敗時の対処）
+### 1.4 エラーリカバリー(部分失敗時の対処)
 
 #### 問題
 
-**10個のタスクをインポート中、5個目でエラーが発生したらどうする？**
+**10個のタスクをインポート中, 5個目でエラーが発生したらどうする?**
 
 ```
-Claude Code: （task_import_yaml() 実行中）
+Claude Code: (task_import_yaml() 実行中)
              Task 1: ✓
              Task 2: ✓
              Task 3: ✓
              Task 4: ✓
              Task 5: ✗ Error: Circular dependency
-             → どうする？
-               A) 全てロールバック（4個も削除）
-               B) 5個目だけスキップ（不完全な状態）
-               C) エラーで停止、ユーザーに判断を求める
+             → どうする?
+               A) 全てロールバック(4個も削除)
+               B) 5個目だけスキップ(不完全な状態)
+               C) エラーで停止, ユーザーに判断を求める
 ```
 
 ---
@@ -510,7 +510,7 @@ async def task_import_yaml(
 **使用例**:
 
 ```
-Claude Code: （task_import_yaml() with on_error="skip"）
+Claude Code: (task_import_yaml() with on_error="skip")
 
              Importing tasks...
              [1/10] TASK-001: FastAPI初期化 ✓
@@ -525,26 +525,26 @@ Claude Code: （task_import_yaml() with on_error="skip"）
                 Failed: 1 task
                   - Task 3 (DB設定): Invalid file path "backend/db.py"
 
-             9個のタスクは正常に作成されました。
-             TASK-003のエラーを修正しますか？"
+             9個のタスクは正常に作成されました.
+             TASK-003のエラーを修正しますか?"
 ```
 
-**優先度**: 🔴 **CRITICAL**（v0.10.0に必須）
+**優先度**: 🔴 **CRITICAL**(v0.10.0に必須)
 **実装時間**: 4時間
 
 ---
 
-## 2. Important Issues（v0.10.0に含めるべき）
+## 2. Important Issues(v0.10.0に含めるべき)
 
-### 2.1 ログ機能（操作の追跡）
+### 2.1 ログ機能(操作の追跡)
 
 #### 問題
 
-**透過的操作が多いと、何が起こったか分からなくなる**
+**透過的操作が多いと, 何が起こったか分からなくなる**
 
 ```
-User: "何か問題が起きた。何が実行されたの？"
-Claude Code: "..."（ログがないと説明できない）
+User: "何か問題が起きた.何が実行されたの?"
+Claude Code: "..."(ログがないと説明できない)
 ```
 
 ---
@@ -646,39 +646,39 @@ async def get_recent_logs(limit: int = 50) -> dict:
 **使用例**:
 
 ```
-User: "さっき何が実行されたの？"
+User: "さっき何が実行されたの?"
 ↓
-Claude Code: （get_recent_logs(limit=20)）
-             "直近の操作履歴：
+Claude Code: (get_recent_logs(limit=20))
+             "直近の操作履歴: 
 
              15:30:00 - KB追加: FastAPI採用
              15:30:01 - KB追加: React採用
              15:30:02 - KB追加: PostgreSQL採用
-             15:30:10 - タスクインポート開始（10個）
-             15:30:15 - タスクインポート完了（10個作成）
-             15:35:00 - 競合チェック: TASK-001（競合なし）
+             15:30:10 - タスクインポート開始(10個)
+             15:30:15 - タスクインポート完了(10個作成)
+             15:35:00 - 競合チェック: TASK-001(競合なし)
              15:35:01 - タスク更新: TASK-001 → 進行中
              15:40:00 - タスク更新: TASK-001 → 完了
 
-             過去10分間で18個の操作を実行しました。"
+             過去10分間で18個の操作を実行しました."
 ```
 
-**優先度**: 🟡 **IMPORTANT**（v0.10.0に含めるべき）
+**優先度**: 🟡 **IMPORTANT**(v0.10.0に含めるべき)
 **実装時間**: 3時間
 
 ---
 
-### 2.2 進捗表示（長時間操作のフィードバック）
+### 2.2 進捗表示(長時間操作のフィードバック)
 
 #### 問題
 
-**大量のタスク（50個）をインポート中、ユーザーは何が起こっているか分からない**
+**大量のタスク(50個)をインポート中, ユーザーは何が起こっているか分からない**
 
 ```
-Claude Code: （task_import_yaml() 実行中、30秒かかる）
-             "..."（無音）
+Claude Code: (task_import_yaml() 実行中, 30秒かかる)
+             "..."(無音)
 ↓
-User: "固まった？"
+User: "固まった?"
 ```
 
 ---
@@ -728,7 +728,7 @@ async def task_import_yaml(
     }
 ```
 
-**使用例（Claude Codeの内部処理）**:
+**使用例(Claude Codeの内部処理)**:
 
 ```
 Claude Code: "タスクをインポートしています...
@@ -736,19 +736,19 @@ Claude Code: "タスクをインポートしています...
              [████░░░░░░] 5/50 (10%)
              "
 
-（5秒後）
+(5秒後)
 
 Claude Code: "[████████░░] 25/50 (50%)
              "
 
-（5秒後）
+(5秒後)
 
 Claude Code: "[██████████] 50/50 (100%) ✓
 
              ✅ 50個のタスクを作成しました"
 ```
 
-**優先度**: 🟡 **IMPORTANT**（v0.10.0に含めるべき）
+**優先度**: 🟡 **IMPORTANT**(v0.10.0に含めるべき)
 **実装時間**: 2時間
 
 ---
@@ -760,7 +760,7 @@ Claude Code: "[██████████] 50/50 (100%) ✓
 **Claude Codeが生成するYAMLにエラーがあるかもしれない**
 
 ```yaml
-# Claude Codeが生成したYAML（エラーあり）
+# Claude Codeが生成したYAML(エラーあり)
 tasks:
   - name: "Task 1"
     files_to_edit: ["main.py", "utils.py", "main.py"]  # 重複
@@ -877,7 +877,7 @@ class TaskValidator:
         }
 ```
 
-**優先度**: 🟡 **IMPORTANT**（v0.10.0に含めるべき）
+**優先度**: 🟡 **IMPORTANT**(v0.10.0に含めるべき)
 **実装時間**: 3時間
 
 ---
@@ -889,7 +889,7 @@ class TaskValidator:
 **100個のタスクをインポートすると遅い可能性**
 
 ```python
-# 現在の実装（1個ずつ保存）
+# 現在の実装(1個ずつ保存)
 for task in tasks:
     tm.add(task)  # ファイルを100回書き込み → 遅い
 ```
@@ -949,37 +949,37 @@ class TaskManager:
 
 **パフォーマンス**:
 - Before: 100個 × 50ms = 5秒
-- After: 1回 × 200ms = 0.2秒（25倍高速）
+- After: 1回 × 200ms = 0.2秒(25倍高速)
 
-**優先度**: 🟡 **IMPORTANT**（v0.10.0に含めるべき）
+**優先度**: 🟡 **IMPORTANT**(v0.10.0に含めるべき)
 **実装時間**: 2時間
 
 ---
 
-## 3. Nice-to-have Features（v0.11.0以降）
+## 3. Nice-to-have Features(v0.11.0以降)
 
 ### 3.1 インタラクティブモード
 
 **概要**: Claude CodeがユーザーにYAML内容を確認しながら生成
 
 ```
-Claude Code: "Todoアプリのタスクを作成します。
+Claude Code: "Todoアプリのタスクを作成します.
 
              Backend tasks:
                1. FastAPI初期化 (high, 1h)
                2. API設計 (high, 2h)
                3. DB設定 (high, 2h)
 
-             これでよろしいですか？変更したい項目は？"
+             これでよろしいですか?変更したい項目は?"
 ↓
 User: "DB設定は後回しにして"
 ↓
-Claude Code: "承知しました。DB設定を low priority に変更します。
+Claude Code: "承知しました.DB設定を low priority に変更します.
 
-             他に変更は？"
+             他に変更は?"
 ```
 
-**優先度**: 🟢 **NICE-TO-HAVE**（v0.11.0）
+**優先度**: 🟢 **NICE-TO-HAVE**(v0.11.0)
 **実装時間**: 6時間
 
 ---
@@ -1007,16 +1007,16 @@ tasks:
 ```
 User: "FastAPIバックエンドを作りたい"
 ↓
-Claude Code: "FastAPIバックエンドのテンプレートがあります。
-             使いますか？"
+Claude Code: "FastAPIバックエンドのテンプレートがあります.
+             使いますか?"
 ↓
 User: "はい"
 ↓
-Claude Code: （テンプレートをインポート）
+Claude Code: (テンプレートをインポート)
              "✅ 10個のタスクを作成しました"
 ```
 
-**優先度**: 🟢 **NICE-TO-HAVE**（v0.11.0）
+**優先度**: 🟢 **NICE-TO-HAVE**(v0.11.0)
 **実装時間**: 4時間
 
 ---
@@ -1027,7 +1027,7 @@ Claude Code: （テンプレートをインポート）
 
 #### 問題
 
-**Claude CodeがユーザーメッセージからYAMLを生成する際、悪意あるコードが埋め込まれる可能性**
+**Claude CodeがユーザーメッセージからYAMLを生成する際, 悪意あるコードが埋め込まれる可能性**
 
 ```yaml
 # 悪意あるYAML
@@ -1038,7 +1038,7 @@ tasks:
 
 ---
 
-#### 解決策: Safe YAML Loading（既に実装済み）
+#### 解決策: Safe YAML Loading(既に実装済み)
 
 ```python
 # ✅ Already using yaml.safe_load()
@@ -1063,12 +1063,12 @@ def validate_yaml_safety(yaml_content: str) -> bool:
     return True
 ```
 
-**優先度**: 🔴 **CRITICAL**（v0.10.0に必須）
+**優先度**: 🔴 **CRITICAL**(v0.10.0に必須)
 **実装時間**: 1時間
 
 ---
 
-### 4.2 File Path Validation（既に実装済み）
+### 4.2 File Path Validation(既に実装済み)
 
 ```python
 # ✅ Already implemented
@@ -1078,7 +1078,7 @@ def validate_path(path: Path, root: Path) -> None:
         raise SecurityError("Path traversal detected")
 ```
 
-**優先度**: 🔴 **CRITICAL**（既に実装済み）
+**優先度**: 🔴 **CRITICAL**(既に実装済み)
 
 ---
 
@@ -1090,7 +1090,7 @@ def validate_path(path: Path, root: Path) -> None:
 
 ---
 
-#### 解決策: Automatic Backups（既に一部実装済み）
+#### 解決策: Automatic Backups(既に一部実装済み)
 
 ```python
 # Existing backup in yaml_utils.py
@@ -1125,7 +1125,7 @@ class BackupManager:
         return backup_path
 ```
 
-**優先度**: 🟡 **IMPORTANT**（v0.10.0に強化）
+**優先度**: 🟡 **IMPORTANT**(v0.10.0に強化)
 **実装時間**: 2時間
 
 ---
@@ -1136,25 +1136,25 @@ class BackupManager:
 
 **必要なドキュメント**:
 
-1. **Quick Start Guide**（既にあるが更新が必要）
+1. **Quick Start Guide**(既にあるが更新が必要)
    - v0.10.0の透過的統合を反映
    - 自然な会話例を追加
 
-2. **YAML Format Guide**（新規）
+2. **YAML Format Guide**(新規)
    - タスクYAMLの書き方
    - バリデーションルール
    - ベストプラクティス
 
-3. **Error Handling Guide**（新規）
+3. **Error Handling Guide**(新規)
    - よくあるエラーと対処法
    - Undo/Rollback の使い方
    - トラブルシューティング
 
-4. **Migration Guide**（新規）
+4. **Migration Guide**(新規)
    - v0.9.0-beta → v0.10.0
-   - 破壊的変更なし（100% backward compatible）
+   - 破壊的変更なし(100% backward compatible)
 
-**優先度**: 🟡 **IMPORTANT**（v0.10.0リリース時）
+**優先度**: 🟡 **IMPORTANT**(v0.10.0リリース時)
 **実装時間**: 4時間
 
 ---
@@ -1183,7 +1183,7 @@ Need help? Run: clauxton task import --help
 Or visit: https://github.com/nakishiyaman/clauxton/docs/troubleshooting
 ```
 
-**優先度**: 🟡 **IMPORTANT**（v0.10.0に含めるべき）
+**優先度**: 🟡 **IMPORTANT**(v0.10.0に含めるべき)
 **実装時間**: 2時間
 
 ---
@@ -1197,7 +1197,7 @@ Or visit: https://github.com/nakishiyaman/clauxton/docs/troubleshooting
 1. **Undo/Rollback機能** (10 tests)
    - 最後の操作をUndoできる
    - 複数回Undoできる
-   - Undo後にRedoできる（将来）
+   - Undo後にRedoできる(将来)
    - Undo不可能な操作のハンドリング
 
 2. **確認プロンプト** (5 tests)
@@ -1208,7 +1208,7 @@ Or visit: https://github.com/nakishiyaman/clauxton/docs/troubleshooting
 3. **エラーリカバリー** (15 tests)
    - rollback: 全てロールバック
    - skip: 失敗をスキップして続行
-   - abort: 停止、成功分は維持
+   - abort: 停止, 成功分は維持
    - 部分失敗時のレポート
 
 4. **バリデーション** (20 tests)
@@ -1222,9 +1222,9 @@ Or visit: https://github.com/nakishiyaman/clauxton/docs/troubleshooting
    - 100個のタスクを3秒以内にインポート
    - 1000個のタスクを30秒以内にインポート
 
-**Total**: +55 tests（390 → 445 tests）
+**Total**: +55 tests(390 → 445 tests)
 
-**優先度**: 🔴 **CRITICAL**（v0.10.0に必須）
+**優先度**: 🔴 **CRITICAL**(v0.10.0に必須)
 **実装時間**: 10時間
 
 ---
@@ -1238,7 +1238,7 @@ Or visit: https://github.com/nakishiyaman/clauxton/docs/troubleshooting
 3. **Undo Flow**: 操作を取り消す
 4. **Large Batch**: 大量のタスクをインポート
 
-**優先度**: 🟡 **IMPORTANT**（v0.10.0に含めるべき）
+**優先度**: 🟡 **IMPORTANT**(v0.10.0に含めるべき)
 **実装時間**: 4時間
 
 ---
@@ -1252,7 +1252,7 @@ Week 2: KB export (4h)
 Total: 12h
 ```
 
-### Updated Plan（追加事項を含む）
+### Updated Plan(追加事項を含む)
 ```
 Week 1:
   Day 1-2: YAML bulk import - Core (6h)
@@ -1290,8 +1290,8 @@ Total: 53 hours (3 weeks)
 | **確認プロンプト** | 🔴 CRITICAL | 3h | ✅ Yes | ユーザーコントロール維持 |
 | **エラーリカバリー** | 🔴 CRITICAL | 4h | ✅ Yes | 部分失敗時の対処 |
 | **YAML安全性チェック** | 🔴 CRITICAL | 1h | ✅ Yes | セキュリティ |
-| **追加テスト（+55）** | 🔴 CRITICAL | 10h | ✅ Yes | 品質保証 |
-| **ログ機能** | 🟡 IMPORTANT | 3h | ✅ Yes | デバッグ・追跡 |
+| **追加テスト(+55)** | 🔴 CRITICAL | 10h | ✅ Yes | 品質保証 |
+| **ログ機能** | 🟡 IMPORTANT | 3h | ✅ Yes | デバッグ· 追跡 |
 | **進捗表示** | 🟡 IMPORTANT | 2h | ✅ Yes | UX改善 |
 | **バリデーション強化** | 🟡 IMPORTANT | 3h | ✅ Yes | エラー防止 |
 | **パフォーマンス最適化** | 🟡 IMPORTANT | 2h | ✅ Yes | 大量タスク対応 |
@@ -1307,7 +1307,7 @@ Total: 53 hours (3 weeks)
 
 | リスク | 影響 | 確率 | 対策 | ステータス |
 |--------|------|------|------|-----------|
-| Undo機能のバグ | High | Medium | 十分なテスト（15 tests） | 🟡 Mitigated |
+| Undo機能のバグ | High | Medium | 十分なテスト(15 tests) | 🟡 Mitigated |
 | 確認プロンプトがうるさい | Medium | High | 閾値を調整可能に | ✅ Planned |
 | パフォーマンス問題 | High | Low | バッチ書き込み実装 | ✅ Planned |
 | エラーリカバリーの複雑性 | Medium | Medium | 3つの戦略を提供 | ✅ Planned |
@@ -1319,14 +1319,14 @@ Total: 53 hours (3 weeks)
 
 ## 10. Summary & Recommendations
 
-### 10.1 Critical Additions（v0.10.0に必須）
+### 10.1 Critical Additions(v0.10.0に必須)
 
 **必ず実装すべき機能**:
-1. ✅ **Undo/Rollback機能**（4時間）
-2. ✅ **確認プロンプト**（3時間）
-3. ✅ **エラーリカバリー**（4時間）
-4. ✅ **YAML安全性チェック**（1時間）
-5. ✅ **追加テスト**（10時間）
+1. ✅ **Undo/Rollback機能**(4時間)
+2. ✅ **確認プロンプト**(3時間)
+3. ✅ **エラーリカバリー**(4時間)
+4. ✅ **YAML安全性チェック**(1時間)
+5. ✅ **追加テスト**(10時間)
 
 **理由**:
 - 透過的操作の安全性を確保
@@ -1336,16 +1336,16 @@ Total: 53 hours (3 weeks)
 
 ---
 
-### 10.2 Important Additions（v0.10.0に推奨）
+### 10.2 Important Additions(v0.10.0に推奨)
 
 **できるだけ実装すべき機能**:
-1. ✅ **ログ機能**（3時間）
-2. ✅ **進捗表示**（2時間）
-3. ✅ **バリデーション強化**（3時間）
-4. ✅ **パフォーマンス最適化**（2時間）
-5. ✅ **バックアップ強化**（2時間）
-6. ✅ **エラーメッセージ改善**（2時間）
-7. ✅ **ドキュメント更新**（4時間）
+1. ✅ **ログ機能**(3時間)
+2. ✅ **進捗表示**(2時間)
+3. ✅ **バリデーション強化**(3時間)
+4. ✅ **パフォーマンス最適化**(2時間)
+5. ✅ **バックアップ強化**(2時間)
+6. ✅ **エラーメッセージ改善**(2時間)
+7. ✅ **ドキュメント更新**(4時間)
 
 **理由**:
 - UX向上
@@ -1357,21 +1357,21 @@ Total: 53 hours (3 weeks)
 
 ### 10.3 Updated Release Plan
 
-**リリース日**: 2025-11-03 → **2025-11-10**（1週間延期）
+**リリース日**: 2025-11-03 → **2025-11-10**(1週間延期)
 
 **理由**:
-- Critical機能追加（Undo/確認/エラーリカバリー）
-- テスト追加（+55個）
+- Critical機能追加(Undo/確認/エラーリカバリー)
+- テスト追加(+55個)
 - ドキュメント更新
 
 **作業時間**:
-- Original: 12時間（2週間）
-- Updated: **53時間（3週間）**
+- Original: 12時間(2週間)
+- Updated: **53時間(3週間)**
 
 **内訳**:
 - YAML bulk import: 6h
-- Critical additions: 12h（Undo 4h + 確認 3h + エラーリカバリー 4h + YAML安全性 1h）
-- Important additions: 18h（ログ 3h + 進捗 2h + バリデーション 3h + パフォーマンス 2h + バックアップ 2h + エラーメッセージ 2h + ドキュメント 4h）
+- Critical additions: 12h(Undo 4h + 確認 3h + エラーリカバリー 4h + YAML安全性 1h)
+- Important additions: 18h(ログ 3h + 進捗 2h + バリデーション 3h + パフォーマンス 2h + バックアップ 2h + エラーメッセージ 2h + ドキュメント 4h)
 - KB export: 4h
 - Testing: 10h
 - Integration testing: 4h
@@ -1383,37 +1383,37 @@ Total: 53 hours (3 weeks)
 
 **提案**: 以下の順序で実装
 
-#### Phase 1: Core + Critical（Week 1）
-1. YAML bulk import（6時間）
-2. Undo/Rollback（4時間）
-3. 確認プロンプト（3時間）
-4. エラーリカバリー（4時間）
+#### Phase 1: Core + Critical(Week 1)
+1. YAML bulk import(6時間)
+2. Undo/Rollback(4時間)
+3. 確認プロンプト(3時間)
+4. エラーリカバリー(4時間)
 
 **Total**: 17時間
 
 ---
 
-#### Phase 2: Important + KB Export（Week 2）
-5. バリデーション強化（3時間）
-6. ログ機能（3時間）
-7. KB export（4時間）
-8. 進捗表示 + パフォーマンス（4時間）
+#### Phase 2: Important + KB Export(Week 2)
+5. バリデーション強化(3時間)
+6. ログ機能(3時間)
+7. KB export(4時間)
+8. 進捗表示 + パフォーマンス(4時間)
 
 **Total**: 14時間
 
 ---
 
-#### Phase 3: Testing + Documentation（Week 3）
-9. 追加テスト（10時間）
-10. ドキュメント更新（4時間）
-11. 統合テスト（4時間）
-12. バグ修正 + リリース準備（4時間）
+#### Phase 3: Testing + Documentation(Week 3)
+9. 追加テスト(10時間)
+10. ドキュメント更新(4時間)
+11. 統合テスト(4時間)
+12. バグ修正 + リリース準備(4時間)
 
 **Total**: 22時間
 
 ---
 
-**Grand Total**: 53時間（3週間）
+**Grand Total**: 53時間(3週間)
 
 ---
 
@@ -1421,12 +1421,12 @@ Total: 53 hours (3 weeks)
 
 ### 主要な発見
 
-**当初の計画（12時間、2週間）は不十分でした。**
+**当初の計画(12時間, 2週間)は不十分でした.**
 
 **理由**:
-1. 透過的操作には **安全機能** が必須（Undo/確認/エラーリカバリー）
+1. 透過的操作には **安全機能** が必須(Undo/確認/エラーリカバリー)
 2. ユーザーコントロールを維持する必要がある
-3. 十分なテスト（+55個）が必要
+3. 十分なテスト(+55個)が必要
 4. ドキュメント更新が必要
 
 ---
@@ -1434,16 +1434,16 @@ Total: 53 hours (3 weeks)
 ### 推奨される対応
 
 **Option A: 完全版を3週間でリリース**
-- すべての機能を実装（Critical + Important）
-- 品質保証を徹底（55個の追加テスト）
+- すべての機能を実装(Critical + Important)
+- 品質保証を徹底(55個の追加テスト)
 - リリース日: 2025-11-10
 
 **Option B: 段階的リリース**
-- v0.10.0-alpha: Core + Critical のみ（2週間、2025-11-03）
-- v0.10.0-beta: Important追加（+1週間、2025-11-10）
-- v0.10.0: 最終版（+1週間、2025-11-17）
+- v0.10.0-alpha: Core + Critical のみ(2週間, 2025-11-03)
+- v0.10.0-beta: Important追加(+1週間, 2025-11-10)
+- v0.10.0: 最終版(+1週間, 2025-11-17)
 
-**推奨**: **Option A**（完全版を3週間で）
+**推奨**: **Option A**(完全版を3週間で)
 
 **理由**:
 - Undo/確認なしの透過的操作は危険
@@ -1454,9 +1454,9 @@ Total: 53 hours (3 weeks)
 
 ### Next Steps
 
-1. ✅ この追加検討事項をレビュー・承認
-2. ✅ 実装計画を更新（2週間 → 3週間）
-3. ✅ Phase 1（Core + Critical）から開始
+1. ✅ この追加検討事項をレビュー· 承認
+2. ✅ 実装計画を更新(2週間 → 3週間)
+3. ✅ Phase 1(Core + Critical)から開始
 4. ✅ 2025-11-10に v0.10.0 リリース
 
 ---

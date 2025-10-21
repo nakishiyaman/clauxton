@@ -10,8 +10,8 @@
 **結論**: ⚠️ **現在の計画では "Human-in-the-Loop" が不完全に実装されている**
 
 **問題**:
-- 確認プロンプトは「数量ベース」（10個以上のタスク）のみ
-- 個別の操作（kb_add, task_add）には確認がない
+- 確認プロンプトは"数量ベース"(10個以上のタスク)のみ
+- 個別の操作(kb_add, task_add)には確認がない
 - Claude Codeが自動的に実行 → ユーザーは事後確認のみ
 
 **Claude Code の哲学**:
@@ -19,8 +19,8 @@
 >  Any additional edits require approval from a human."
 
 **現在の計画との乖離**:
-- ✅ Undo機能はある（事後の修正）
-- ✅ 確認プロンプトはある（大量操作時のみ）
+- ✅ Undo機能はある(事後の修正)
+- ✅ 確認プロンプトはある(大量操作時のみ)
 - ❌ **個別操作の事前承認がない**
 
 ---
@@ -38,7 +38,7 @@
 **Key Points**:
 1. **デフォルトは読み取り専用**
 2. **全ての書き込み操作は人間の承認が必要**
-3. **ファイル編集、テスト実行、Bashコマンドを含む**
+3. **ファイル編集, テスト実行, Bashコマンドを含む**
 
 ---
 
@@ -46,12 +46,12 @@
 
 **Sidecar Model Approach**:
 ```
-Claude Code: （会話中に重要な情報を検出）
+Claude Code: (会話中に重要な情報を検出)
              "💡 Should I remember: 'This project uses JWT auth'?"
 
 User: [Approve] ✓ / [Reject] ✗
 
-Claude Code: （承認後にMemoryに保存）
+Claude Code: (承認後にMemoryに保存)
              "Saved to memory."
 ```
 
@@ -64,7 +64,7 @@ Claude Code: （承認後にMemoryに保存）
 
 ## 2. 現在のClauxtonの実装状況
 
-### 2.1 現在の計画（v0.10.0）
+### 2.1 現在の計画(v0.10.0)
 
 #### ✅ 実装されている Human-in-the-Loop
 
@@ -75,11 +75,11 @@ undo_last_operation()
 # → 誤った操作を取り消せる
 ```
 
-**評価**: ✅ Human-in-the-Loop（事後対応）
+**評価**: ✅ Human-in-the-Loop(事後対応)
 
 ---
 
-**2. 確認プロンプト（数量ベース）**:
+**2. 確認プロンプト(数量ベース)**:
 ```python
 # 閾値を超えると確認
 CONFIRMATION_THRESHOLDS = {
@@ -89,10 +89,10 @@ CONFIRMATION_THRESHOLDS = {
 
 # 10個のタスクをインポート → 確認が表示される
 task_import_yaml(yaml_content)
-# → "この10個のタスクを作成してよろしいですか？"
+# → "この10個のタスクを作成してよろしいですか?"
 ```
 
-**評価**: ✅ Human-in-the-Loop（大量操作のみ）
+**評価**: ✅ Human-in-the-Loop(大量操作のみ)
 
 ---
 
@@ -102,18 +102,18 @@ task_import_yaml(yaml_content)
 ```python
 # 現在の実装
 kb_add(title="FastAPI採用", category="architecture")
-# → 即座に実行される（確認なし）
+# → 即座に実行される(確認なし)
 
 task_add(name="Task 1", priority="high")
-# → 即座に実行される（確認なし）
+# → 即座に実行される(確認なし)
 ```
 
 **問題**:
-- 個別の操作（1-4個のKBエントリ、1-9個のタスク）には確認がない
+- 個別の操作(1-4個のKBエントリ, 1-9個のタスク)には確認がない
 - Claude Codeが自動的に実行
-- ユーザーは事後確認のみ可能（Undoで修正）
+- ユーザーは事後確認のみ可能(Undoで修正)
 
-**評価**: ❌ Human-in-the-Loop（実装されていない）
+**評価**: ❌ Human-in-the-Loop(実装されていない)
 
 ---
 
@@ -124,22 +124,22 @@ task_add(name="Task 1", priority="high")
 ```
 User: "FastAPIとReactを使いたい"
 
-↓ Claude Codeの処理（内部、ユーザーには見えない）
+↓ Claude Codeの処理(内部, ユーザーには見えない)
 
 kb_add(title="FastAPI採用", category="architecture", ...)
 kb_add(title="React採用", category="architecture", ...)
 
 ↓ ユーザーに表示
 
-Claude Code: "FastAPIとReactをKnowledge Baseに登録しました。"
+Claude Code: "FastAPIとReactをKnowledge Baseに登録しました."
 ```
 
 **問題**:
 - ❌ ユーザーは事前に承認していない
 - ❌ 何が登録されるか事前に確認できない
-- ✅ Undoで取り消せる（事後対応のみ）
+- ✅ Undoで取り消せる(事後対応のみ)
 
-**Human-in-the-Loop**: ⚠️ **事後対応のみ（事前承認なし）**
+**Human-in-the-Loop**: ⚠️ **事後対応のみ(事前承認なし)**
 
 ---
 
@@ -148,55 +148,55 @@ Claude Code: "FastAPIとReactをKnowledge Baseに登録しました。"
 ```
 User: "Todoアプリを作りたい"
 
-↓ Claude Codeの処理（内部）
+↓ Claude Codeの処理(内部)
 
-# 5個のタスクを生成（閾値未満）
-task_import_yaml(yaml_content)  # 5個 < 10個（閾値）
+# 5個のタスクを生成(閾値未満)
+task_import_yaml(yaml_content)  # 5個 < 10個(閾値)
 # → 確認なしで即座に実行
 
 ↓ ユーザーに表示
 
-Claude Code: "5個のタスクを作成しました。"
+Claude Code: "5個のタスクを作成しました."
 ```
 
 **問題**:
-- ❌ 5個のタスク（閾値未満）は確認なし
+- ❌ 5個のタスク(閾値未満)は確認なし
 - ❌ ユーザーは事前に確認できない
-- ✅ Undoで取り消せる（事後対応）
+- ✅ Undoで取り消せる(事後対応)
 
-**Human-in-the-Loop**: ⚠️ **事後対応のみ（事前承認なし）**
+**Human-in-the-Loop**: ⚠️ **事後対応のみ(事前承認なし)**
 
 ---
 
-#### シナリオ3: 20個のタスク追加（閾値超え）
+#### シナリオ3: 20個のタスク追加(閾値超え)
 
 ```
 User: "大規模なEコマースサイトを作りたい"
 
-↓ Claude Codeの処理（内部）
+↓ Claude Codeの処理(内部)
 
-# 20個のタスクを生成（閾値超え）
-task_import_yaml(yaml_content)  # 20個 >= 10個（閾値）
+# 20個のタスクを生成(閾値超え)
+task_import_yaml(yaml_content)  # 20個 >= 10個(閾値)
 # → 確認プロンプトが表示される
 
 ↓ ユーザーに表示
 
-Claude Code: "タスクを作成する準備ができました。
+Claude Code: "タスクを作成する準備ができました.
 
              📊 Preview:
                 Task count: 20 tasks
                 Total estimate: 45 hours
 
-             この20個のタスクを作成してよろしいですか？"
+             この20個のタスクを作成してよろしいですか?"
 
 User: "はい"
 
 ↓ 承認後に実行
 
-Claude Code: "20個のタスクを作成しました。"
+Claude Code: "20個のタスクを作成しました."
 ```
 
-**Human-in-the-Loop**: ✅ **事前承認あり（閾値超え時のみ）**
+**Human-in-the-Loop**: ✅ **事前承認あり(閾値超え時のみ)**
 
 ---
 
@@ -204,16 +204,16 @@ Claude Code: "20個のタスクを作成しました。"
 
 | 操作 | 数量 | 確認 | Human-in-the-Loop |
 |------|------|------|-------------------|
-| KB追加 | 1-4個 | ❌ なし | ⚠️ 事後対応のみ（Undo） |
+| KB追加 | 1-4個 | ❌ なし | ⚠️ 事後対応のみ(Undo) |
 | KB追加 | 5個以上 | ✅ あり | ✅ 事前承認 |
-| タスク追加 | 1-9個 | ❌ なし | ⚠️ 事後対応のみ（Undo） |
+| タスク追加 | 1-9個 | ❌ なし | ⚠️ 事後対応のみ(Undo) |
 | タスク追加 | 10個以上 | ✅ あり | ✅ 事前承認 |
-| KB削除 | 1-2個 | ❌ なし | ⚠️ 事後対応のみ（Undo） |
+| KB削除 | 1-2個 | ❌ なし | ⚠️ 事後対応のみ(Undo) |
 | KB削除 | 3個以上 | ✅ あり | ✅ 事前承認 |
 
 **結論**:
-- 小規模な操作（閾値未満）は **事前承認なし**
-- Undoで事後対応可能だが、**Human-in-the-Loop哲学とは異なる**
+- 小規模な操作(閾値未満)は **事前承認なし**
+- Undoで事後対応可能だが, **Human-in-the-Loop哲学とは異なる**
 
 ---
 
@@ -244,26 +244,26 @@ Claude Code: "Added to Knowledge Base."
 
 ---
 
-### 3.2 Clauxtonの現状（v0.10.0計画）
+### 3.2 Clauxtonの現状(v0.10.0計画)
 
 **実際の動作**:
 ```
-Claude Code: （内部で kb_add() を実行）
-             "FastAPI採用をKnowledge Baseに登録しました。"
+Claude Code: (内部で kb_add() を実行)
+             "FastAPI採用をKnowledge Baseに登録しました."
 
-User: （事後確認のみ、事前承認なし）
-      "あ、違う..."
+User: (事後確認のみ, 事前承認なし)
+      "あ, 違う..."
 
 ↓ Undoで修正
 
 User: "さっきの登録を取り消して"
-Claude Code: （undo_last_operation()）
-             "取り消しました。"
+Claude Code: (undo_last_operation())
+             "取り消しました."
 ```
 
 **問題**:
-- ✅ Undo可能（事後対応）
-- ❌ 事前承認なし（Human-in-the-Loop不完全）
+- ✅ Undo可能(事後対応)
+- ❌ 事前承認なし(Human-in-the-Loop不完全)
 
 ---
 
@@ -275,17 +275,17 @@ Claude Code: （undo_last_operation()）
 - **透明性**: 何が実行されるか明示
 
 **Clauxton v0.10.0 の Human-in-the-Loop**:
-- **事前承認**: 大量操作のみ（閾値超え時）
-- **事後対応**: Undo機能（全操作）
+- **事前承認**: 大量操作のみ(閾値超え時)
+- **事後対応**: Undo機能(全操作)
 - **透明性**: 実行後に通知
 
-**乖離度**: ⚠️ **約50%**（事前承認が部分的）
+**乖離度**: ⚠️ **約50%**(事前承認が部分的)
 
 ---
 
 ## 4. 改善案
 
-### Option A: 全操作に事前承認を追加（完全な Human-in-the-Loop）
+### Option A: 全操作に事前承認を追加(完全な Human-in-the-Loop)
 
 #### 設計
 
@@ -336,7 +336,7 @@ User: "FastAPIを使いたい"
 
 ↓ Claude Codeの処理
 
-Claude Code: （kb_add() を呼び出し、確認が必要）
+Claude Code: (kb_add() を呼び出し, 確認が必要)
 
              "💡 Add to Knowledge Base?
 
@@ -360,15 +360,15 @@ Claude Code: "Added to Knowledge Base (KB-20251020-001)."
 - ✅ ユーザーが全てコントロール
 
 **欠点**:
-- ⚠️ 確認が頻繁（UX低下）
+- ⚠️ 確認が頻繁(UX低下)
 - ⚠️ 自然な会話が断絶
 - ⚠️ 透過的統合が損なわれる
 
-**実装時間**: +6時間（全MCPツールに確認追加）
+**実装時間**: +6時間(全MCPツールに確認追加)
 
 ---
 
-### Option B: デフォルト設定可能な確認モード（バランス型）
+### Option B: デフォルト設定可能な確認モード(バランス型)
 
 #### 設計
 
@@ -387,20 +387,20 @@ confirmation_thresholds:
 
 **3つのモード**:
 
-**1. "always" モード（最も安全）**:
+**1. "always" モード(最も安全)**:
 - 全ての書き込み操作で確認
 - Claude Code 哲学と完全一致
 - UX: やや煩雑
 
-**2. "auto" モード（デフォルト、バランス型）**:
+**2. "auto" モード(デフォルト, バランス型)**:
 - 閾値を超えたら確認
 - 閾値未満は自動実行 + Undo可能
 - UX: スムーズ
 
-**3. "never" モード（最も速い）**:
-- 全て自動実行（確認なし）
+**3. "never" モード(最も速い)**:
+- 全て自動実行(確認なし)
 - Undo可能
-- UX: 非常にスムーズ（リスクあり）
+- UX: 非常にスムーズ(リスクあり)
 
 **実装**:
 
@@ -444,7 +444,7 @@ async def kb_add(title: str, category: str, ...) -> dict:
     # 実行
     entry_id = kb.add(...)
 
-    # 履歴に記録（Undo可能）
+    # 履歴に記録(Undo可能)
     history.record("kb_add", [entry_id])
 
     return {"status": "success", "id": entry_id}
@@ -453,14 +453,14 @@ async def kb_add(title: str, category: str, ...) -> dict:
 **使用例**:
 
 ```bash
-# モード設定（CLI）
+# モード設定(CLI)
 clauxton config set confirmation_mode always    # 常に確認
-clauxton config set confirmation_mode auto      # 閾値ベース（デフォルト）
-clauxton config set confirmation_mode never     # 確認なし（Undoのみ）
+clauxton config set confirmation_mode auto      # 閾値ベース(デフォルト)
+clauxton config set confirmation_mode never     # 確認なし(Undoのみ)
 
 # 閾値調整
-clauxton config set confirmation_thresholds.kb_add 1  # 1個以上で確認（厳格）
-clauxton config set confirmation_thresholds.task_import 20  # 20個以上で確認（緩い）
+clauxton config set confirmation_thresholds.kb_add 1  # 1個以上で確認(厳格)
+clauxton config set confirmation_thresholds.task_import 20  # 20個以上で確認(緩い)
 ```
 
 **利点**:
@@ -470,20 +470,20 @@ clauxton config set confirmation_thresholds.task_import 20  # 20個以上で確�
 - ✅ 柔軟性が高い
 
 **欠点**:
-- ⚠️ 複雑性が増す（3つのモード）
+- ⚠️ 複雑性が増す(3つのモード)
 - ⚠️ ユーザーが設定を理解する必要
 
-**実装時間**: +8時間（設定管理 + 確認ロジック + CLI）
+**実装時間**: +8時間(設定管理 + 確認ロジック + CLI)
 
 ---
 
-### Option C: 現状維持 + CLAUDE.md で説明（最小限の変更）
+### Option C: 現状維持 + CLAUDE.md で説明(最小限の変更)
 
 #### 設計
 
 **現在の計画を維持**:
 - Undo機能
-- 確認プロンプト（閾値ベース）
+- 確認プロンプト(閾値ベース)
 
 **CLAUDE.md で Human-in-the-Loop の実装方法を明記**:
 
@@ -532,7 +532,7 @@ but maintains user control through post-hoc approval (Undo).
 ```
 
 **利点**:
-- ✅ 実装変更なし（0時間）
+- ✅ 実装変更なし(0時間)
 - ✅ 透過的統合を維持
 - ✅ Undo で Human-in-the-Loop を実現
 
@@ -540,13 +540,13 @@ but maintains user control through post-hoc approval (Undo).
 - ⚠️ Claude Code の哲学と100%一致しない
 - ⚠️ 事前承認ではなく事後対応
 
-**実装時間**: 0時間（ドキュメント更新のみ）
+**実装時間**: 0時間(ドキュメント更新のみ)
 
 ---
 
 ## 5. 推奨案
 
-### 推奨: **Option B（設定可能な確認モード）**
+### 推奨: **Option B(設定可能な確認モード)**
 
 **理由**:
 
@@ -556,19 +556,19 @@ but maintains user control through post-hoc approval (Undo).
    - "auto" モードで透過的統合
 
 2. **段階的移行**:
-   - v0.10.0: "auto" モードをデフォルト（現在の計画）
-   - v0.11.0: "always" モードを推奨（ドキュメントで）
+   - v0.10.0: "auto" モードをデフォルト(現在の計画)
+   - v0.11.0: "always" モードを推奨(ドキュメントで)
    - ユーザーフィードバックで調整
 
 3. **実装コスト**:
-   - +8時間（Week 2に追加可能）
+   - +8時間(Week 2に追加可能)
    - 3週間の計画内で実装可能
 
 ---
 
-### 実装計画（Option B）
+### 実装計画(Option B)
 
-#### Week 2 に追加（Day 10）
+#### Week 2 に追加(Day 10)
 
 **新規実装**:
 1. `ConfirmationManager` class
@@ -588,7 +588,7 @@ Week 2: 18h → 26h (+8h)
   Day 10: バックアップ + エラーメッセージ + 確認モード (4h + 8h = 12h)
 ```
 
-**Total**: 61時間（53h → 61h、+8h）
+**Total**: 61時間(53h → 61h, +8h)
 
 ---
 
@@ -596,7 +596,7 @@ Week 2: 18h → 26h (+8h)
 
 | Aspect | Option A | Option B ⭐ | Option C |
 |--------|----------|-----------|----------|
-| **Human-in-the-Loop** | 100% | 可変（25-100%） | 50% |
+| **Human-in-the-Loop** | 100% | 可変(25-100%) | 50% |
 | **Claude哲学一致度** | 100% | 75-100% | 50% |
 | **透過的統合** | ❌ 損なわれる | ✅ 維持可能 | ✅ 維持 |
 | **UX** | ⚠️ 煩雑 | ✅ バランス良い | ✅ スムーズ |
@@ -611,9 +611,9 @@ Week 2: 18h → 26h (+8h)
 ### 現状の問題
 
 ⚠️ **v0.10.0の現在の計画では "Human-in-the-Loop" が不完全**:
-- 小規模操作（閾値未満）は事前承認なし
-- Undoで事後対応可能だが、Claude Code 哲学とは異なる
-- 合致度: 50%（事後対応のみ）
+- 小規模操作(閾値未満)は事前承認なし
+- Undoで事後対応可能だが, Claude Code 哲学とは異なる
+- 合致度: 50%(事後対応のみ)
 
 ---
 
@@ -627,22 +627,22 @@ Week 2: 18h → 26h (+8h)
 - 3つのモード: "always" | "auto" | "never"
 - `clauxton config` CLI
 
-**追加時間**: +8時間（Week 2 Day 10）
-**Total時間**: 61時間（53h → 61h）
+**追加時間**: +8時間(Week 2 Day 10)
+**Total時間**: 61時間(53h → 61h)
 
 **期待される効果**:
-- ✅ Claude Code 哲学との一致度: 50% → **75-100%**（モード依存）
+- ✅ Claude Code 哲学との一致度: 50% → **75-100%**(モード依存)
 - ✅ ユーザーが自分のワークフローに合わせて選択可能
-- ✅ 透過的統合を維持しつつ、厳格なモードも提供
-- ✅ v0.11.0で "always" モードを推奨し、段階的に移行
+- ✅ 透過的統合を維持しつつ, 厳格なモードも提供
+- ✅ v0.11.0で "always" モードを推奨し, 段階的に移行
 
 ---
 
 ### 次のステップ
 
 1. ✅ Option B の採用を決定
-2. ✅ Week 2 Day 11 に確認モード実装を追加（+8h）
-3. ✅ 実装計画を更新（61時間）
+2. ✅ Week 2 Day 11 に確認モード実装を追加(+8h)
+3. ✅ 実装計画を更新(61時間)
 4. ✅ CLAUDE.md に確認モードの説明を追加
 
 ---
@@ -651,9 +651,9 @@ Week 2: 18h → 26h (+8h)
 
 ### Decision Date: 2025-10-20
 
-**User Decision**: ✅ **Option B（設定可能な確認モード）を採用**
+**User Decision**: ✅ **Option B(設定可能な確認モード)を採用**
 
-**User Response**: "Option B（設定可能な確認モード）とします。計画やその他資料を修正してください。"
+**User Response**: "Option B(設定可能な確認モード)とします.計画やその他資料を修正してください."
 
 ---
 

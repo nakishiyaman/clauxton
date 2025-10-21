@@ -2,18 +2,18 @@
 
 **期間**: Week 9-10 (2週間)
 **アプローチ**: ハイブリッド (Phase 1完了 + リリース準備 + Phase 2準備)
-**目標**: TF-IDF検索実装、ドキュメント整備、v0.8.0リリース
+**目標**: TF-IDF検索実装, ドキュメント整備, v0.8.0リリース
 
 ---
 
 ## 概要
 
-Phase 1 (Week 1-8) は機能的には完了しましたが、以下が未実装:
+Phase 1 (Week 1-8) は機能的には完了しましたが, 以下が未実装:
 - ❌ Enhanced Search (TF-IDF) - 検索精度向上
 - ❌ Slash Commands - ユーザー体験向上
 - ❌ リリースドキュメント (CHANGELOG, CONTRIBUTING)
 
-このWeek 9-10で、これらを完成させ、v0.8.0としてリリース準備を整えます。
+このWeek 9-10で, これらを完成させ, v0.8.0としてリリース準備を整えます.
 
 ---
 
@@ -22,7 +22,7 @@ Phase 1 (Week 1-8) は機能的には完了しましたが、以下が未実装:
 ### Day 1-2: TF-IDF Search 実装
 
 #### 目標
-現在の線形検索を、TF-IDF (Term Frequency-Inverse Document Frequency) アルゴリズムで置き換え、検索精度と関連性を向上させる。
+現在の線形検索を, TF-IDF (Term Frequency-Inverse Document Frequency) アルゴリズムで置き換え, 検索精度と関連性を向上させる.
 
 #### 実装内容
 
@@ -659,7 +659,7 @@ By contributing, you agree that your contributions will be licensed under the MI
 ### Day 4-5: Slash Commands 実装
 
 #### 概要
-Claude Codeでクイックアクセスできる Slash Commands を実装します。
+Claude Codeでクイックアクセスできる Slash Commands を実装します.
 
 #### ディレクトリ構造
 ```
@@ -1008,7 +1008,7 @@ touch .claude/commands/task-list.md
 # 3. 各ファイルに上記内容をコピー
 
 # 4. Claude Codeで動作確認
-# Claude Codeを再起動して、/kb-search などのコマンドが認識されることを確認
+# Claude Codeを再起動して, /kb-search などのコマンドが認識されることを確認
 ```
 
 **期間**: 2日 (Day 4-5)
@@ -1331,17 +1331,17 @@ clauxton conflicts suggest-order [task-ids]
 ### リスク1: TF-IDF実装の複雑性
 **確率**: 中
 **影響**: 高
-**対策**: scikit-learn使用で実装簡素化、プロトタイプで動作確認
+**対策**: scikit-learn使用で実装簡素化, プロトタイプで動作確認
 
 ### リスク2: PyPIリリースの初回トラブル
 **確率**: 高
 **影響**: 中
-**対策**: TestPyPIで事前テスト、ドキュメント熟読
+**対策**: TestPyPIで事前テスト, ドキュメント熟読
 
 ### リスク3: スケジュール遅延
 **確率**: 中
 **影響**: 低
-**対策**: Day 10をバッファとして確保、優先度明確化
+**対策**: Day 10をバッファとして確保, 優先度明確化
 
 ---
 
@@ -1367,6 +1367,6 @@ clauxton conflicts suggest-order [task-ids]
 
 ---
 
-**ステータス**: 計画完成、実装準備完了
+**ステータス**: 計画完成, 実装準備完了
 **作成日**: 2025-10-19
 **次のマイルストーン**: TF-IDF検索実装完了 (Day 2終了時)

@@ -1,6 +1,6 @@
 # Week 11 実行計画: Documentation & Community Setup
 
-**期間**: 2025-10-19 〜 2025-10-25 (7日間)
+**期間**: 2025-10-19 ~ 2025-10-25 (7日間)
 **目的**: v0.8.0公開後のドキュメント整備とコミュニティ受け入れ準備
 **ステータス**: Day 1 完了 (14%)
 
@@ -9,12 +9,12 @@
 ## 📋 Week 11 Overview
 
 ### 目標
-v0.8.0を公開したばかりの状態から、新規ユーザーがスムーズにonboardingでき、コミュニティが自然発生する環境を整える。
+v0.8.0を公開したばかりの状態から, 新規ユーザーがスムーズにonboardingでき, コミュニティが自然発生する環境を整える.
 
 ### 優先度
-- **Priority 1 (Critical)**: README更新、PyPI installation優先
-- **Priority 2 (High)**: CI/CD setup、Community templates
-- **Priority 3 (Medium)**: Tutorial、Use cases、Additional docs
+- **Priority 1 (Critical)**: README更新, PyPI installation優先
+- **Priority 2 (High)**: CI/CD setup, Community templates
+- **Priority 3 (Medium)**: Tutorial, Use cases, Additional docs
 
 ---
 
@@ -28,15 +28,15 @@ v0.8.0を公開したばかりの状態から、新規ユーザーがスムー�
 - ✅ README.md major revision (Alpha → Stable)
   - Status変更: "Alpha" → "Production Ready"
   - Badges追加: PyPI version, downloads, coverage
-  - Features再編成: TF-IDF、Task Management、MCP 12 tools
-  - Installation: PyPI first、source second
+  - Features再編成: TF-IDF, Task Management, MCP 12 tools
+  - Installation: PyPI first, source second
   - Project Status: Phase 1 100% complete
-  - Links: PyPI、GitHub Releases追加
+  - Links: PyPI, GitHub Releases追加
 
 - ✅ docs/installation.md更新
   - Method 1: PyPI (Recommended)
   - Method 2: Source (Development)
-  - Dependencies: scikit-learn、numpy追加
+  - Dependencies: scikit-learn, numpy追加
   - Version history追加
 
 - ✅ docs/quick-start.md更新
@@ -45,18 +45,18 @@ v0.8.0を公開したばかりの状態から、新規ユーザーがスムー�
 #### 成果物
 - Commit: 54fe293 (README)
 - Commit: 47ebe21 (installation.md, quick-start.md)
-- 変更: +213行、-128行 (net +85行)
+- 変更: +213行, -128行 (net +85行)
 
 #### 効果
 - 新規ユーザーの混乱解消 (Alpha warning削除)
 - Installation friction削減 (1 command: pip install clauxton)
-- Feature discovery向上 (TF-IDF、12 MCP tools明示)
+- Feature discovery向上 (TF-IDF, 12 MCP tools明示)
 
 ---
 
 ### Day 2: Quick Start Expansion + Tutorial Creation
 
-**目標**: 初心者が5-10分でClauxtonを理解・使用開始できるガイド作成
+**目標**: 初心者が5-10分でClauxtonを理解· 使用開始できるガイド作成
 
 #### タスク (優先度順)
 
@@ -89,7 +89,7 @@ v0.8.0を公開したばかりの状態から、新規ユーザーがスムー�
 
 **期待される成果**:
 - Quick Startが15分→10分に短縮
-- TF-IDF、Task Management、MCPの全機能を網羅
+- TF-IDF, Task Management, MCPの全機能を網羅
 
 ---
 
@@ -208,14 +208,14 @@ Interactive example:
 
 #### Success Criteria
 - [ ] 初心者が30分以内にClauxtonの全機能を使用開始できる
-- [ ] TF-IDF、Task Management、MCPの各機能に実例がある
+- [ ] TF-IDF, Task Management, MCPの各機能に実例がある
 - [ ] Real-world workflowが3つ以上documented
 
 ---
 
 ### Day 3: CI/CD Setup (GitHub Actions)
 
-**目標**: 自動テスト・Lint実行環境構築、品質保証の自動化
+**目標**: 自動テスト· Lint実行環境構築, 品質保証の自動化
 
 #### タスク
 
@@ -273,9 +273,9 @@ jobs:
 
 **期待される効果**:
 - 全PR/pushで自動テスト実行
-- Python 3.11、3.12の両方でテスト
+- Python 3.11, 3.12の両方でテスト
 - Coverage自動レポート
-- Type checking、Linting自動化
+- Type checking, Linting自動化
 
 ---
 
@@ -290,7 +290,7 @@ jobs:
 
 ---
 
-##### 3. pre-commit hooks設定 (1時間、Optional)
+##### 3. pre-commit hooks設定 (1時間, Optional)
 **ファイル**: `.pre-commit-config.yaml` (新規作成)
 
 ```yaml
@@ -312,7 +312,7 @@ repos:
 
 #### 成果物 (Day 3終了時)
 - ✅ GitHub Actions CI/CD workflow
-- ✅ Automated pytest、coverage、mypy、ruff
+- ✅ Automated pytest, coverage, mypy, ruff
 - ✅ CI status badge in README
 - ✅ Codecov integration (optional)
 - ✅ pre-commit hooks (optional)
@@ -321,13 +321,13 @@ repos:
 - [ ] 全PRで自動テスト実行される
 - [ ] Coverage reportが自動生成される
 - [ ] CI badgeがREADMEに表示される
-- [ ] Python 3.11、3.12両方でテストpass
+- [ ] Python 3.11, 3.12両方でテストpass
 
 ---
 
 ### Day 4: Community Setup
 
-**目標**: GitHub Discussions、Issue/PR templates、CONTRIBUTING.md整備
+**目標**: GitHub Discussions, Issue/PR templates, CONTRIBUTING.md整備
 
 #### タスク
 
@@ -335,9 +335,9 @@ repos:
 **場所**: GitHub Repository Settings
 
 **Categories**:
-- **General**: 一般的な質問・議論
-- **Q&A**: 技術的な質問・回答
-- **Ideas**: 新機能提案・改善アイデア
+- **General**: 一般的な質問· 議論
+- **Q&A**: 技術的な質問· 回答
+- **Ideas**: 新機能提案· 改善アイデア
 - **Show and Tell**: ユーザー事例共有
 - **Announcements**: 公式アナウンス (maintainer only)
 
@@ -629,12 +629,12 @@ Then create PR on GitHub.
 
 #### 成果物 (Day 4終了時)
 - ✅ GitHub Discussions有効化 + welcome post
-- ✅ Issue templates (bug report、feature request)
+- ✅ Issue templates (bug report, feature request)
 - ✅ PR template with checklist
 - ✅ CONTRIBUTING.md詳細化 (development workflow)
 
 #### Success Criteria
-- [ ] Discussionsが有効で、welcomeメッセージ投稿済み
+- [ ] Discussionsが有効で, welcomeメッセージ投稿済み
 - [ ] Issue作成時にtemplateが表示される
 - [ ] PR作成時にchecklistが表示される
 - [ ] CONTRIBUTING.mdにdevelopment workflowが詳述されている
@@ -643,7 +643,7 @@ Then create PR on GitHub.
 
 ### Day 5-6: Use Cases & Troubleshooting
 
-**目標**: Real-world use cases文書化、Troubleshooting拡充
+**目標**: Real-world use cases文書化, Troubleshooting拡充
 
 #### タスク
 
@@ -1003,7 +1003,7 @@ When reporting:
 
 ### Day 7: Review & Polish
 
-**目標**: Week 11全体のレビュー、品質保証、完成度確認
+**目標**: Week 11全体のレビュー, 品質保証, 完成度確認
 
 #### タスク
 
@@ -1083,7 +1083,7 @@ pip install clauxton==0.8.0
 ```markdown
 # Week 11 Complete Summary
 
-**Period**: 2025-10-19 〜 2025-10-25
+**Period**: 2025-10-19 ~ 2025-10-25
 **Status**: ✅ 100% Complete
 
 ## Achievements
@@ -1182,7 +1182,7 @@ pip install clauxton==0.8.0
 - ✅ Final commit & push
 
 #### Success Criteria
-- [ ] ドキュメントにtypo、broken linkがゼロ
+- [ ] ドキュメントにtypo, broken linkがゼロ
 - [ ] 全code exampleが動作する
 - [ ] PyPI pageが正しく表示される
 - [ ] Week 11完了サマリーがdocumented

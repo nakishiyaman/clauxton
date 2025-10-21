@@ -99,28 +99,28 @@ graph TB
 ### 1.3 設計原則
 
 **1. AI-First Design**
-- すべてのコンポーネントがAI（Claude Code）によって読み書き可能
-- 宣言的設定（YAML, Pydantic models）
-- 自己記述的コード（Docstring, Type hints）
+- すべてのコンポーネントがAI(Claude Code)によって読み書き可能
+- 宣言的設定(YAML, Pydantic models)
+- 自己記述的コード(Docstring, Type hints)
 
 **2. Local-First**
 - デフォルトでローカルストレージのみ
-- No network dependencies（オプション除く）
+- No network dependencies(オプション除く)
 - Privacy by default
 
 **3. Modular & Extensible**
 - 各コンポーネントが独立して動作
-- Plugin API for third-party extensions（Phase 2+）
+- Plugin API for third-party extensions(Phase 2+)
 - Loose coupling via MCP Protocol
 
 **4. Event-Driven**
 - Event Sourcing pattern
 - すべての変更を Event Log に記録
-- 監査可能・再生可能
+- 監査可能· 再生可能
 
 **5. Fail-Safe**
-- Graceful degradation（MCP Server停止時もCLI継続）
-- データ損失防止（Atomic writes, Backups）
+- Graceful degradation(MCP Server停止時もCLI継続)
+- データ損失防止(Atomic writes, Backups)
 - 明確なエラーメッセージ
 
 ---
@@ -229,8 +229,8 @@ clauxton/
 
 **責務**:
 - Knowledge Base の CRUD 操作
-- 検索（キーワード、カテゴリ、タグ）
-- バージョニング（更新履歴）
+- 検索(キーワード, カテゴリ, タグ)
+- バージョニング(更新履歴)
 
 **主要クラス**:
 
@@ -343,8 +343,8 @@ entries:
 
 **責務**:
 - Task の CRUD 操作
-- 依存関係グラフ（DAG）管理
-- Task 状態遷移（pending → in_progress → completed）
+- 依存関係グラフ(DAG)管理
+- Task 状態遷移(pending → in_progress → completed)
 - Next Task 推奨
 
 **主要クラス**:
@@ -502,7 +502,7 @@ def detect_bottlenecks(tasks: List[Task]) -> List[str]:
 
 **責務**:
 - コード編集から依存関係を推論
-- AST（Abstract Syntax Tree）解析
+- AST(Abstract Syntax Tree)解析
 - Knowledge Base の pattern エントリを参照
 - Subagent 経由で LLM 推論
 
@@ -603,7 +603,7 @@ class DependencyAnalyzer:
 #### 2.2.4 Conflict Detector (clauxton.core.conflict_detector)
 
 **責務**:
-- ファイル・行レベルの競合予測
+- ファイル· 行レベルの競合予測
 - Git diff 解析
 - 競合リスクスコアリング
 - 安全な実行順序の推奨
@@ -752,7 +752,7 @@ entries: array
     version: integer
 ```
 
-**インデックス**（将来的にSQLite移行時）:
+**インデックス**(将来的にSQLite移行時):
 - Primary key: `id`
 - Index: `category`, `tags`, `created_at`
 - Full-text search: `title`, `content`
@@ -784,7 +784,7 @@ tasks: array
 ```
 
 **制約**:
-- `depends_on` で循環参照を許さない（DAG制約）
+- `depends_on` で循環参照を許さない(DAG制約)
 - `status` 遷移ルール:
   - pending → in_progress → completed
   - in_progress → blocked → in_progress
@@ -824,10 +824,10 @@ tasks: array
 | `conflict_detected` | `task1_id`, `task2_id`, `risk_score` | Conflict detected |
 
 **用途**:
-- Event Sourcing（状態再構築）
+- Event Sourcing(状態再構築)
 - 監査ログ
 - Drift Detection
-- 機械学習（将来的に依存・競合予測精度向上）
+- 機械学習(将来的に依存· 競合予測精度向上)
 
 ### 3.4 Configuration スキーマ
 
@@ -879,22 +879,22 @@ cloud:  # Optional
 
 ### 4.1 選定基準
 
-AI（特にClaude Code）が扱いやすい技術を選定する基準：
+AI(特にClaude Code)が扱いやすい技術を選定する基準: 
 
-1. **宣言的**: 手続き型より宣言型（YAMLスキーマ、Pydanticモデル）
-2. **型安全**: 明示的な型情報（Type hints, Pydantic）
-3. **標準的**: ニッチなライブラリより標準的なもの（標準ライブラリ、人気フレームワーク）
-4. **可読性**: AIがコードを理解しやすい（明確な命名、Docstring）
-5. **テスタブル**: AIがテストを生成しやすい（純粋関数、依存注入）
+1. **宣言的**: 手続き型より宣言型(YAMLスキーマ, Pydanticモデル)
+2. **型安全**: 明示的な型情報(Type hints, Pydantic)
+3. **標準的**: ニッチなライブラリより標準的なもの(標準ライブラリ, 人気フレームワーク)
+4. **可読性**: AIがコードを理解しやすい(明確な命名, Docstring)
+5. **テスタブル**: AIがテストを生成しやすい(純粋関数, 依存注入)
 
 ### 4.2 技術スタック詳細
 
 #### 4.2.1 プログラミング言語: Python 3.11+
 
 **選定理由**:
-- ✅ AI が最も得意な言語（Claude, GPT は Python コード生成精度が最高）
-- ✅ Type hints でコード補完・検証が容易
-- ✅ 豊富なライブラリエコシステム（AST解析、YAML、CLI）
+- ✅ AI が最も得意な言語(Claude, GPT は Python コード生成精度が最高)
+- ✅ Type hints でコード補完· 検証が容易
+- ✅ 豊富なライブラリエコシステム(AST解析, YAML, CLI)
 - ✅ MCP SDK が Python をサポート
 
 **使用機能**:
@@ -942,12 +942,12 @@ def search(q, c=None, l=10):  # Cryptic names, no types, no docstring
 
 **YAML** (Knowledge Base, Tasks, Config):
 - ✅ 人間が読み書きしやすい
-- ✅ AI がパターンを理解しやすい（インデントベース）
-- ✅ コメント対応（設定説明を含められる）
+- ✅ AI がパターンを理解しやすい(インデントベース)
+- ✅ コメント対応(設定説明を含められる)
 - ❌ 複雑な構造では冗長
 
 **JSON** (Event Log, API通信):
-- ✅ 標準的、あらゆる言語で対応
+- ✅ 標準的, あらゆる言語で対応
 - ✅ 厳密なスキーマ検証
 - ✅ JSON Lines (.jsonl) で追記型ログに適する
 - ❌ コメント非対応
@@ -1010,8 +1010,8 @@ task.model_dump()  # → dict (for YAML serialization)
 ```
 
 **AI-Friendly な点**:
-- モデル定義を見れば、制約がすべてわかる（ドキュメント不要）
-- AIが新しいモデルを生成しやすい（パターンが明確）
+- モデル定義を見れば, 制約がすべてわかる(ドキュメント不要)
+- AIが新しいモデルを生成しやすい(パターンが明確)
 
 ---
 
@@ -1019,7 +1019,7 @@ task.model_dump()  # → dict (for YAML serialization)
 
 **選定理由**:
 - ✅ Pythonで最も人気のCLIフレームワーク
-- ✅ 宣言的コマンド定義（デコレータベース）
+- ✅ 宣言的コマンド定義(デコレータベース)
 - ✅ 自動ヘルプ生成
 - ✅ AIがコマンド追加しやすい
 
@@ -1060,7 +1060,7 @@ if __name__ == "__main__":
 
 **選定理由**:
 - ✅ Python標準的なテストフレームワーク
-- ✅ AIがテストケース生成しやすい（シンプルな構文）
+- ✅ AIがテストケース生成しやすい(シンプルな構文)
 - ✅ Fixtures でテストデータ管理
 
 **例**:
@@ -1103,8 +1103,8 @@ def test_circular_dependency_detection(tm):
 ```
 
 **AI がテスト生成しやすい理由**:
-- 関数名が `test_` で始まる（パターン明確）
-- Assertion が `assert` 文（自然言語に近い）
+- 関数名が `test_` で始まる(パターン明確)
+- Assertion が `assert` 文(自然言語に近い)
 - Fixtures で前提条件を宣言的に定義
 
 ---
@@ -1112,9 +1112,9 @@ def test_circular_dependency_detection(tm):
 #### 4.2.6 AST解析: ast (標準ライブラリ)
 
 **選定理由**:
-- ✅ Python標準ライブラリ（依存なし）
+- ✅ Python標準ライブラリ(依存なし)
 - ✅ AIがコード構造を理解するのに適する
-- ✅ import文、関数定義、クラス定義を抽出可能
+- ✅ import文, 関数定義, クラス定義を抽出可能
 
 **例**:
 ```python
@@ -1160,7 +1160,7 @@ def extract_function_names(file_path: str) -> List[str]:
 
 **選定理由**:
 - ✅ Pythonで最も人気のGitライブラリ
-- ✅ AIがGit操作コードを生成しやすい（高レベルAPI）
+- ✅ AIがGit操作コードを生成しやすい(高レベルAPI)
 
 **例**:
 ```python
@@ -1188,12 +1188,12 @@ def get_last_commit_message() -> str:
 
 ### 5.1 MCP Protocol概要
 
-**MCP (Model Context Protocol)** は、AnthropicがAIツール統合のために策定したプロトコル。
+**MCP (Model Context Protocol)** は, AnthropicがAIツール統合のために策定したプロトコル.
 
 **特徴**:
 - JSON-RPC 2.0 ベース
-- Tools (AI が呼び出せる関数)、Resources (AI が読めるデータ)、Prompts (AI が使うテンプレート) をサポート
-- サーバープロセスとして動作（Claude Code が起動・管理）
+- Tools (AI が呼び出せる関数), Resources (AI が読めるデータ), Prompts (AI が使うテンプレート) をサポート
+- サーバープロセスとして動作(Claude Code が起動· 管理)
 
 ### 5.2 Knowledge Base MCP Server
 
@@ -1302,7 +1302,7 @@ if __name__ == "__main__":
 - `task_next`: 次のタスク取得
 - `deps_graph`: 依存グラフ取得
 
-（実装は KB Server と同様のパターン）
+(実装は KB Server と同様のパターン)
 
 ---
 
@@ -1472,7 +1472,7 @@ exit 0
 
 **目的**:
 - タスク開始前に競合をチェック
-- リスクが高い場合、警告を表示
+- リスクが高い場合, 警告を表示
 
 **実装**:
 ```bash
@@ -1535,7 +1535,7 @@ exit 0
    ```
 
 3. **機密情報の除外**:
-   - `.gitignore` に `.clauxton/config.yml` 推奨（API key等含む可能性）
+   - `.gitignore` に `.clauxton/config.yml` 推奨(API key等含む可能性)
    - Knowledge Base には機密情報を保存しない警告
 
 4. **テレメトリ Opt-In**:
@@ -1566,8 +1566,8 @@ class KnowledgeBaseEntry(BaseModel):
 ### 8.3 Git Credentials
 
 **絶対に保存しない**:
-- Git操作は GitPython 経由（システムの Git credential helper を使用）
-- Clauxton は Git credentials を保存・管理しない
+- Git操作は GitPython 経由(システムの Git credential helper を使用)
+- Clauxton は Git credentials を保存· 管理しない
 
 ---
 
@@ -1620,8 +1620,8 @@ pip install clauxton
 
 ### 9.2 Claude Code Plugin インストール
 
-**方法1: Plugin Marketplace（将来）**:
-- Claude Code 公式マーケットプレイスから検索・インストール
+**方法1: Plugin Marketplace(将来)**:
+- Claude Code 公式マーケットプレイスから検索· インストール
 
 **方法2: Manual Installation**:
 ```bash
@@ -1653,7 +1653,7 @@ cp -r clauxton/hooks my-project/
 
 **自動初期化**:
 ```bash
-# Claude Code起動時、Clauxtonが.clauxton/を自動作成
+# Claude Code起動時, Clauxtonが.clauxton/を自動作成
 cd my-project/
 claude-code
 
@@ -1829,10 +1829,10 @@ def test_complete_user_journey(tmp_project):
 
 | 処理 | 想定ボトルネック | 対策 |
 |---|---|---|
-| KB検索 | 大量エントリで線形探索 | 将来的にSQLite + FTS5（全文検索）移行 |
-| Dependency解析 | AST解析が重い | ファイルキャッシュ（変更時のみ再解析） |
-| Conflict検出 | Pairwise比較でO(n²) | 並列化、ファイル重複がある組のみ詳細解析 |
-| MCP Server起動 | 初回起動が遅い | 常駐プロセス化（Phase 2） |
+| KB検索 | 大量エントリで線形探索 | 将来的にSQLite + FTS5(全文検索)移行 |
+| Dependency解析 | AST解析が重い | ファイルキャッシュ(変更時のみ再解析) |
+| Conflict検出 | Pairwise比較でO(n²) | 並列化, ファイル重複がある組のみ詳細解析 |
+| MCP Server起動 | 初回起動が遅い | 常駐プロセス化(Phase 2) |
 
 ### 11.2 キャッシング戦略
 
@@ -1863,12 +1863,12 @@ def parse_file_cached(file_path: str) -> ast.AST:
 ### 12.1 Phase 3+ 機能
 
 **チーム機能**:
-- 共有Knowledge Base（PostgreSQL）
-- リアルタイムコラボレーション（WebSocket）
-- Task assignment（チームメンバーへ割り当て）
+- 共有Knowledge Base(PostgreSQL)
+- リアルタイムコラボレーション(WebSocket)
+- Task assignment(チームメンバーへ割り当て)
 
 **AI学習機能**:
-- 依存推論精度向上（ユーザーフィードバック学習）
+- 依存推論精度向上(ユーザーフィードバック学習)
 - プロジェクト固有パターン自動抽出
 
 **統合拡張**:
@@ -1880,9 +1880,9 @@ def parse_file_cached(file_path: str) -> ast.AST:
 
 ## 付録
 
-### A. API Reference（抜粋）
+### A. API Reference(抜粋)
 
-詳細は `docs/api-reference.md` 参照。
+詳細は `docs/api-reference.md` 参照.
 
 **Core API**:
 - `KnowledgeBase.add(entry) -> str`
@@ -1923,4 +1923,4 @@ stateDiagram-v2
 
 ---
 
-**実装準備完了！次は Phase 0 の実装開始です。**
+**実装準備完了!次は Phase 0 の実装開始です.**

@@ -391,10 +391,10 @@ Clauxton follows Claude Code's philosophy:
 
 | User Statement | MCP Call | Category |
 |----------------|----------|----------|
-| "FastAPIを使う" | `kb_add(title="FastAPI採用", category="architecture", ...)` | architecture |
-| "最大1000件まで" | `kb_add(title="データ上限", category="constraint", ...)` | constraint |
-| "JWTで認証" | `kb_add(title="JWT認証", category="decision", ...)` | decision |
-| "snake_case推奨" | `kb_add(title="命名規則", category="convention", ...)` | convention |
+| "Use FastAPI" | `kb_add(title="FastAPI Adoption", category="architecture", ...)` | architecture |
+| "Maximum 1000 items" | `kb_add(title="Data Limit", category="constraint", ...)` | constraint |
+| "JWT Authentication" | `kb_add(title="JWT Auth", category="decision", ...)` | decision |
+| "Prefer snake_case" | `kb_add(title="Naming Convention", category="convention", ...)` | convention |
 
 **Implementation Pattern**:
 ```python
@@ -419,25 +419,25 @@ if user_mentioned_tech_decision:
 **Example Workflow**:
 
 ```
-User: "Todoアプリを作りたい。FastAPIでバックエンド、Reactでフロントエンドを構築して。"
+User: "I want to create a Todo app. Build backend with FastAPI and frontend with React."
 
-↓ Claude Code思考プロセス ↓
+↓ Claude Code Thought Process ↓
 
 1. Feature breakdown:
-   - Backend: FastAPI初期化、API設計、DB設定
-   - Frontend: React初期化、UI実装
-   - Integration: API連携
+   - Backend: FastAPI initialization, API design, DB setup
+   - Frontend: React initialization, UI implementation
+   - Integration: API integration
 
 2. Generate YAML:
    ```yaml
    tasks:
-     - name: "FastAPI初期化"
-       description: "FastAPIプロジェクトをセットアップ"
+     - name: "FastAPI Initialization"
+       description: "Setup FastAPI project"
        priority: high
        files_to_edit: [backend/main.py, backend/requirements.txt]
        estimate: 1
-     - name: "API設計"
-       description: "Todo CRUD APIエンドポイントを定義"
+     - name: "API Design"
+       description: "Define Todo CRUD API endpoints"
        priority: high
        files_to_edit: [backend/api/todos.py]
        depends_on: [TASK-001]
@@ -460,12 +460,12 @@ User: "Todoアプリを作りたい。FastAPIでバックエンド、Reactでフ
 5. Start implementation:
    ```python
    next_task = task_next()
-   # → TASK-001 (FastAPI初期化)
+   # → TASK-001 (FastAPI Initialization)
    ```
 
 ↓ User sees ↓
 
-"10個のタスクを作成しました。TASK-001（FastAPI初期化）から始めます。"
+"Created 10 tasks.TASK-001(FastAPI Initialization)Starting from."
 ```
 
 **Key Points**:
@@ -710,56 +710,56 @@ Total: **17 tools** (15 current + 2 implemented in v0.10.0)
 ### Before Enhancement (Current v0.9.0-beta):
 
 ```
-User: "Todoアプリを作りたい"
+User: "I want to create a Todo app"
 ↓
-Claude Code: "まず、以下のコマンドを実行してください：
-              clauxton task add --name 'FastAPI初期化' ...
-              clauxton task add --name 'API設計' ...
-              ...（10回繰り返し）"
+Claude Code: "First, please run the following commands:
+              clauxton task add --name 'FastAPI Initialization' ...
+              clauxton task add --name 'API Design' ...
+              ..."
 ↓
-User: （手動で10回コマンド実行）
+User: (manually run commands 10 times)
 ↓
-Claude Code: "タスクを登録しました。始めましょう。"
+Claude Code: "tasks registered. Let's begin."
 ```
 
-**問題**: 会話フローが断絶、手間が多い
+**Problem**: Conversation flow is broken, too much manual work
 
 ---
 
 ### After Enhancement (v0.10.0):
 
 ```
-User: "Todoアプリを作りたい"
+User: "I want to create a Todo app"
 ↓
-Claude Code: （内部でYAML生成 → task_import_yaml()）
-             "10個のタスクを作成しました：
-              - TASK-001: FastAPI初期化
-              - TASK-002: API設計
-              - TASK-003: DB設定
+Claude Code: (internally generates YAML → task_import_yaml())
+             "Created 10 tasks:
+              - TASK-001: FastAPI Initialization
+              - TASK-002: API Design
+              - TASK-003: DB Setup
               ...
-              TASK-001から始めます。"
+              TASK-001Starting from."
 ↓
-User: "はい、お願いします"
+User: "Yes, please proceed"
 ↓
-Claude Code: （実装開始）
+Claude Code: (starts Implementation)
 ```
 
-**改善**: 自然な会話、手間なし、効率的
+**Improvement**: Natural conversation, no manual work, efficient
 
 ---
 
 ## 📈 Success Metrics
 
-**定量的指標**:
-- タスク登録時間: 5分 → 10秒（30倍高速化）
-- ユーザー操作回数: 10回 → 0回（完全自動化）
-- Claude哲学合致度: 70% → 95%（Composable + HITL実現）
+**Quantitative Metrics**:
+- task registration time: 5minutes → 10seconds(30times faster)
+- User operation count: 10times → 0times(Fully automated)
+- Claude Philosophy alignment: 70% → 95%(Composable + HITL Achieved)
 
-**定性的指標**:
-- ユーザーは自然な会話だけでタスク管理可能
-- Claude Codeが自律的にClauxtonを活用
-- 手動オーバーライドも常に可能（User Control）
-- 確認レベルをユーザーが選択可能（v0.10.0+）
+**Qualitative Metrics**:
+- Users can manage tasks through natural conversation only
+- Claude CodeClaude Code autonomously utilizes Clauxton
+- Manual override always available(User Control)
+- Users can choose confirmation level(v0.10.0+)
 
 ---
 

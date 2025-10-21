@@ -10,17 +10,17 @@
 
 1. [インストール方法](#インストール方法)
 2. [基本的な使い方](#基本的な使い方)
-3. [Conflict Detection（新機能）](#conflict-detection新機能)
-4. [MCP統合（Claude Code）](#mcp統合claude-code)
+3. [Conflict Detection(新機能)](#conflict-detection新機能)
+4. [MCP統合(Claude Code)](#mcp統合claude-code)
 5. [トラブルシューティング](#トラブルシューティング)
 
 ---
 
 ## インストール方法
 
-### 方法1: 開発版を直接使用（ローカル）
+### 方法1: 開発版を直接使用(ローカル)
 
-現在のclauxton開発ディレクトリで：
+現在のclauxton開発ディレクトリで: 
 
 ```bash
 # 1. 仮想環境をアクティベート
@@ -34,7 +34,7 @@ clauxton --version
 # 出力: clauxton, version 0.9.0-beta
 ```
 
-### 方法2: PyPIからインストール（将来）
+### 方法2: PyPIからインストール(将来)
 
 ```bash
 # PyPI公開後は以下でインストール可能
@@ -72,7 +72,7 @@ clauxton kb add
 clauxton kb add \
   --title "FastAPIを使用する" \
   --category architecture \
-  --content "バックエンドはFastAPIで構築。非同期処理とOpenAPI自動生成が理由。" \
+  --content "バックエンドはFastAPIで構築.非同期処理とOpenAPI自動生成が理由." \
   --tags "backend,api,fastapi"
 ```
 
@@ -84,7 +84,7 @@ clauxton kb add \
   Tags: backend, api, fastapi
 ```
 
-### Step 3: Knowledge Base検索（TF-IDF）
+### Step 3: Knowledge Base検索(TF-IDF)
 
 ```bash
 # TF-IDF relevance ranking search
@@ -105,7 +105,7 @@ Search Results for 'FastAPI' (1):
     Title: FastAPIを使用する
     Category: architecture
     Tags: backend, api, fastapi
-    Preview: バックエンドはFastAPIで構築。非同期処理とOpenAPI自動生成が理由。
+    Preview: バックエンドはFastAPIで構築.非同期処理とOpenAPI自動生成が理由.
 ```
 
 ### Step 4: タスク管理
@@ -126,7 +126,7 @@ clauxton task add \
   --estimate 4
 ```
 
-**重要**: `--files`はカンマ区切りで指定（スペースなし）
+**重要**: `--files`はカンマ区切りで指定(スペースなし)
 
 **出力例**:
 ```
@@ -148,7 +148,7 @@ clauxton task list --status pending
 clauxton task list --priority high
 ```
 
-#### 次のタスク推奨（AI）
+#### 次のタスク推奨(AI)
 
 ```bash
 clauxton task next
@@ -184,9 +184,9 @@ clauxton task update TASK-001 --priority critical
 
 ---
 
-## Conflict Detection（新機能）
+## Conflict Detection(新機能)
 
-v0.9.0-betaの新機能：タスク間のファイル競合を事前に検出できます。
+v0.9.0-betaの新機能: タスク間のファイル競合を事前に検出できます.
 
 ### 1. タスクの競合チェック
 
@@ -195,7 +195,7 @@ v0.9.0-betaの新機能：タスク間のファイル競合を事前に検出で
 clauxton conflict detect TASK-002
 ```
 
-**出力例（競合なし）**:
+**出力例(競合なし)**:
 ```
 Conflict Detection Report
 Task: TASK-002 - Add authentication endpoint
@@ -205,7 +205,7 @@ Files: 2 file(s)
 This task is safe to start working on.
 ```
 
-**出力例（競合あり）**:
+**出力例(競合あり)**:
 ```
 Conflict Detection Report
 Task: TASK-003 - Setup database
@@ -253,7 +253,7 @@ clauxton conflict check src/models/user.py
 clauxton conflict check src/api/auth.py src/models/user.py
 ```
 
-**出力例（使用中）**:
+**出力例(使用中)**:
 ```
 File Availability Check
 Files: 1 file(s)
@@ -267,7 +267,7 @@ Files: 1 file(s)
 💡 Coordinate before editing these files
 ```
 
-**出力例（利用可能）**:
+**出力例(利用可能)**:
 ```
 File Availability Check
 Files: 1 file(s)
@@ -277,15 +277,15 @@ Files: 1 file(s)
 
 ---
 
-## MCP統合（Claude Code）
+## MCP統合(Claude Code)
 
-ClautonはMCP (Model Context Protocol) を通じてClaude Codeと統合できます。
+ClautonはMCP (Model Context Protocol) を通じてClaude Codeと統合できます.
 
 ### セットアップ方法
 
 #### 1. MCPサーバー設定ファイル作成
 
-Claude Codeの設定ファイル（場所は環境による）:
+Claude Codeの設定ファイル(場所は環境による):
 
 **macOS/Linux**: `~/.config/claude-code/mcp-servers.json`
 **Windows**: `%APPDATA%\claude-code\mcp-servers.json`
@@ -304,9 +304,9 @@ Claude Codeの設定ファイル（場所は環境による）:
 
 #### 2. Claude Codeを再起動
 
-MCPサーバーが自動的に起動します。
+MCPサーバーが自動的に起動します.
 
-### 利用可能なMCPツール（15個）
+### 利用可能なMCPツール(15個)
 
 #### Knowledge Base Tools (6)
 - `kb_search` - TF-IDF relevance search
@@ -331,13 +331,13 @@ MCPサーバーが自動的に起動します。
 
 ### Claude Codeでの使用例
 
-Claude Codeに以下のように指示できます：
+Claude Codeに以下のように指示できます: 
 
 ```
 "タスクTASK-001の競合をチェックして"
 → detect_conflicts tool が呼ばれる
 
-"次に取り組むべきタスクは？"
+"次に取り組むべきタスクは?"
 → task_next tool が呼ばれる
 
 "FastAPIに関する情報を検索して"
@@ -346,7 +346,7 @@ Claude Codeに以下のように指示できます：
 
 ---
 
-## 実践例：チーム開発ワークフロー
+## 実践例: チーム開発ワークフロー
 
 ### シナリオ: 複数人で並行開発
 
@@ -356,7 +356,7 @@ Claude Codeに以下のように指示できます：
 # 1. 次のタスクを確認
 clauxton task next
 
-# 出力: TASK-002（認証機能追加）
+# 出力: TASK-002(認証機能追加)
 
 # 2. 競合チェック
 clauxton conflict detect TASK-002
@@ -364,10 +364,10 @@ clauxton conflict detect TASK-002
 # 出力: TASK-003とsrc/models/user.pyで競合
 
 # 3. 開発者Bに確認
-echo "開発者B、user.pyを編集中？"
+echo "開発者B, user.pyを編集中?"
 clauxton conflict check src/models/user.py
 
-# 出力: TASK-003（開発者B担当）がin_progress
+# 出力: TASK-003(開発者B担当)がin_progress
 
 # 4. 別のタスクを開始
 clauxton task update TASK-001 --status in_progress
@@ -380,7 +380,7 @@ clauxton task update TASK-001 --status in_progress
 clauxton task update TASK-003 --status completed
 
 # 2. 開発者Aに通知
-echo "user.py解放したよ！"
+echo "user.py解放したよ!"
 
 # 3. 開発者Aは再チェック
 clauxton conflict check src/models/user.py
@@ -403,7 +403,7 @@ source .venv/bin/activate  # Linux/macOS
 
 ### Q2: `Task with ID 'TASK-001' not found`
 
-**原因**: タスクが存在しない、またはIDが間違っている
+**原因**: タスクが存在しない, またはIDが間違っている
 
 **解決**:
 ```bash
@@ -422,7 +422,7 @@ clauxton task list
 # ❌ 間違い
 clauxton task add --name "Test" --files "file1.py" "file2.py"
 
-# ✅ 正しい（カンマ区切り、スペースなし）
+# ✅ 正しい(カンマ区切り, スペースなし)
 clauxton task add --name "Test" --files "file1.py,file2.py"
 ```
 
@@ -446,7 +446,7 @@ python -c "import sklearn; print('scikit-learn OK')"
 
 ### Q5: MCP統合が動作しない
 
-**原因**: MCPサーバー設定が間違っているか、Claude Codeが古い
+**原因**: MCPサーバー設定が間違っているか, Claude Codeが古い
 
 **解決**:
 1. MCPサーバー設定ファイルのパスを確認
@@ -461,14 +461,14 @@ python -c "import sklearn; print('scikit-learn OK')"
 
 ## ファイル構造
 
-Clauxton初期化後のディレクトリ構造：
+Clauxton初期化後のディレクトリ構造: 
 
 ```
 your-project/
 ├── .clauxton/
-│   ├── knowledge-base.yml      # Knowledge Base（YAML）
+│   ├── knowledge-base.yml      # Knowledge Base(YAML)
 │   ├── knowledge-base.yml.bak  # 自動バックアップ
-│   ├── tasks.yml               # タスク一覧（YAML）
+│   ├── tasks.yml               # タスク一覧(YAML)
 │   └── tasks.yml.bak           # 自動バックアップ
 ├── src/
 │   └── (your code)
@@ -476,9 +476,9 @@ your-project/
 ```
 
 **重要**:
-- `.clauxton/`はGit管理推奨（チーム共有）
-- バックアップファイル（`.bak`）は自動生成
-- パーミッション: 700（ディレクトリ）、600（ファイル）
+- `.clauxton/`はGit管理推奨(チーム共有)
+- バックアップファイル(`.bak`)は自動生成
+- パーミッション: 700(ディレクトリ), 600(ファイル)
 
 ---
 
@@ -498,17 +498,17 @@ clauxton conflict --help
 # プロジェクト初期化
 clauxton init
 
-# KB: 追加・検索
+# KB: 追加· 検索
 clauxton kb add
 clauxton kb search "query"
 clauxton kb list
 
-# タスク: 追加・一覧・次
+# タスク: 追加· 一覧· 次
 clauxton task add --name "Task name" --priority high
 clauxton task list
 clauxton task next
 
-# 競合チェック（v0.9.0-beta）
+# 競合チェック(v0.9.0-beta)
 clauxton conflict detect TASK-001
 clauxton conflict order TASK-001 TASK-002 TASK-003
 clauxton conflict check src/file.py
@@ -523,13 +523,13 @@ clauxton conflict check src/file.py
 - **MCP統合**: `docs/mcp-server.md` (14KB)
 - **Task Management**: `docs/task-management-guide.md` (20KB)
 - **Troubleshooting**: `docs/troubleshooting.md` (26KB)
-- **全ドキュメント**: `docs/` ディレクトリ（420KB+、41 files）
+- **全ドキュメント**: `docs/` ディレクトリ(420KB+, 41 files)
 
 ---
 
 ## フィードバック
 
-バグ報告や機能要望は以下へ：
+バグ報告や機能要望は以下へ: 
 - **GitHub Issues**: https://github.com/nakishiyaman/clauxton/issues
 - **Discussions**: https://github.com/nakishiyaman/clauxton/discussions
 

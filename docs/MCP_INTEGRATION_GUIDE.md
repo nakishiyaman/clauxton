@@ -34,7 +34,7 @@ source .venv/bin/activate
 clauxton --version
 # 出力: clauxton, version 0.9.0-beta
 
-# または、PyPI版を使用する場合（将来）
+# または, PyPI版を使用する場合(将来)
 pip install clauxton==0.9.0-beta
 ```
 
@@ -42,7 +42,7 @@ pip install clauxton==0.9.0-beta
 
 ## ステップ1: MCP設定ファイルの場所を確認
 
-Claude CodeのMCP設定ファイルは環境によって異なります：
+Claude CodeのMCP設定ファイルは環境によって異なります: 
 
 ### Linux/WSL
 
@@ -50,7 +50,7 @@ Claude CodeのMCP設定ファイルは環境によって異なります：
 # 設定ファイルの場所
 ~/.config/claude-code/mcp-servers.json
 
-# ディレクトリ作成（存在しない場合）
+# ディレクトリ作成(存在しない場合)
 mkdir -p ~/.config/claude-code
 ```
 
@@ -60,7 +60,7 @@ mkdir -p ~/.config/claude-code
 # 設定ファイルの場所
 ~/Library/Application Support/Claude/mcp-servers.json
 
-# ディレクトリ作成（存在しない場合）
+# ディレクトリ作成(存在しない場合)
 mkdir -p ~/Library/Application\ Support/Claude
 ```
 
@@ -70,7 +70,7 @@ mkdir -p ~/Library/Application\ Support/Claude
 # 設定ファイルの場所
 %APPDATA%\Claude\mcp-servers.json
 
-# 実際のパス（例）
+# 実際のパス(例)
 C:\Users\YourName\AppData\Roaming\Claude\mcp-servers.json
 ```
 
@@ -78,11 +78,11 @@ C:\Users\YourName\AppData\Roaming\Claude\mcp-servers.json
 
 ## ステップ2: MCP設定を追加
 
-### 方法A: 開発版を使用（現在の環境）
+### 方法A: 開発版を使用(現在の環境)
 
 **重要**: 現在のclauxton開発ディレクトリを使用する場合
 
-`~/.config/claude-code/mcp-servers.json` に以下を追加：
+`~/.config/claude-code/mcp-servers.json` に以下を追加: 
 
 ```json
 {
@@ -104,9 +104,9 @@ C:\Users\YourName\AppData\Roaming\Claude\mcp-servers.json
 - `PYTHONPATH`: clauxtonパッケージの場所を指定
 - `cwd`: `${workspaceFolder}` はClaude Codeが開いているプロジェクトのルートディレクトリ
 
-### 方法B: システムインストール版を使用（将来）
+### 方法B: システムインストール版を使用(将来)
 
-PyPIからインストールした場合：
+PyPIからインストールした場合: 
 
 ```json
 {
@@ -122,7 +122,7 @@ PyPIからインストールした場合：
 
 ### 既存のMCPサーバーがある場合
 
-既に他のMCPサーバーを使用している場合は、`clauxton`を追加：
+既に他のMCPサーバーを使用している場合は, `clauxton`を追加: 
 
 ```json
 {
@@ -177,7 +177,7 @@ clauxton init
 
 ### 4.2 Claude Codeで確認
 
-Claude Codeを開き、以下のような質問をしてみてください：
+Claude Codeを開き, 以下のような質問をしてみてください: 
 
 #### 確認1: Knowledge Base検索
 
@@ -187,7 +187,7 @@ User: "clauxtonでFastAPIに関する情報を検索して"
 
 **期待される動作**:
 - Claude Codeが `kb_search` ツールを呼び出す
-- 結果が表示される（まだエントリーがない場合は空）
+- 結果が表示される(まだエントリーがない場合は空)
 
 #### 確認2: タスク一覧
 
@@ -207,7 +207,7 @@ User: "利用可能なclauxtonツールを教えて"
 
 **期待される応答**:
 ```
-以下のClauxtonツールが利用可能です：
+以下のClauxtonツールが利用可能です: 
 
 Knowledge Base (6ツール):
 - kb_search: 情報を検索
@@ -291,7 +291,7 @@ clauxton init
    - `.clauxton/` のパーミッションを確認
    - `chmod 700 .clauxton`
 
-### 問題3: 「Task not found」エラー
+### 問題3: "Task not found"エラー
 
 **症状**: タスク操作時にエラー
 
@@ -307,7 +307,7 @@ clauxton task list
 
 ### 問題4: MCPサーバーのログを確認したい
 
-**ログの場所**（環境による）:
+**ログの場所**(環境による):
 
 Linux/WSL:
 ```bash
@@ -404,7 +404,7 @@ tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
   "estimate": 4.0                       // optional: hours
 }
 ```
-**説明**: 新しいタスクを追加（自動依存関係推論あり）
+**説明**: 新しいタスクを追加(自動依存関係推論あり)
 
 #### `task_list`
 ```json
@@ -413,7 +413,7 @@ tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
   "priority": "high"       // optional: critical, high, medium, low
 }
 ```
-**説明**: タスク一覧を取得（フィルタ可能）
+**説明**: タスク一覧を取得(フィルタ可能)
 
 #### `task_get`
 ```json
@@ -458,7 +458,7 @@ tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
   "task_id": "TASK-002"
 }
 ```
-**説明**: タスクの競合を検出（リスクレベル付き）
+**説明**: タスクの競合を検出(リスクレベル付き)
 
 **出力例**:
 ```json
@@ -557,18 +557,18 @@ Claude Code: kb_add ツールを使用
 {
   "title": "FastAPIを採用",
   "category": "architecture",
-  "content": "非同期処理、OpenAPI自動生成、高性能",
+  "content": "非同期処理, OpenAPI自動生成, 高性能",
   "tags": ["backend", "fastapi"]
 }
 
-User: "3つのタスクを追加：認証、データベース、API"
+User: "3つのタスクを追加: 認証, データベース, API"
 
 Claude Code: task_add を3回呼び出し
 TASK-001: 認証機能
 TASK-002: データベース接続
 TASK-003: API実装
 
-User: "競合はある？"
+User: "競合はある?"
 
 Claude Code: recommend_safe_order 呼び出し
 推奨順序: TASK-002 → TASK-001 → TASK-003
@@ -577,15 +577,15 @@ Claude Code: recommend_safe_order 呼び出し
 ### シナリオ2: タスク開始前のチェック
 
 ```
-User: "次に何をすべき？"
+User: "次に何をすべき?"
 
 Claude Code: task_next 呼び出し
-推奨: TASK-002（データベース接続）
+推奨: TASK-002(データベース接続)
 
-User: "TASK-002は安全？"
+User: "TASK-002は安全?"
 
 Claude Code: detect_conflicts("TASK-002") 呼び出し
-結果: 競合なし、開始可能
+結果: 競合なし, 開始可能
 
 User: "開始する"
 
@@ -601,21 +601,21 @@ User: "user.pyを編集したい"
 Claude Code: check_file_conflicts(["src/models/user.py"])
 結果: TASK-001が編集中
 
-User: "誰が使ってる？"
+User: "誰が使ってる?"
 
 Claude Code: task_get("TASK-001")
-詳細表示: 認証機能タスク、in_progress
+詳細表示: 認証機能タスク, in_progress
 
 User: "別のファイルで作業する"
 
-Claude Code: 了解、他のタスクを推奨
+Claude Code: 了解, 他のタスクを推奨
 ```
 
 ---
 
 ## 設定ファイルテンプレート
 
-### 完全版（開発環境用）
+### 完全版(開発環境用)
 
 ```json
 {
@@ -633,7 +633,7 @@ Claude Code: 了解、他のタスクを推奨
 }
 ```
 
-### シンプル版（PyPI版用・将来）
+### シンプル版(PyPI版用· 将来)
 
 ```json
 {
@@ -653,7 +653,7 @@ Claude Code: 了解、他のタスクを推奨
 
 1. ✅ MCP統合完了
 2. プロジェクトで `clauxton init` 実行
-3. Claude Codeで情報を追加・検索
+3. Claude Codeで情報を追加· 検索
 4. タスク管理を開始
 5. Conflict Detectionを活用
 
@@ -661,7 +661,7 @@ Claude Code: 了解、他のタスクを推奨
 
 ## サポート
 
-- **ドキュメント**: `docs/` ディレクトリ（420KB+）
+- **ドキュメント**: `docs/` ディレクトリ(420KB+)
 - **GitHub Issues**: https://github.com/nakishiyaman/clauxton/issues
 - **Quick Start**: `docs/quick-start.md`
 - **Troubleshooting**: `docs/troubleshooting.md`

@@ -25,7 +25,7 @@ Step 1: Initial Request
 User: "Todoアプリを作りたい"
 
 Step 2: Claude Code Generates Requirements
-Claude: "了解しました。以下の要件で進めます：
+Claude: "了解しました.以下の要件で進めます: 
 - FastAPI + React
 - JWT認証
 - PostgreSQL
@@ -39,8 +39,8 @@ Claude:
   ...
 
 Problem:
-❌ 要件が散逸（チャット履歴に埋もれる）
-❌ 設計書なし（後から参照できない）
+❌ 要件が散逸(チャット履歴に埋もれる)
+❌ 設計書なし(後から参照できない)
 ❌ Claude Codeは前のセッションを覚えていない
 ❌ チーム共有できない
 ```
@@ -68,7 +68,7 @@ Claude: Reads docs/tasks.md → Implements Task 1
 
 Problem:
 ⚠️ 手動でドキュメント作成を指示する必要がある
-⚠️ タスクは単なるMarkdown（構造化されていない）
+⚠️ タスクは単なるMarkdown(構造化されていない)
 ⚠️ タスクの進捗管理が手動
 ⚠️ 競合検出なし
 ```
@@ -209,14 +209,14 @@ Step 1: Initial Request
 User: "Todoアプリを作りたい"
 
 Step 2: Requirements Gathering (Interactive)
-Claude: "以下の要件でよろしいですか？
+Claude: "以下の要件でよろしいですか?
 - バックエンド: FastAPI
 - フロントエンド: React + TypeScript
 - データベース: PostgreSQL
 - 認証: JWT
 ..."
 
-User: "はい、それでお願いします"
+User: "はい, それでお願いします"
 
 Step 3: Claude Auto-Registers to Clauxton KB ✨
 Claude (internally):
@@ -225,7 +225,7 @@ Claude (internally):
   kb_add(title="JWT認証方式", category="decision", content="...")
 
 Step 4: Task Breakdown ✨
-Claude: "タスクを分解しました：
+Claude: "タスクを分解しました: 
 1. FastAPI初期化
 2. DB接続設定
 3. ユーザーモデル作成
@@ -241,8 +241,8 @@ Claude (internally):
   """)
 
 Step 5: Documentation Export (Optional) ✨
-Claude: docs/requirements.md を生成（Clauxton KBから）
-Claude: docs/tasks.md を生成（Clauxton Tasksから）
+Claude: docs/requirements.md を生成(Clauxton KBから)
+Claude: docs/tasks.md を生成(Clauxton Tasksから)
 
 Step 6: Implementation
 Claude: "TASK-001から始めます"
@@ -270,7 +270,7 @@ Claude (internally):
   kb_search("認証") → Finds "JWT認証方式" decision
   kb_search("FastAPI") → Understands backend stack
 
-Claude: "既存の設計では JWT 認証を採用していますね。
+Claude: "既存の設計では JWT 認証を採用していますね.
 これに従って実装します..."
 
 Step 3: Design & Task Generation ✨
@@ -282,8 +282,8 @@ Step 4: Conflict Detection ✨
 Claude (internally):
   detect_conflicts("TASK-005") → "⚠️ backend/models/user.py は TASK-003 で編集中"
 
-Claude: "注意: backend/models/user.py は別のタスクで編集中です。
-先に TASK-003 を完了させますか？"
+Claude: "注意: backend/models/user.py は別のタスクで編集中です.
+先に TASK-003 を完了させますか?"
 
 Step 5: Implementation
 Claude: Implements following existing architecture ✓
@@ -300,7 +300,7 @@ Claude: Implements following existing architecture ✓
 
 Example conversation:
 ```
-User: "FastAPIを使いたい。理由は非同期処理が必要だから"
+User: "FastAPIを使いたい.理由は非同期処理が必要だから"
 
 Claude (internally):
   Detects: Architecture decision
@@ -308,11 +308,11 @@ Claude (internally):
   Auto-registers: kb_add(
     title="FastAPI採用",
     category="architecture",
-    content="非同期処理が必要なため、FastAPIを採用。...",
+    content="非同期処理が必要なため, FastAPIを採用....",
     tags=["backend", "fastapi", "async"]
   )
 
-Claude (to user): "了解しました。FastAPIで進めます。"
+Claude (to user): "了解しました.FastAPIで進めます."
 ```
 
 **How**: Claude Code uses Clauxton MCP tools automatically
@@ -328,13 +328,13 @@ Example:
 ```
 User: "認証機能を実装して"
 
-Claude: "認証機能を以下のタスクに分解しました：
+Claude: "認証機能を以下のタスクに分解しました: 
 1. ユーザーモデル作成 (2h)
 2. JWT生成ユーティリティ (1h)
 3. ログインエンドポイント (3h)
 4. トークン検証ミドルウェア (2h)
 
-実装を開始してよろしいですか？"
+実装を開始してよろしいですか?"
 
 User: "はい"
 
@@ -440,13 +440,13 @@ clauxton task export docs/tasks.md
 
 **Example**:
 ```
-User: "認証はJWTにしよう。OAuth2は複雑すぎる"
+User: "認証はJWTにしよう.OAuth2は複雑すぎる"
 
 Claude (internally):
   Detects decision: JWT authentication
   Extracts reasoning: OAuth2 complexity
   Auto-suggests:
-    "この決定をKnowledge Baseに記録しますか？
+    "この決定をKnowledge Baseに記録しますか?
      タイトル: JWT認証採用
      カテゴリ: decision
      理由: OAuth2の複雑性を避けるため"

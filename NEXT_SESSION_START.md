@@ -1,6 +1,6 @@
 # Week 2 Day 15-16 開始ガイド
 
-## 現在の状態（2025-10-21）
+## 現在の状態(2025-10-21)
 
 ### 完了済み
 - ✅ Week 2 Day 1-2: YAML Bulk Import
@@ -23,7 +23,7 @@
 - **MCP Tools**: 20 tools
 - **CLI Commands**: +7 new commands
 
-### 実装完了機能（13個）
+### 実装完了機能(13個)
 1. ✅ YAML Bulk Import (30x faster)
 2. ✅ Undo/Rollback (7 operation types)
 3. ✅ Confirmation Prompts (threshold-based)
@@ -38,7 +38,7 @@
 12. ✅ Error Message Improvement (context + suggestion + commands)
 13. ✅ Configurable Confirmation Mode (always/auto/never)
 
-### ドキュメント完成（10ファイル）
+### ドキュメント完成(10ファイル)
 - ✅ ERROR_HANDLING_GUIDE.md (657 lines, 37 sections)
 - ✅ MIGRATION_v0.10.0.md (614 lines, 31 sections)
 - ✅ configuration-guide.md (482 lines)
@@ -54,7 +54,7 @@
 
 ## 次のタスク: Week 2 Day 15-16
 
-### オプション1: 統合テスト + バグ修正（推奨）
+### オプション1: 統合テスト + バグ修正(推奨)
 
 **目的**: リリース前の最終品質保証
 
@@ -67,7 +67,7 @@
 **テスト観点**:
 1. **Full Workflow Tests** (5 tests):
    - 初期化 → YAML import → タスク実行 → KB export → undo
-   - 複数エラーシナリオ（YAML safety + validation + recovery）
+   - 複数エラーシナリオ(YAML safety + validation + recovery)
    - 設定変更 → タスクimport → 確認モード検証
 
 2. **MCP Integration Tests** (3 tests):
@@ -122,12 +122,12 @@
 
 ---
 
-### オプション2: 直接リリース準備（Day 16のみ）
+### オプション2: 直接リリース準備(Day 16のみ)
 
-Day 15をスキップして直接リリース準備に進む。
+Day 15をスキップして直接リリース準備に進む.
 
 **理由**:
-- 既存テストが包括的（666 tests, 92% coverage）
+- 既存テストが包括的(666 tests, 92% coverage)
 - 全機能が個別テスト済み
 - 統合テストは必須ではない
 
@@ -146,7 +146,7 @@ cd /home/kishiyama-n/workspace/projects/clauxton
 git status
 git log --oneline -5
 
-# 2. テスト実行（現状確認）
+# 2. テスト実行(現状確認)
 source .venv/bin/activate
 pytest tests/ -q
 
@@ -160,7 +160,7 @@ echo "MCP Tools: $(grep -c '^@mcp.tool()' clauxton/mcp/server.py)"
 
 ---
 
-## Day 15 実装ファイル予定（オプション1選択時）
+## Day 15 実装ファイル予定(オプション1選択時)
 
 ### 新規作成ファイル
 1. `tests/integration/test_full_workflow.py` (NEW)
@@ -304,7 +304,7 @@ Thank you to all beta testers and contributors!
 
 ## 推奨開始フロー
 
-### オプション1選択時（統合テスト + リリース準備）
+### オプション1選択時(統合テスト + リリース準備)
 
 **Day 15 (統合テスト)**:
 1. **環境確認** (5分)
@@ -341,7 +341,7 @@ Thank you to all beta testers and contributors!
 
 ---
 
-### オプション2選択時（直接リリース準備）
+### オプション2選択時(直接リリース準備)
 
 **Day 16 のみ**:
 1. **環境確認** (5分)
@@ -360,7 +360,7 @@ Thank you to all beta testers and contributors!
 
 ## 品質チェックリスト
 
-リリース前に必ず実行：
+リリース前に必ず実行: 
 - [ ] `mypy clauxton/` - strict mode パス
 - [ ] `ruff check clauxton/ tests/` - linting パス
 - [ ] `pytest tests/ -q` - 全テストパス (676+ tests)
@@ -401,7 +401,7 @@ Thank you to all beta testers and contributors!
 
 ## 期待される成果
 
-### Day 15 完了時（オプション1選択時）
+### Day 15 完了時(オプション1選択時)
 - ✅ 10 新規統合テスト
 - ✅ 全統合テスト合格
 - ✅ パフォーマンステスト合格
@@ -409,7 +409,7 @@ Thank you to all beta testers and contributors!
 - ✅ テスト総数: 676+ tests
 - ✅ カバレッジ: 92%+
 
-### Day 16 完了時（両オプション共通）
+### Day 16 完了時(両オプション共通)
 - ✅ Version bumped to 0.10.0
 - ✅ CHANGELOG.md 完成
 - ✅ All quality checks passed
@@ -421,7 +421,7 @@ Thank you to all beta testers and contributors!
 
 ## 推奨オプション
 
-**推奨: オプション1（統合テスト + リリース準備）**
+**推奨: オプション1(統合テスト + リリース準備)**
 
 **理由**:
 - v0.10.0は13の新機能を含む大規模リリース
@@ -429,15 +429,15 @@ Thank you to all beta testers and contributors!
 - リリース後のバグ報告リスクを最小化
 - 高品質リリースの実績を維持
 
-**時間**: 2日（Day 15 + Day 16）
+**時間**: 2日(Day 15 + Day 16)
 
-**代替案**: オプション2（直接リリース準備）
+**代替案**: オプション2(直接リリース準備)
 - すぐにリリースしたい場合
 - 既存テストで十分と判断した場合
-- 時間: 1日（Day 16のみ）
+- 時間: 1日(Day 16のみ)
 
 ---
 
-**準備完了！新セッションでこのファイルを参照して Week 2 Day 15-16 を開始してください。**
+**準備完了!新セッションでこのファイルを参照して Week 2 Day 15-16 を開始してください.**
 
-**推奨**: Claude Code に「ガイドに従って Week 2 Day 15（統合テスト）の実装を開始してください」と伝える。
+**推奨**: Claude Code に"ガイドに従って Week 2 Day 15(統合テスト)の実装を開始してください"と伝える.

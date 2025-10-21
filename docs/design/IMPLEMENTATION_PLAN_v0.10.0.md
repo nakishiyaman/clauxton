@@ -8,29 +8,29 @@
 
 ## Executive Summary
 
-**Goal**: Claude Code との透過的統合を実現し、合致度 90% → 95% に向上
+**Goal**: Claude Code との透過的統合を実現し, 合致度 90% → 95% に向上
 
 **Scope**: 完全版 - Critical + Important 全機能実装
-1. 🔴 **CLAUDE.md強化**（Day 0、2時間）- 即効性あり
-2. 🔴 **YAML一括インポート**（Week 1、6時間）- 基盤機能
-3. 🔴 **Undo/Rollback機能**（Week 1、4時間）- 安全弁
-4. 🔴 **確認プロンプト**（Week 1、3時間）- 制御維持（閾値ベース）
-5. 🔴 **エラーリカバリー**（Week 1、4時間）- 対処明確
-6. 🔴 **YAML安全性チェック**（Week 1、1時間）- セキュリティ
-7. 🟡 **バリデーション強化**（Week 2、3時間）- エラー防止
-8. 🟡 **ログ機能**（Week 2、3時間）- 追跡
-9. 🟡 **KB→ドキュメント出力**（Week 2、4時間）- 人間可読性
-10. 🟡 **進捗表示 + パフォーマンス最適化**（Week 2、4時間）- UX + 大量対応
-11. 🟡 **バックアップ強化**（Week 2、2時間）- データ保護
-12. 🟡 **エラーメッセージ改善**（Week 2、2時間）- ユーザビリティ
-13. 🟡 **設定可能な確認モード**（Week 2、8時間）- Human-in-the-Loop強化
-14. 🟡 **追加テスト（+90個）**（Week 3、10時間）- 品質保証
-15. 🟡 **ドキュメント更新**（Week 3、4時間）- ユーザー教育
+1. 🔴 **CLAUDE.md強化**(Day 0, 2時間)- 即効性あり
+2. 🔴 **YAML一括インポート**(Week 1, 6時間)- 基盤機能
+3. 🔴 **Undo/Rollback機能**(Week 1, 4時間)- 安全弁
+4. 🔴 **確認プロンプト**(Week 1, 3時間)- 制御維持(閾値ベース)
+5. 🔴 **エラーリカバリー**(Week 1, 4時間)- 対処明確
+6. 🔴 **YAML安全性チェック**(Week 1, 1時間)- セキュリティ
+7. 🟡 **バリデーション強化**(Week 2, 3時間)- エラー防止
+8. 🟡 **ログ機能**(Week 2, 3時間)- 追跡
+9. 🟡 **KB→ドキュメント出力**(Week 2, 4時間)- 人間可読性
+10. 🟡 **進捗表示 + パフォーマンス最適化**(Week 2, 4時間)- UX + 大量対応
+11. 🟡 **バックアップ強化**(Week 2, 2時間)- データ保護
+12. 🟡 **エラーメッセージ改善**(Week 2, 2時間)- ユーザビリティ
+13. 🟡 **設定可能な確認モード**(Week 2, 8時間)- Human-in-the-Loop強化
+14. 🟡 **追加テスト(+90個)**(Week 3, 10時間)- 品質保証
+15. 🟡 **ドキュメント更新**(Week 3, 4時間)- ユーザー教育
 
 **Expected Impact**:
 - ユーザー体験: 10回のコマンド → 1回の会話
-- Claude哲学合致度: 70% → 95%（Composable & Scriptable + Human-in-the-Loop）
-- Human-in-the-Loop: 50% → 75-100%（設定可能）
+- Claude哲学合致度: 70% → 95%(Composable & Scriptable + Human-in-the-Loop)
+- Human-in-the-Loop: 50% → 75-100%(設定可能)
 - 開発効率: 5分の手動登録 → 10秒の自動登録
 - 安全性: Undo/確認/エラーリカバリー完備 + 設定可能な確認レベル
 - 品質: 480 tests (390 → +90), 94% coverage維持
@@ -43,11 +43,11 @@
 
 ### 1.1 Overview
 
-**目的**: Claude Codeに「Clauxtonをいつ・どう使うか」を明確に教える
+**目的**: Claude Codeに"Clauxtonをいつ· どう使うか"を明確に教える
 
 **時間**: 2時間
 
-**リリース**: 即時（コード変更不要、ドキュメント更新のみ）
+**リリース**: 即時(コード変更不要, ドキュメント更新のみ)
 
 **成果物**:
 - `CLAUDE.md` に新セクション追加
@@ -110,13 +110,13 @@ if user_mentioned_tech_decision:
 **Example Workflow**:
 
 ```
-User: "Todoアプリを作りたい。FastAPIでバックエンド、Reactでフロントエンドを構築して。"
+User: "Todoアプリを作りたい.FastAPIでバックエンド, Reactでフロントエンドを構築して."
 
 ↓ Claude Code思考プロセス ↓
 
 1. Feature breakdown:
-   - Backend: FastAPI初期化、API設計、DB設定
-   - Frontend: React初期化、UI実装
+   - Backend: FastAPI初期化, API設計, DB設定
+   - Frontend: React初期化, UI実装
    - Integration: API連携
 
 2. Generate YAML:
@@ -156,7 +156,7 @@ User: "Todoアプリを作りたい。FastAPIでバックエンド、Reactでフ
 
 ↓ User sees ↓
 
-"10個のタスクを作成しました。TASK-001（FastAPI初期化）から始めます。"
+"10個のタスクを作成しました.TASK-001(FastAPI初期化)から始めます."
 ```
 
 **Key Points**:
@@ -347,17 +347,17 @@ Total: **16 tools** (15 existing + 2 new in v0.10.0)
 ```
 User: "Todoアプリを作りたい"
 ↓
-Claude Code: "まず、以下のコマンドを実行してください：
+Claude Code: "まず, 以下のコマンドを実行してください: 
               clauxton task add --name 'FastAPI初期化' ...
               clauxton task add --name 'API設計' ...
-              ...（10回繰り返し）"
+              ...(10回繰り返し)"
 ↓
-User: （手動で10回コマンド実行）
+User: (手動で10回コマンド実行)
 ↓
-Claude Code: "タスクを登録しました。始めましょう。"
+Claude Code: "タスクを登録しました.始めましょう."
 ```
 
-**問題**: 会話フローが断絶、手間が多い
+**問題**: 会話フローが断絶, 手間が多い
 
 ---
 
@@ -366,34 +366,34 @@ Claude Code: "タスクを登録しました。始めましょう。"
 ```
 User: "Todoアプリを作りたい"
 ↓
-Claude Code: （内部でYAML生成 → task_import_yaml()）
-             "10個のタスクを作成しました：
+Claude Code: (内部でYAML生成 → task_import_yaml())
+             "10個のタスクを作成しました: 
               - TASK-001: FastAPI初期化
               - TASK-002: API設計
               - TASK-003: DB設定
               ...
-              TASK-001から始めます。"
+              TASK-001から始めます."
 ↓
-User: "はい、お願いします"
+User: "はい, お願いします"
 ↓
-Claude Code: （実装開始）
+Claude Code: (実装開始)
 ```
 
-**改善**: 自然な会話、手間なし、効率的
+**改善**: 自然な会話, 手間なし, 効率的
 
 ---
 
 ## 📈 Success Metrics
 
 **定量的指標**:
-- タスク登録時間: 5分 → 10秒（30倍高速化）
-- ユーザー操作回数: 10回 → 0回（完全自動化）
-- Claude哲学合致度: 70% → 95%（Composable実現）
+- タスク登録時間: 5分 → 10秒(30倍高速化)
+- ユーザー操作回数: 10回 → 0回(完全自動化)
+- Claude哲学合致度: 70% → 95%(Composable実現)
 
 **定性的指標**:
 - ユーザーは自然な会話だけでタスク管理可能
 - Claude Codeが自律的にClauxtonを活用
-- 手動オーバーライドも常に可能（User Control）
+- 手動オーバーライドも常に可能(User Control)
 
 ---
 ```
@@ -408,7 +408,7 @@ Claude Code: （実装開始）
 **内容**:
 ```markdown
 ## Clauxton Integration Philosophy
-...（上記の設計内容を追加）
+...(上記の設計内容を追加)
 ```
 
 **場所**: `CLAUDE.md` の "Code Style Guidelines" の後
@@ -425,7 +425,7 @@ Claude Code: （実装開始）
    ```
    User: "FastAPIを使ってTodoアプリを作りたい"
    ↓
-   Claude Code: （Clauxtonを使うか確認）
+   Claude Code: (Clauxtonを使うか確認)
    ```
 
 ---
@@ -434,7 +434,7 @@ Claude Code: （実装開始）
 **時間**: 30分
 
 **更新ファイル**:
-- `README.md`: Usage セクションに「Claude Code統合」を追加
+- `README.md`: Usage セクションに"Claude Code統合"を追加
 - `docs/quick-start.md`: 自然な会話例を追加
 
 ---
@@ -471,9 +471,9 @@ Add comprehensive guide for Claude Code to use Clauxton transparently.
 ### 1.4 Acceptance Criteria
 
 ✅ CLAUDE.md に新セクションが追加されている
-✅ Claude Code がファイルを読み込める（構文エラーなし）
-✅ 「いつ使うか」が明確に記述されている
-✅ 「どう使うか」が具体例付きで記述されている
+✅ Claude Code がファイルを読み込める(構文エラーなし)
+✅ "いつ使うか"が明確に記述されている
+✅ "どう使うか"が具体例付きで記述されている
 ✅ 手動オーバーライド方法が記述されている
 ✅ エラーハンドリング方法が記述されている
 ✅ README.md が更新されている
@@ -488,12 +488,12 @@ Add comprehensive guide for Claude Code to use Clauxton transparently.
 
 **時間**: 8時間
 
-**リリース**: v0.10.0（Week 1）
+**リリース**: v0.10.0(Week 1)
 
 **成果物**:
 - 新しいMCPツール: `task_import_yaml()`
 - 新しいCLIコマンド: `clauxton task import`
-- テストコード（20テスト）
+- テストコード(20テスト)
 - ドキュメント
 
 ---
@@ -508,7 +508,7 @@ Add comprehensive guide for Claude Code to use Clauxton transparently.
 # tasks.yml
 tasks:
   - name: "FastAPI初期化"
-    description: "FastAPIプロジェクトをセットアップし、基本的なディレクトリ構造を作成"
+    description: "FastAPIプロジェクトをセットアップし, 基本的なディレクトリ構造を作成"
     priority: high
     files_to_edit:
       - backend/main.py
@@ -517,7 +517,7 @@ tasks:
     estimate: 1
 
   - name: "API設計"
-    description: "Todo CRUD APIエンドポイントを定義し、OpenAPI仕様を作成"
+    description: "Todo CRUD APIエンドポイントを定義し, OpenAPI仕様を作成"
     priority: high
     files_to_edit:
       - backend/api/todos.py
@@ -537,7 +537,7 @@ tasks:
     estimate: 2
 
   - name: "認証実装"
-    description: "JWT認証を実装し、ユーザー管理APIを作成"
+    description: "JWT認証を実装し, ユーザー管理APIを作成"
     priority: medium
     files_to_edit:
       - backend/auth.py
@@ -552,18 +552,18 @@ tasks:
 
 | Field | Required | Type | Description | Example |
 |-------|----------|------|-------------|---------|
-| `name` | ✅ Yes | string | タスク名（簡潔に） | "FastAPI初期化" |
+| `name` | ✅ Yes | string | タスク名(簡潔に) | "FastAPI初期化" |
 | `description` | ❌ No | string | 詳細説明 | "FastAPIプロジェクトを..." |
 | `priority` | ❌ No | enum | critical/high/medium/low | "high" |
 | `files_to_edit` | ❌ No | list | 編集予定ファイル | ["main.py"] |
 | `depends_on` | ❌ No | list | 依存タスクID | ["TASK-001"] |
-| `estimate` | ❌ No | int | 見積もり時間（時間単位） | 2 |
+| `estimate` | ❌ No | int | 見積もり時間(時間単位) | 2 |
 | `tags` | ❌ No | list | タグ | ["backend", "api"] |
 
 **バリデーション**:
-- `name`: 必須、1文字以上、255文字以下
+- `name`: 必須, 1文字以上, 255文字以下
 - `priority`: "critical", "high", "medium", "low" のいずれか
-- `depends_on`: 実在するタスクIDのみ（循環依存検出）
+- `depends_on`: 実在するタスクIDのみ(循環依存検出)
 - `estimate`: 正の整数
 
 ---
@@ -1136,7 +1136,7 @@ class TestTaskImport:
         """Test handling of Unicode characters."""
         yaml_content = """
         tasks:
-          - name: "タスク名（日本語）"
+          - name: "タスク名(日本語)"
             description: "説明文with emojis 🎉"
             tags: [テスト, 日本語]
         """
@@ -1145,7 +1145,7 @@ class TestTaskImport:
 
         assert result["status"] == "success"
         task = tm.get(result["task_ids"][0])
-        assert task.name == "タスク名（日本語）"
+        assert task.name == "タスク名(日本語)"
         assert "🎉" in task.description
 
     def test_empty_tasks_list(self, tmp_path):
@@ -1212,7 +1212,7 @@ class TestTaskImport:
 | Day 5 | Integration testing | 1h | Pending |
 | Day 5 | Code review & bug fixes | 2h | Pending |
 
-**Total**: 14時間（バッファ含む、見積もりは8時間）
+**Total**: 14時間(バッファ含む, 見積もりは8時間)
 
 ---
 
@@ -1226,7 +1226,7 @@ class TestTaskImport:
 ✅ エラーメッセージが明確で役立つ
 ✅ 20個のテストが全てパスする
 ✅ テストカバレッジ95%以上
-✅ ドキュメントが更新されている（README, docs/）
+✅ ドキュメントが更新されている(README, docs/)
 ✅ CLAUDE.mdに使用例が追加されている
 
 ---
@@ -1235,17 +1235,17 @@ class TestTaskImport:
 
 ### 3.1 Overview
 
-**目的**: 構造化データ（KB）を人間が読めるMarkdownドキュメントに出力
+**目的**: 構造化データ(KB)を人間が読めるMarkdownドキュメントに出力
 
 **時間**: 4時間
 
-**リリース**: v0.10.0（Week 2）
+**リリース**: v0.10.0(Week 2)
 
 **成果物**:
 - 新しいMCPツール: `kb_export_docs()`
 - 新しいCLIコマンド: `clauxton kb export`
 - 生成されるドキュメント: `docs/architecture.md`, `docs/decisions.md`, etc.
-- テストコード（15テスト）
+- テストコード(15テスト)
 
 ---
 
@@ -1283,7 +1283,7 @@ docs/
 
 ### 概要
 
-FastAPIをバックエンドフレームワークとして採用。
+FastAPIをバックエンドフレームワークとして採用.
 
 ### 理由
 
@@ -1314,18 +1314,18 @@ FastAPIをバックエンドフレームワークとして採用。
 
 ### 概要
 
-PostgreSQLをデータベースとして採用。
+PostgreSQLをデータベースとして採用.
 
 ### 理由
 
 1. **信頼性**: エンタープライズグレードの安定性
 2. **JSON対応**: JSONBによる柔軟なデータ保存
-3. **拡張性**: パーティショニング、レプリケーション
+3. **拡張性**: パーティショニング, レプリケーション
 4. **オープンソース**: ライセンス費用なし
 
 ### 影響
 
-- 構造化データと非構造化データ（JSONB）を同時に扱える
+- 構造化データと非構造化データ(JSONB)を同時に扱える
 - スケーリングが容易
 - トランザクション保証が強固
 
@@ -1355,15 +1355,15 @@ PostgreSQLをデータベースとして採用。
 
 ### Context
 
-ユーザー認証の仕組みを決定する必要がある。
-以下の選択肢を検討：
+ユーザー認証の仕組みを決定する必要がある.
+以下の選択肢を検討: 
 - JWT (JSON Web Token)
 - Session-based authentication
 - OAuth 2.0
 
 ### Decision
 
-JWT認証を採用する。
+JWT認証を採用する.
 
 ### Rationale
 
@@ -1380,8 +1380,8 @@ JWT認証を採用する。
 - クロスドメイン対応が容易
 
 **Negative**:
-- トークン無効化が難しい（ブラックリスト必要）
-- トークンサイズが大きい（Cookieに比べて）
+- トークン無効化が難しい(ブラックリスト必要)
+- トークンサイズが大きい(Cookieに比べて)
 
 ### Implementation Notes
 
@@ -1399,11 +1399,11 @@ JWT認証を採用する。
 
 ### Context
 
-Pythonコードの命名規則を統一する必要がある。
+Pythonコードの命名規則を統一する必要がある.
 
 ### Decision
 
-PEP 8に従い、snake_case を採用。
+PEP 8に従い, snake_case を採用.
 
 ### Rationale
 
@@ -1413,7 +1413,7 @@ PEP 8に従い、snake_case を採用。
 
 ### Consequences
 
-- 全てのPython変数・関数名は `snake_case`
+- 全てのPython変数· 関数名は `snake_case`
 - クラス名は `PascalCase`
 - 定数は `UPPER_CASE`
 
@@ -1430,7 +1430,7 @@ PEP 8に従い、snake_case を採用。
 **コマンド仕様**:
 
 ```bash
-# 基本形（全カテゴリをdocs/にエクスポート）
+# 基本形(全カテゴリをdocs/にエクスポート)
 clauxton kb export docs/
 
 # 特定カテゴリのみ
@@ -1439,7 +1439,7 @@ clauxton kb export docs/ --category decision
 
 # 出力フォーマット指定
 clauxton kb export docs/ --format markdown  # デフォルト
-clauxton kb export docs/ --format html      # HTML形式（将来実装）
+clauxton kb export docs/ --format html      # HTML形式(将来実装)
 
 # 上書き確認
 clauxton kb export docs/ --force            # 確認なしで上書き
@@ -1826,7 +1826,7 @@ class TestKBExport:
 | Day 8 | Documentation | 1h | Pending |
 | Day 8 | Integration testing | 0.5h | Pending |
 
-**Total**: 7時間（バッファ含む、見積もりは4時間）
+**Total**: 7時間(バッファ含む, 見積もりは4時間)
 
 ---
 
@@ -1835,7 +1835,7 @@ class TestKBExport:
 ✅ `kb_export_docs()` MCPツールが実装されている
 ✅ `clauxton kb export` CLIコマンドが実装されている
 ✅ Markdown形式で出力される
-✅ ADR形式（decisions.md）が正しい
+✅ ADR形式(decisions.md)が正しい
 ✅ Unicode対応している
 ✅ 15個のテストが全てパスする
 ✅ テストカバレッジ95%以上
@@ -1851,28 +1851,28 @@ class TestKBExport:
 
 **時間**: 8時間
 
-**リリース**: v0.10.0（Week 2 Day 11）
+**リリース**: v0.10.0(Week 2 Day 11)
 
 **成果物**:
 - `ConfirmationManager` class
 - `.clauxton/config.yml` - 確認モード設定
 - `clauxton config` CLI commands
 - MCP tools with confirmation_mode parameter
-- テストコード（5テスト）
+- テストコード(5テスト)
 
 ---
 
 ### 4.2 Rationale
 
 **Human-in-the-Loop哲学との整合性**:
-- **現状**: 閾値ベースの確認のみ（10+ tasks時のみ確認）→ 50% HITL
-- **問題**: 小規模操作（1-9タスク）は確認なし → Human-in-the-Loopの不完全実装
+- **現状**: 閾値ベースの確認のみ(10+ tasks時のみ確認)→ 50% HITL
+- **問題**: 小規模操作(1-9タスク)は確認なし → Human-in-the-Loopの不完全実装
 - **Solution**: 設定可能な確認モード → ユーザーが制御レベルを選択
 
 **3つの確認モード**:
-1. **"always"**: 全ての書き込み操作で確認（100% HITL）
-2. **"auto"**: 閾値ベース（デフォルト、75% HITL）
-3. **"never"**: 確認なし、Undoのみ（25% HITL）
+1. **"always"**: 全ての書き込み操作で確認(100% HITL)
+2. **"auto"**: 閾値ベース(デフォルト, 75% HITL)
+3. **"never"**: 確認なし, Undoのみ(25% HITL)
 
 ---
 
@@ -1911,7 +1911,7 @@ logging:
 
 **デフォルト値**:
 - `confirmation_mode`: "auto" - バランス重視
-- 閾値は操作種別により異なる（小さい操作は低閾値）
+- 閾値は操作種別により異なる(小さい操作は低閾値)
 
 ---
 
@@ -2293,9 +2293,9 @@ class TestConfirmationManager:
 ### 4.6 Acceptance Criteria
 
 ✅ `ConfirmationManager` class が実装されている
-✅ `.clauxton/config.yml` が作成・読み込みされる
+✅ `.clauxton/config.yml` が作成· 読み込みされる
 ✅ `clauxton config set/get` CLI commands が動作する
-✅ 3つのモード（always/auto/never）が正しく動作する
+✅ 3つのモード(always/auto/never)が正しく動作する
 ✅ 閾値設定が動作する
 ✅ MCPツールが確認モードに対応している
 ✅ 7個のテストが全てパスする
@@ -2307,9 +2307,9 @@ class TestConfirmationManager:
 
 | Mode | HITL Level | Use Case |
 |------|------------|----------|
-| **always** | 100% | 厳格な管理、チーム開発、本番環境 |
-| **auto** | 75% | バランス重視（デフォルト） |
-| **never** | 25% | 高速開発、個人開発、テスト環境 |
+| **always** | 100% | 厳格な管理, チーム開発, 本番環境 |
+| **auto** | 75% | バランス重視(デフォルト) |
+| **never** | 25% | 高速開発, 個人開発, テスト環境 |
 
 **Expected Improvement**:
 - Before: 50% HITL (閾値のみ)
@@ -2342,7 +2342,7 @@ Week 2 (Important Features + KB Export):
   Day 11: 設定可能な確認モード (8h)
 
 Week 3 (Testing + Documentation + Release):
-  Day 12-13: 追加テスト（+90個） (10h)
+  Day 12-13: 追加テスト(+90個) (10h)
   Day 14: ドキュメント更新 (4h)
   Day 15: 統合テスト (4h)
   Day 16: バグ修正 + リリース準備 (4h)
@@ -2356,27 +2356,27 @@ Release: 2025-11-10
 ### 5.2 Milestones (REVISED)
 
 #### Milestone 0: CLAUDE.md Enhancement
-**Date**: 2025-10-20（Day 0）
+**Date**: 2025-10-20(Day 0)
 **Duration**: 2時間
 **Deliverables**:
-- ✅ CLAUDE.md に「Clauxton Integration Philosophy」セクション追加
+- ✅ CLAUDE.md に"Clauxton Integration Philosophy"セクション追加
 - ✅ README.md更新
 - ✅ Commit & Push
 
 **Success Criteria**:
 - Claude Codeが CLAUDE.md を読み込める
-- 「いつ・どう使うか」が明確
+- "いつ· どう使うか"が明確
 
 ---
 
 #### Milestone 1: Core + Critical Features
-**Date**: 2025-10-27（Week 1終了時）
-**Duration**: 18時間（Day 1-5）
+**Date**: 2025-10-27(Week 1終了時)
+**Duration**: 18時間(Day 1-5)
 **Deliverables**:
 - ✅ `task_import_yaml()` MCP tool + CLI command
 - ✅ `undo_last_operation()` MCP tool
-- ✅ 確認プロンプト機能（閾値設定）
-- ✅ エラーリカバリー（rollback/skip/abort）
+- ✅ 確認プロンプト機能(閾値設定)
+- ✅ エラーリカバリー(rollback/skip/abort)
 - ✅ YAML安全性チェック
 - ✅ 操作履歴機能
 - ✅ 20 tests for YAML import
@@ -2385,7 +2385,7 @@ Release: 2025-11-10
 
 **Success Criteria**:
 - Claude Codeが複数タスクを一括登録できる
-- 誤操作を取り消せる（Undo）
+- 誤操作を取り消せる(Undo)
 - 大量操作時に確認プロンプトが表示される
 - エラー発生時に適切にリカバリーできる
 - 危険なYAMLを検出できる
@@ -2394,41 +2394,41 @@ Release: 2025-11-10
 ---
 
 #### Milestone 2: Important Features + KB Export + Confirmation Mode
-**Date**: 2025-11-04（Week 2終了時）
-**Duration**: 26時間（Day 6-11）
+**Date**: 2025-11-04(Week 2終了時)
+**Duration**: 26時間(Day 6-11)
 **Deliverables**:
 - ✅ `kb_export_docs()` MCP tool + CLI command
 - ✅ `get_recent_logs()` MCP tool
-- ✅ 強化されたバリデーション（TaskValidator）
+- ✅ 強化されたバリデーション(TaskValidator)
 - ✅ 進捗表示機能
 - ✅ バッチ書き込み最適化
 - ✅ 複数世代バックアップ
 - ✅ 改善されたエラーメッセージ
-- ✅ `ConfirmationManager` class（NEW）
-- ✅ `.clauxton/config.yml` support（NEW）
-- ✅ `clauxton config` CLI commands（NEW）
+- ✅ `ConfirmationManager` class(NEW)
+- ✅ `.clauxton/config.yml` support(NEW)
+- ✅ `clauxton config` CLI commands(NEW)
 - ✅ 15 tests for KB export
 - ✅ 20 tests for enhanced validation
 - ✅ 5 tests for performance
-- ✅ 7 tests for confirmation mode（NEW）
+- ✅ 7 tests for confirmation mode(NEW)
 
 **Success Criteria**:
-- KBがMarkdown形式で出力される（ADR形式含む）
-- 操作ログが記録・確認できる
-- YAMLの品質が検証される（重複、無効値など）
-- 大量タスク（100個）のインポートが高速
+- KBがMarkdown形式で出力される(ADR形式含む)
+- 操作ログが記録· 確認できる
+- YAMLの品質が検証される(重複, 無効値など)
+- 大量タスク(100個)のインポートが高速
 - バックアップが複数世代保持される
 - エラーメッセージが明確で役立つ
-- 確認モード（always/auto/never）が動作する（NEW）
-- Human-in-the-Loop哲学が75-100%実現される（NEW）
+- 確認モード(always/auto/never)が動作する(NEW)
+- Human-in-the-Loop哲学が75-100%実現される(NEW)
 
 ---
 
 #### Milestone 3: Testing + Documentation
-**Date**: 2025-11-08（Week 3 Day 12-14）
+**Date**: 2025-11-08(Week 3 Day 12-14)
 **Duration**: 14時間
 **Deliverables**:
-- ✅ 90個の追加テスト（合計480 tests）
+- ✅ 90個の追加テスト(合計480 tests)
   - Undo/Rollback: 15 tests
   - 確認プロンプト: 5 tests
   - エラーリカバリー: 15 tests
@@ -2438,8 +2438,8 @@ Release: 2025-11-10
   - パフォーマンス: 5 tests
   - バックアップ: 5 tests
   - KB export: 15 tests
-  - Confirmation mode: 7 tests（NEW）
-  - 統合シナリオ: 13 tests（REVISED）
+  - Confirmation mode: 7 tests(NEW)
+  - 統合シナリオ: 13 tests(REVISED)
 - ✅ ドキュメント更新
   - README.md: 使用例追加
   - docs/YAML_FORMAT_GUIDE.md: 新規作成
@@ -2453,15 +2453,15 @@ Release: 2025-11-10
 - テストカバレッジ94%維持
 - ドキュメントが完全で正確
 - ユーザーが新機能を理解できる
-- Human-in-the-Loopガイドが追加されている（NEW）
+- Human-in-the-Loopガイドが追加されている(NEW)
 
 ---
 
 #### Milestone 4: v0.10.0 Release
-**Date**: 2025-11-10（Week 3 Day 15-16）
+**Date**: 2025-11-10(Week 3 Day 15-16)
 **Duration**: 8時間
 **Deliverables**:
-- ✅ 統合テスト完了（シナリオテスト）
+- ✅ 統合テスト完了(シナリオテスト)
 - ✅ バグ修正完了
 - ✅ All tests passing (480 tests)
 - ✅ Documentation complete
@@ -2483,11 +2483,11 @@ Release: 2025-11-10
 
 | Risk | Impact | Probability | Mitigation |
 |------|--------|-------------|------------|
-| 循環依存検出のバグ | High | Medium | 既存コードを再利用、追加テスト |
-| Unicode処理のエラー | Medium | Low | UTF-8明示、既存テストパターン活用 |
+| 循環依存検出のバグ | High | Medium | 既存コードを再利用, 追加テスト |
+| Unicode処理のエラー | Medium | Low | UTF-8明示, 既存テストパターン活用 |
 | MCPツールの統合問題 | High | Low | 既存15ツールと同じパターン |
-| テストが時間内に完了しない | Medium | Medium | コアロジック優先、エッジケースは後回し |
-| ドキュメント作成が遅延 | Low | Medium | テンプレート活用、既存ドキュメント参考 |
+| テストが時間内に完了しない | Medium | Medium | コアロジック優先, エッジケースは後回し |
+| ドキュメント作成が遅延 | Low | Medium | テンプレート活用, 既存ドキュメント参考 |
 
 ---
 
@@ -2495,17 +2495,17 @@ Release: 2025-11-10
 
 ### 6.1 v0.10.0リリース後の検証
 
-**Week 3（2025-11-04 → 2025-11-10）**:
+**Week 3(2025-11-04 → 2025-11-10)**:
 - ユーザーフィードバック収集
-- バグ修正（緊急対応）
+- バグ修正(緊急対応)
 - パフォーマンス測定
 
 ---
 
-### 6.2 v0.11.0計画（将来）
+### 6.2 v0.11.0計画(将来)
 
 **優先度MEDIUM機能**:
-1. **Human-in-the-Loop**（確認フロー）
+1. **Human-in-the-Loop**(確認フロー)
    - `kb_add_with_confirmation()`
    - ユーザー承認機能
    - 時間: 6時間
@@ -2517,10 +2517,10 @@ Release: 2025-11-10
 
 ---
 
-### 6.3 v0.12.0計画（将来）
+### 6.3 v0.12.0計画(将来)
 
 **優先度LOW機能**:
-1. **Repository Map**（自動索引）
+1. **Repository Map**(自動索引)
    - リポジトリ構造を自動分析
    - `repo_map()` MCP tool
    - 時間: 12時間
@@ -2561,13 +2561,13 @@ Release: 2025-11-10
 ### 7.3 Business Impact
 
 **開発効率**:
-- タスク登録: 30倍高速化（5分 → 10秒）
-- 会話フロー: 断絶なし（自然な対話）
-- チーム共有: Git管理可能（Markdown出力）
+- タスク登録: 30倍高速化(5分 → 10秒)
+- 会話フロー: 断絶なし(自然な対話)
+- チーム共有: Git管理可能(Markdown出力)
 
 **Claude哲学合致度**:
-- Before: 90%（7/10項目完全一致）
-- After: 95%（9/10項目完全一致）
+- Before: 90%(7/10項目完全一致)
+- After: 95%(9/10項目完全一致)
 - Composable & Scriptable: 70% → 95%
 - Human-in-the-Loop: 50% → 75-100% (設定可能)
 
@@ -2577,27 +2577,27 @@ Release: 2025-11-10
 
 ### 8.1 Summary
 
-このImplementation Planは、Clauxtonを Claude Code と透過的に統合し、
-Claude哲学との合致度を 90% → 95% に向上させるための詳細な計画です。
+このImplementation Planは, Clauxtonを Claude Code と透過的に統合し, 
+Claude哲学との合致度を 90% → 95% に向上させるための詳細な計画です.
 
 **3つの優先実装項目**:
-1. 🔴 CLAUDE.md強化（2時間、今すぐ）
-2. 🔴 YAML一括インポート（8時間、Week 1）
-3. 🟡 KB→ドキュメント出力（4時間、Week 2）
+1. 🔴 CLAUDE.md強化(2時間, 今すぐ)
+2. 🔴 YAML一括インポート(8時間, Week 1)
+3. 🟡 KB→ドキュメント出力(4時間, Week 2)
 
 **Expected Results**:
 - ユーザー体験: 10回のコマンド → 1回の会話
-- 開発効率: 5分 → 10秒（30倍高速化）
+- 開発効率: 5分 → 10秒(30倍高速化)
 - Claude哲学: "Composable" を完全実現
 
 ---
 
 ### 8.2 Next Steps
 
-1. ✅ この計画をレビュー・承認してもらう
-2. ✅ Milestone 1（CLAUDE.md強化）を即座に開始
-3. ✅ Week 1にMilestone 2（YAML一括インポート）を実装
-4. ✅ Week 2にMilestone 3（KB Export）を実装
+1. ✅ この計画をレビュー· 承認してもらう
+2. ✅ Milestone 1(CLAUDE.md強化)を即座に開始
+3. ✅ Week 1にMilestone 2(YAML一括インポート)を実装
+4. ✅ Week 2にMilestone 3(KB Export)を実装
 5. ✅ 2025-11-03に v0.10.0 リリース
 
 ---
