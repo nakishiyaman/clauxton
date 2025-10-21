@@ -1356,9 +1356,12 @@ def test_task_manager_string_path_operations(tmp_path: Path) -> None:
     assert retrieved.name == "Test Task"
 
     # List tasks
-    tasks = tm.list_tasks()
+    tasks = tm.list_all()
     assert len(tasks) == 1
 
     # Delete task
     tm.delete(task_id)
-    assert tm.get(task_id) is None
+
+    # Verify deletion (get should raise NotFoundError)
+    with pytest.raises(NotFoundError):
+        tm.get(task_id)

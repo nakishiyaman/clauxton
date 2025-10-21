@@ -1135,9 +1135,12 @@ def test_knowledge_base_string_path_operations(tmp_path: Path) -> None:
     assert retrieved.title == "Test Entry"
 
     # List entries
-    entries = kb.list_entries()
+    entries = kb.list_all()
     assert len(entries) == 1
 
     # Delete entry
     kb.delete(entry_id)
-    assert kb.get(entry_id) is None
+
+    # Verify deletion (get should raise NotFoundError)
+    with pytest.raises(NotFoundError):
+        kb.get(entry_id)
