@@ -400,3 +400,211 @@ def test_write_yaml_nested_structures(tmp_path: Path) -> None:
     read_data = read_yaml(yaml_file)
     assert read_data["level1"]["level2"]["level3"]["level4"]["value"] == "deep"
     assert read_data["level1"]["level2"]["level3"]["level4"]["list"] == [1, 2, 3]
+
+
+def test_read_yaml_dangerous_tags_blocked(tmp_path: Path) -> None:
+    """Test that yaml.safe_load blocks dangerous YAML tags."""
+    yaml_file = tmp_path / "dangerous.yml"
+
+    # YAML with Python object tag (should be blocked by safe_load)
+    dangerous_yaml = """
+version: 1.0
+entries:
+  - !!python/object/apply:os.system
+    args: ['echo hacked']
+"""
+    yaml_file.write_text(dangerous_yaml, encoding="utf-8")
+
+    # safe_load should raise an error for dangerous tags
+    with pytest.raises(ValidationError) as exc_info:
+        read_yaml(yaml_file)
+
+    assert "Failed to parse YAML" in str(exc_info.value)
+
+
+def test_read_yaml_with_special_characters(tmp_path: Path) -> None:
+    """Test reading YAML with special characters and escape sequences."""
+    yaml_file = tmp_path / "special.yml"
+    data = {
+        "quotes": 'He said "Hello"',
+        "apostrophes": "It's working",
+        "newlines": "Line 1\nLine 2",
+        "tabs": "Col1\tCol2",
+        "backslash": "C:\\Users\\test",
+    }
+
+    write_yaml(yaml_file, data, backup=False)
+
+    # Read back and verify
+    read_data = read_yaml(yaml_file)
+    assert read_data["quotes"] == 'He said "Hello"'
+    assert read_data["apostrophes"] == "It's working"
+    assert read_data["newlines"] == "Line 1\nLine 2"
+    assert read_data["tabs"] == "Col1\tCol2"
+    assert read_data["backslash"] == "C:\\Users\\test"
+
+
+def test_write_yaml_atomic_failure_cleanup(tmp_path: Path) -> None:
+    """Test that temporary file is cleaned up if write fails."""
+    yaml_file = tmp_path / "test.yml"
+    temp_file = tmp_path / "test.yml.tmp"
+
+    # Create a directory with the target file's name (will cause write to fail)
+    yaml_file.mkdir()
+
+    # Try to write (should fail)
+    with pytest.raises(ValidationError):
+        write_yaml(yaml_file, {"test": "data"}, backup=False)
+
+    # Verify temp file was cleaned up
+    assert not temp_file.exists()
+
+
+def test_write_yaml_backup_failure_continues(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Test that write continues even if backup creation fails."""
+    yaml_file = tmp_path / "test.yml"
+    backup_dir = tmp_path / "backups"
+
+    # Write initial data
+    write_yaml(yaml_file, {"version": "1.0"}, backup=False)
+
+    # Make backup directory read-only (backup will fail)
+    backup_dir.mkdir(mode=0o700)
+    backup_dir.chmod(0o500)
+
+    try:
+        # Write should succeed despite backup failure
+        write_yaml(yaml_file, {"version": "2.0"}, backup=True)
+
+        # Verify warning was printed
+        captured = capsys.readouterr()
+        assert "Warning" in captured.err
+        assert "backup" in captured.err.lower()
+
+        # Verify file was written with new data
+        read_data = read_yaml(yaml_file)
+        assert read_data["version"] == "2.0"
+    finally:
+        # Restore permissions
+        backup_dir.chmod(0o700)
+
+
+def test_write_yaml_readonly_parent_dir(tmp_path: Path) -> None:
+    """Test write fails gracefully when parent directory is read-only."""
+    readonly_dir = tmp_path / "readonly"
+    readonly_dir.mkdir(mode=0o700)
+    readonly_dir.chmod(0o500)
+
+    yaml_file = readonly_dir / "test.yml"
+
+    try:
+        with pytest.raises(ValidationError) as exc_info:
+            write_yaml(yaml_file, {"test": "data"}, backup=False)
+
+        assert "Failed to write YAML" in str(exc_info.value)
+    finally:
+        # Restore permissions for cleanup
+        readonly_dir.chmod(0o700)
+
+
+def test_read_yaml_permission_denied(tmp_path: Path) -> None:
+    """Test read fails gracefully when file is not readable."""
+    yaml_file = tmp_path / "unreadable.yml"
+    yaml_file.write_text("version: '1.0'", encoding="utf-8")
+
+    # Make file unreadable
+    yaml_file.chmod(0o000)
+
+    try:
+        with pytest.raises(ValidationError) as exc_info:
+            read_yaml(yaml_file)
+
+        assert "Failed to read YAML" in str(exc_info.value)
+    finally:
+        # Restore permissions for cleanup
+        yaml_file.chmod(0o600)
+
+
+def test_write_yaml_sequential_updates(tmp_path: Path) -> None:
+    """Test multiple sequential writes maintain data integrity."""
+    yaml_file = tmp_path / "sequential.yml"
+
+    # Write multiple times sequentially
+    for i in range(10):
+        data = {"version": "1.0", "count": i, "data": f"update_{i}"}
+        write_yaml(yaml_file, data, backup=False)
+
+    # Verify final state
+    final_data = read_yaml(yaml_file)
+    assert final_data["count"] == 9
+    assert final_data["data"] == "update_9"
+
+
+def test_write_yaml_very_large_file(tmp_path: Path) -> None:
+    """Test writing a very large YAML file (>1MB)."""
+    yaml_file = tmp_path / "large.yml"
+
+    # Create 10,000 entries (should be >1MB)
+    large_data = {
+        "version": "1.0",
+        "entries": [
+            {
+                "id": f"KB-20251019-{i:05d}",
+                "title": f"Entry {i}" * 10,  # Make each entry larger
+                "content": f"Content for entry {i}" * 50,
+                "tags": [f"tag{j}" for j in range(10)],
+            }
+            for i in range(10000)
+        ],
+    }
+
+    # Write large file
+    write_yaml(yaml_file, large_data, backup=False)
+
+    # Verify file size
+    file_size = yaml_file.stat().st_size
+    assert file_size > 1_000_000, f"File size {file_size} is not >1MB"
+
+    # Verify can read back
+    read_data = read_yaml(yaml_file)
+    assert len(read_data["entries"]) == 10000
+
+
+def test_validate_kb_yaml_entries_with_invalid_items() -> None:
+    """Test KB validation with entries containing invalid items."""
+    data = {
+        "version": "1.0",
+        "project_name": "test",
+        "entries": [
+            {"id": "KB-001", "title": "Valid entry"},
+            None,  # Invalid entry
+            {"id": "KB-002", "title": "Another valid entry"},
+        ],
+    }
+
+    # validate_kb_yaml only checks top-level structure, not individual entries
+    # Individual entry validation is done by KnowledgeBase class
+    result = validate_kb_yaml(data)
+    assert result is True
+
+
+def test_write_yaml_preserves_booleans_and_nulls(tmp_path: Path) -> None:
+    """Test that write_yaml correctly preserves booleans and null values."""
+    yaml_file = tmp_path / "types.yml"
+    data = {
+        "boolean_true": True,
+        "boolean_false": False,
+        "null_value": None,
+        "zero": 0,
+        "empty_string": "",
+    }
+
+    write_yaml(yaml_file, data, backup=False)
+
+    # Read back and verify types are preserved
+    read_data = read_yaml(yaml_file)
+    assert read_data["boolean_true"] is True
+    assert read_data["boolean_false"] is False
+    assert read_data["null_value"] is None
+    assert read_data["zero"] == 0
+    assert read_data["empty_string"] == ""

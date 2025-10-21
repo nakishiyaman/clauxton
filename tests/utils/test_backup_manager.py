@@ -391,3 +391,149 @@ def test_restore_backup_readonly_target(tmp_path: Path) -> None:
     finally:
         # Restore permissions for cleanup
         readonly_dir.chmod(0o700)
+
+
+def test_concurrent_backup_operations(tmp_path: Path) -> None:
+    """Test concurrent backup creation maintains data integrity."""
+    import threading
+
+    # Setup
+    test_file = tmp_path / "test.yml"
+    test_file.write_text("data\n", encoding="utf-8")
+
+    backup_dir = tmp_path / "backups"
+    bm = BackupManager(backup_dir)
+
+    # Create backups concurrently
+    errors = []
+
+    def create_backup_thread() -> None:
+        try:
+            bm.create_backup(test_file)
+        except Exception as e:
+            errors.append(e)
+
+    threads = [threading.Thread(target=create_backup_thread) for _ in range(10)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    # Verify all backups created successfully
+    assert len(errors) == 0
+    backups = bm.list_backups(test_file)
+    assert len(backups) == 10
+
+    # Verify all backups have unique names (microsecond precision)
+    backup_names = [b.name for b in backups]
+    assert len(backup_names) == len(set(backup_names))
+
+
+def test_cleanup_handles_missing_backups(tmp_path: Path) -> None:
+    """Test cleanup handles gracefully when backups are deleted externally."""
+    # Setup
+    test_file = tmp_path / "test.yml"
+    test_file.write_text("data\n", encoding="utf-8")
+
+    backup_dir = tmp_path / "backups"
+    bm = BackupManager(backup_dir)
+
+    # Create 5 backups
+    backups = []
+    for _ in range(5):
+        backup = bm.create_backup(test_file, max_generations=100)
+        backups.append(backup)
+        time.sleep(0.01)
+
+    # Manually delete one backup (simulating external deletion)
+    backups[2].unlink()
+
+    # Cleanup should handle missing file gracefully
+    deleted = bm.cleanup_old_backups(test_file, max_generations=3)
+
+    # Verify cleanup proceeded despite missing file
+    remaining = bm.list_backups(test_file)
+    assert len(remaining) <= 3
+
+
+def test_backup_rotation_maintains_newest(tmp_path: Path) -> None:
+    """Test backup rotation keeps newest backups and deletes oldest."""
+    # Setup
+    test_file = tmp_path / "test.yml"
+    backup_dir = tmp_path / "backups"
+    bm = BackupManager(backup_dir)
+
+    # Create 15 backups with identifiable content
+    backup_contents = []
+    for i in range(15):
+        content = f"version: {i}\n"
+        test_file.write_text(content, encoding="utf-8")
+        bm.create_backup(test_file, max_generations=5)
+        backup_contents.append(content)
+        time.sleep(0.01)
+
+    # Verify only 5 newest remain
+    backups = bm.list_backups(test_file)
+    assert len(backups) == 5
+
+    # Verify they contain the latest content (versions 10-14)
+    contents = [b.read_text(encoding="utf-8") for b in backups]
+    for i in range(10, 15):
+        assert f"version: {i}\n" in contents
+
+
+def test_restore_backup_overwrites_existing(tmp_path: Path) -> None:
+    """Test restore overwrites existing target file."""
+    # Setup
+    test_file = tmp_path / "test.yml"
+    test_file.write_text("original\n", encoding="utf-8")
+
+    backup_dir = tmp_path / "backups"
+    bm = BackupManager(backup_dir)
+
+    # Create backup
+    backup_path = bm.create_backup(test_file)
+
+    # Create target with different content
+    target_path = tmp_path / "target.yml"
+    target_path.write_text("existing content\n", encoding="utf-8")
+
+    # Restore (should overwrite)
+    bm.restore_backup(backup_path, target_path)
+
+    # Verify overwritten
+    assert target_path.read_text(encoding="utf-8") == "original\n"
+
+
+def test_list_backups_filters_by_filename(tmp_path: Path) -> None:
+    """Test list_backups only returns backups for the specified file."""
+    # Setup multiple files
+    file1 = tmp_path / "tasks.yml"
+    file2 = tmp_path / "knowledge-base.yml"
+    file3 = tmp_path / "tasks-backup.yml"  # Similar name but different
+    file1.write_text("tasks\n", encoding="utf-8")
+    file2.write_text("kb\n", encoding="utf-8")
+    file3.write_text("tasks-backup\n", encoding="utf-8")
+
+    backup_dir = tmp_path / "backups"
+    bm = BackupManager(backup_dir)
+
+    # Create backups
+    bm.create_backup(file1)
+    bm.create_backup(file1)
+    bm.create_backup(file2)
+    bm.create_backup(file3)
+
+    # Verify filtering
+    tasks_backups = bm.list_backups(file1)
+    kb_backups = bm.list_backups(file2)
+    tasks_backup_backups = bm.list_backups(file3)
+
+    assert len(tasks_backups) == 2
+    assert len(kb_backups) == 1
+    assert len(tasks_backup_backups) == 1
+
+    # Verify no cross-contamination
+    assert all("tasks_" in b.name for b in tasks_backups)
+    assert all("knowledge-base_" in b.name for b in kb_backups)
+    assert all("tasks-backup_" in b.name for b in tasks_backup_backups)
