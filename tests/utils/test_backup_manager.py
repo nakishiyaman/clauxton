@@ -449,7 +449,7 @@ def test_cleanup_handles_missing_backups(tmp_path: Path) -> None:
     backups[2].unlink()
 
     # Cleanup should handle missing file gracefully
-    deleted = bm.cleanup_old_backups(test_file, max_generations=3)
+    bm.cleanup_old_backups(test_file, max_generations=3)
 
     # Verify cleanup proceeded despite missing file
     remaining = bm.list_backups(test_file)

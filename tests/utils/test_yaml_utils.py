@@ -460,7 +460,9 @@ def test_write_yaml_atomic_failure_cleanup(tmp_path: Path) -> None:
     assert not temp_file.exists()
 
 
-def test_write_yaml_backup_failure_continues(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_write_yaml_backup_failure_continues(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Test that write continues even if backup creation fails."""
     yaml_file = tmp_path / "test.yml"
     backup_dir = tmp_path / "backups"
