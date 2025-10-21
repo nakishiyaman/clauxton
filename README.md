@@ -569,6 +569,7 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 ### Developer Guides
 - [Architecture Overview](docs/architecture.md) - System design and data flow
 - [Development Guide](docs/development.md) - Setup and contribution guide
+- [Technical Design](docs/technical-design.md) - Implementation details (⚠️ Currently in Japanese, English version coming in v0.10.1)
 - [Error Handling Guide](docs/ERROR_HANDLING_GUIDE.md) - Error handling patterns ✨ v0.10.0
 - [Performance Guide](docs/performance-guide.md) - Performance optimization ✨ v0.10.0
 - [Troubleshooting Guide](docs/troubleshooting.md) - Common issues and solutions ✨ v0.10.0
