@@ -35,12 +35,25 @@
 
 ### 🔄 Known Issues to Address
 
+**Critical Bug** (🔴 MUST FIX):
+1. ❌ **Path vs str type incompatibility** in KnowledgeBase and TaskManager
+   - **Issue**: Cannot pass string paths to constructors
+   - **Error**: `TypeError: unsupported operand type(s) for /: 'str' and 'str'`
+   - **Example**: `kb = KnowledgeBase('.clauxton')` fails
+   - **Impact**: API users cannot use intuitive string paths
+   - **Files affected**:
+     - `clauxton/utils/file_utils.py` (ensure_clauxton_dir)
+     - `clauxton/core/knowledge_base.py` (__init__)
+     - `clauxton/core/task_manager.py` (__init__)
+   - **Fix**: Accept `Path | str` and convert internally
+   - **Test**: Add tests for string path usage
+
 **Documentation**:
-1. ❌ **docs/technical-design.md** contains 2143 Japanese characters
+2. ❌ **docs/technical-design.md** contains 2143 Japanese characters
    - Currently linked from README.md, quick-start.md, roadmap.md
    - Needs English version
 
-2. ❌ **PyPI project page** shows outdated README.md
+3. ❌ **PyPI project page** shows outdated README.md
    - Contains "Phase 1: Complete (v0.9.0-beta)"
    - Contains "Phase 2: Conflict Detection (Complete in v0.9.0-beta)"
    - Contains "Beta Testing 🔄 In Progress"
@@ -57,6 +70,93 @@
 ---
 
 ## 🎯 Session 13 Goals
+
+### Phase 0: Critical Bug Fix (MUST DO FIRST)
+
+#### 0.1 Fix Path vs str type incompatibility
+**Estimated Time**: 45 minutes
+**Priority**: CRITICAL
+
+**Reason**: v0.10.0 has a bug preventing API users from using string paths
+
+**Implementation**:
+
+1. **Update file_utils.py** (10min):
+```python
+def ensure_clauxton_dir(root_dir: Path | str) -> Path:
+    """
+    Create .clauxton/ directory with proper permissions.
+
+    Args:
+        root_dir: Project root directory (Path or str)
+
+    Returns:
+        Path to .clauxton/ directory
+    """
+    root_path = Path(root_dir) if isinstance(root_dir, str) else root_dir
+    clauxton_dir = root_path / ".clauxton"
+    # ... rest of implementation
+```
+
+2. **Update knowledge_base.py** (5min):
+```python
+def __init__(self, root_dir: Path | str) -> None:
+    """
+    Initialize Knowledge Base at root_dir.
+
+    Args:
+        root_dir: Project root directory (Path or str)
+    """
+    self.root_dir: Path = Path(root_dir) if isinstance(root_dir, str) else root_dir
+    # ... rest of implementation
+```
+
+3. **Update task_manager.py** (5min):
+```python
+def __init__(self, root_dir: Path | str) -> None:
+    """
+    Initialize Task Manager at root_dir.
+
+    Args:
+        root_dir: Project root directory (Path or str)
+    """
+    self.root_dir: Path = Path(root_dir) if isinstance(root_dir, str) else root_dir
+    # ... rest of implementation
+```
+
+4. **Add tests** (15min):
+```python
+# tests/core/test_knowledge_base_path_compat.py
+def test_knowledge_base_accepts_string_path(tmp_path):
+    """Test that KnowledgeBase accepts string paths."""
+    kb = KnowledgeBase(str(tmp_path))
+    assert kb.root_dir == tmp_path
+
+def test_knowledge_base_accepts_path_object(tmp_path):
+    """Test that KnowledgeBase accepts Path objects."""
+    kb = KnowledgeBase(tmp_path)
+    assert kb.root_dir == tmp_path
+
+# Similar tests for TaskManager
+```
+
+5. **Run tests** (10min):
+```bash
+pytest tests/core/test_knowledge_base_path_compat.py -v
+pytest tests/core/test_task_manager.py -k "string" -v
+mypy clauxton
+```
+
+**Acceptance Criteria**:
+- ✅ `KnowledgeBase('.clauxton')` works
+- ✅ `KnowledgeBase(Path('.clauxton'))` works
+- ✅ `TaskManager('.clauxton')` works
+- ✅ `TaskManager(Path('.clauxton'))` works
+- ✅ All existing tests pass
+- ✅ mypy type checks pass
+- ✅ New tests added and passing
+
+---
 
 ### Phase 1: Critical Documentation (MUST DO)
 
@@ -134,17 +234,21 @@
 ```markdown
 ## [0.10.1] - 2025-10-22
 
+### Fixed
+- **CRITICAL**: Path vs str type incompatibility in KnowledgeBase and TaskManager
+  - Now accepts both `Path` and `str` for root_dir parameter
+  - Fixes `TypeError` when passing string paths to constructors
+  - Affects: `KnowledgeBase()`, `TaskManager()`, `ensure_clauxton_dir()`
+- Japanese text in search-algorithm.md example ("使い方" → "Tutorial")
+
 ### Documentation
 - Add TEST_WRITING_GUIDE.md for contributors
 - Replace Japanese technical-design.md with English version
-- Update README.md to remove Technical Design link (restored after rewrite)
-
-### Fixed
-- Japanese text in search-algorithm.md example
-- PyPI project page now shows updated README.md
+- PyPI project page now shows updated README.md (no Phase/beta references)
 
 ### Internal
 - Archive Japanese technical-design.md for reference
+- Add tests for string path compatibility
 ```
 
 ---
@@ -313,6 +417,8 @@ bandit:
 ## 📊 Success Criteria
 
 ### MUST Have (v0.10.1 Release)
+- ✅ **Path vs str bug FIXED** (KnowledgeBase, TaskManager accept both types)
+- ✅ String path compatibility tests added and passing
 - ✅ docs/technical-design.md is English
 - ✅ TEST_WRITING_GUIDE.md exists and is comprehensive
 - ✅ PyPI project page shows updated README.md (no Phase/beta references)
@@ -321,6 +427,7 @@ bandit:
 - ✅ All links verified on GitHub
 - ✅ All quality checks pass (mypy, ruff)
 - ✅ Package installs correctly from PyPI
+- ✅ Bug fix verified: `KnowledgeBase('.clauxton')` works
 
 ### NICE to Have (Can defer)
 - 🔄 PERFORMANCE_GUIDE.md
@@ -332,6 +439,8 @@ bandit:
 ## 🚀 Release Workflow Summary
 
 ```
+0. Fix Path vs str bug (45min) ⚠️ CRITICAL BUG FIX
+   ↓
 1. Create English technical-design.md (1.5h)
    ↓
 2. Create TEST_WRITING_GUIDE.md (1.5h)
@@ -367,7 +476,7 @@ bandit:
 17. Done! 🎉
 ```
 
-**Total Estimated Time**: 4-5 hours (core tasks only)
+**Total Estimated Time**: 4.5-5.5 hours (core tasks + bug fix)
 
 ---
 
