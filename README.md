@@ -507,9 +507,10 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 
 ### User Guides
 - [Quick Start Guide](docs/quick-start.md) - Get started in 5 minutes (CLI)
+- **[Developer Workflow Guide](docs/DEVELOPER_WORKFLOW_GUIDE.md)** - Complete development workflow with examples and diagrams ✨ NEW v0.10.0
 - **[Installation Guide](docs/INSTALLATION_GUIDE.md)** - Shell alias setup, virtual environment isolation explained ✨ NEW
 - **[How to Use v0.9.0-beta](docs/HOW_TO_USE_v0.9.0-beta.md)** - Complete usage guide for current version ✨ NEW
-- **[MCP Integration Guide](docs/MCP_INTEGRATION_GUIDE.md)** - Step-by-step Claude Code integration (15 tools) ✨ NEW
+- **[MCP Integration Guide](docs/MCP_INTEGRATION_GUIDE.md)** - Step-by-step Claude Code integration (20 tools) ✨ NEW
 - [Tutorial: Your First Knowledge Base](docs/tutorial-first-kb.md) - 30-minute beginner guide
 - [Use Cases & Examples](docs/use-cases.md) - Real-world scenarios and implementations
 - [MCP Server Quick Start](docs/mcp-server-quickstart.md) - Get started with Claude Code
