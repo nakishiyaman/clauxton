@@ -17,15 +17,8 @@ from click.testing import CliRunner
 
 from clauxton.cli.main import cli
 from clauxton.core.knowledge_base import KnowledgeBase
-from clauxton.core.models import (
-    CategoryType,
-    KnowledgeBaseEntry,
-    TaskPriorityType,
-    Task,
-    TaskStatusType,
-)
+from clauxton.core.models import KnowledgeBaseEntry, Task
 from clauxton.core.task_manager import TaskManager
-
 
 # ============================================================================
 # CLI Fixtures

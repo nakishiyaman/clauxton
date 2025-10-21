@@ -18,11 +18,9 @@ Tests cover complete task workflows through CLI:
 
 from pathlib import Path
 
-import pytest
 from click.testing import CliRunner
 
 from clauxton.cli.main import cli
-
 
 # ============================================================================
 # Test 1: Complete Task Lifecycle
@@ -369,7 +367,7 @@ def test_task_conflict_detection(runner: CliRunner, tmp_path: Path, extract_id) 
             ],
         )
         assert result.exit_code == 0
-        task_b = extract_id(result.output, "TASK-")
+        _ = extract_id(result.output, "TASK-")  # task_b
 
         # Detect conflicts
         result = runner.invoke(cli, ["conflict", "detect", task_a])
@@ -580,7 +578,7 @@ def test_task_export_import_cycle(
 
         # Export (if supported)
         # Note: Export command may not exist, so this is optional
-        export_file = Path("export.yml")
+        # export_file = Path("export.yml")
         # result = runner.invoke(cli, ["task", "export", str(export_file)])
 
         # For now, just verify import worked

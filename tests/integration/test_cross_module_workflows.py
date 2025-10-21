@@ -11,11 +11,9 @@ Tests cover interactions between multiple Clauxton modules:
 
 from pathlib import Path
 
-import pytest
 from click.testing import CliRunner
 
 from clauxton.cli.main import cli
-
 
 # ============================================================================
 # Test 1: KB and Task Integration

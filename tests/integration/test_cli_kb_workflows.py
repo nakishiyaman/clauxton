@@ -15,11 +15,9 @@ Tests cover complete KB workflows through CLI:
 
 from pathlib import Path
 
-import pytest
 from click.testing import CliRunner
 
 from clauxton.cli.main import cli
-
 
 # ============================================================================
 # Test 1: Complete KB CRUD Workflow
@@ -279,7 +277,7 @@ def test_kb_category_filtering(runner: CliRunner, tmp_path: Path) -> None:
             # Check if category or entry appears
             output_lower = result.output.lower()
             assert (
-                category in output_lower or f"entry" in output_lower
+                category in output_lower or "entry" in output_lower
             ), f"Category {category} not found"
 
         # Filter by each category

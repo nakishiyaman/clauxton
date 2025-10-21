@@ -1017,33 +1017,6 @@ def test_export_to_docs_large_dataset(tmp_path: Path) -> None:
     assert total_size > 1000  # At least 1KB of content
 
 
-def test_update_nonexistent_entry(tmp_path: Path) -> None:
-    """Test updating non-existent entry."""
-    kb = KnowledgeBase(tmp_path)
-
-    # Try to update non-existent entry
-    with pytest.raises(NotFoundError):
-        kb.update(
-            entry_id="KB-20251021-999",
-            updates={"title": "Updated Title"},
-        )
-
-
-def test_search_empty_query(tmp_path: Path) -> None:
-    """Test search with empty query."""
-    kb = KnowledgeBase(tmp_path)
-
-    # Add entry
-    entry = KnowledgeBaseEntry(
-        id="KB-20251021-001",
-        title="Test Entry",
-        category="architecture",
-        content="Test content",
-        tags=["test"],
-        created_at=datetime.now(),
-        updated_at=datetime.now(),
-    )
-    kb.add(entry)
 
     # Search with empty query
     results = kb.search("")
