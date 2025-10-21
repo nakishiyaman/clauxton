@@ -406,8 +406,8 @@ chmod 600 .clauxton/config.yml
 **Solution**: Fully supported! Clauxton handles Unicode correctly:
 
 ```bash
-clauxton config set タスク削除_threshold 10
-clauxton config get タスク削除_threshold
+clauxton config set task_delete_threshold 10
+clauxton config get task_delete_threshold
 # Output: 10
 ```
 

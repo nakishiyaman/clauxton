@@ -300,7 +300,7 @@ entries:
 - ✅ Git-friendly (commit to version control)
 - ✅ Secure permissions (600 for files, 700 for directories)
 - ✅ Automatic backups (.yml.bak)
-- ✅ Unicode support (日本語, emoji, etc.)
+- ✅ Unicode support (Japanese, emoji, etc.)
 
 ---
 

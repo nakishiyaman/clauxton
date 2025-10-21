@@ -1,88 +1,88 @@
-# Clauxton MCP統合ガイド - Claude Code
+# Clauxton MCP Integration Guide - Claude Code
 
 **Version**: v0.9.0-beta
 **Updated**: 2025-10-20
 
 ---
 
-## 📋 目次
+## 📋 Table of Contents
 
-1. [前提条件](#前提条件)
-2. [ステップ1: MCP設定ファイルの場所を確認](#ステップ1-mcp設定ファイルの場所を確認)
-3. [ステップ2: MCP設定を追加](#ステップ2-mcp設定を追加)
-4. [ステップ3: Claude Codeを再起動](#ステップ3-claude-codeを再起動)
-5. [ステップ4: 動作確認](#ステップ4-動作確認)
-6. [トラブルシューティング](#トラブルシューティング)
-7. [利用可能なツール一覧](#利用可能なツール一覧)
+1. [Prerequisites](#prerequisites)
+2. [Step 1: Locate MCP Configuration File](#step-1-locate-mcp-configuration-file)
+3. [Step 2: Add MCP Configuration](#step-2-add-mcp-configuration)
+4. [Step 3: Restart Claude Code](#step-3-restart-claude-code)
+5. [Step 4: Verify Integration](#step-4-verify-integration)
+6. [Troubleshooting](#troubleshooting)
+7. [Available Tools Reference](#available-tools-reference)
 
 ---
 
-## 前提条件
+## Prerequisites
 
-### 必須環境
+### Required Environment
 
-- ✅ Claude Code がインストール済み
-- ✅ Python 3.11+ がインストール済み
-- ✅ Clauxton v0.9.0-beta がインストール済み
+- ✅ Claude Code installed
+- ✅ Python 3.11+ installed
+- ✅ Clauxton v0.9.0-beta installed
 
-### Clauxton インストール確認
+### Verify Clauxton Installation
 
 ```bash
-# 開発版を使用する場合
+# If using development version
 cd /home/kishiyama-n/workspace/projects/clauxton
 source .venv/bin/activate
 clauxton --version
-# 出力: clauxton, version 0.9.0-beta
+# Output: clauxton, version 0.9.0-beta
 
-# または, PyPI版を使用する場合(将来)
+# Or, if using PyPI version (future)
 pip install clauxton==0.9.0-beta
 ```
 
 ---
 
-## ステップ1: MCP設定ファイルの場所を確認
+## Step 1: Locate MCP Configuration File
 
-Claude CodeのMCP設定ファイルは環境によって異なります: 
+Claude Code's MCP configuration file location varies by platform:
 
 ### Linux/WSL
 
 ```bash
-# 設定ファイルの場所
+# Configuration file location
 ~/.config/claude-code/mcp-servers.json
 
-# ディレクトリ作成(存在しない場合)
+# Create directory if it doesn't exist
 mkdir -p ~/.config/claude-code
 ```
 
 ### macOS
 
 ```bash
-# 設定ファイルの場所
+# Configuration file location
 ~/Library/Application Support/Claude/mcp-servers.json
 
-# ディレクトリ作成(存在しない場合)
+# Create directory if it doesn't exist
 mkdir -p ~/Library/Application\ Support/Claude
 ```
 
 ### Windows
 
 ```powershell
-# 設定ファイルの場所
+# Configuration file location
 %APPDATA%\Claude\mcp-servers.json
 
-# 実際のパス(例)
+# Actual path (example)
 C:\Users\YourName\AppData\Roaming\Claude\mcp-servers.json
 ```
 
 ---
 
-## ステップ2: MCP設定を追加
+## Step 2: Add MCP Configuration
 
-### 方法A: 開発版を使用(現在の環境)
+### Method A: Using Development Version (Current Environment)
 
-**重要**: 現在のclauxton開発ディレクトリを使用する場合
+**Important**: If using the current clauxton development directory
 
-`~/.config/claude-code/mcp-servers.json` に以下を追加: 
+Add the following to `~/.config/claude-code/mcp-servers.json`:
 
 ```json
 {
@@ -99,14 +99,14 @@ C:\Users\YourName\AppData\Roaming\Claude\mcp-servers.json
 }
 ```
 
-**ポイント**:
-- `command`: 仮想環境のPythonを直接指定
-- `PYTHONPATH`: clauxtonパッケージの場所を指定
-- `cwd`: `${workspaceFolder}` はClaude Codeが開いているプロジェクトのルートディレクトリ
+**Key Points**:
+- `command`: Directly specify the virtual environment's Python
+- `PYTHONPATH`: Specify the location of the clauxton package
+- `cwd`: `${workspaceFolder}` is the root directory of the project Claude Code has open
 
-### 方法B: システムインストール版を使用(将来)
+### Method B: Using System Installation (Future)
 
-PyPIからインストールした場合: 
+If installed from PyPI:
 
 ```json
 {
@@ -120,9 +120,9 @@ PyPIからインストールした場合:
 }
 ```
 
-### 既存のMCPサーバーがある場合
+### If You Have Existing MCP Servers
 
-既に他のMCPサーバーを使用している場合は, `clauxton`を追加: 
+If you're already using other MCP servers, add `clauxton`:
 
 ```json
 {
@@ -145,115 +145,115 @@ PyPIからインストールした場合:
 
 ---
 
-## ステップ3: Claude Codeを再起動
+## Step 3: Restart Claude Code
 
-### VSCode版 Claude Code
+### VSCode Claude Code
 
-1. VSCodeを完全に終了
-2. VSCodeを再起動
-3. Claude Code拡張機能が自動的にMCPサーバーを起動
+1. Completely exit VSCode
+2. Restart VSCode
+3. Claude Code extension will automatically start MCP servers
 
-### CLI版 Claude Code
+### CLI Claude Code
 
 ```bash
-# プロセスを完全に終了
+# Completely terminate the process
 pkill -9 claude-code
 
-# 再起動
+# Restart
 claude-code
 ```
 
 ---
 
-## ステップ4: 動作確認
+## Step 4: Verify Integration
 
-### 4.1 プロジェクトでClauxtonを初期化
+### 4.1 Initialize Clauxton in Your Project
 
 ```bash
-# テストプロジェクトで初期化
+# Initialize in your test project
 cd /path/to/test-project
 clauxton init
 ```
 
-### 4.2 Claude Codeで確認
+### 4.2 Verify in Claude Code
 
-Claude Codeを開き, 以下のような質問をしてみてください: 
+Open Claude Code and try asking questions like:
 
-#### 確認1: Knowledge Base検索
-
-```
-User: "clauxtonでFastAPIに関する情報を検索して"
-```
-
-**期待される動作**:
-- Claude Codeが `kb_search` ツールを呼び出す
-- 結果が表示される(まだエントリーがない場合は空)
-
-#### 確認2: タスク一覧
+#### Verification 1: Knowledge Base Search
 
 ```
-User: "現在のタスクを一覧表示して"
+User: "Search for FastAPI information in clauxton"
 ```
 
-**期待される動作**:
-- Claude Codeが `task_list` ツールを呼び出す
-- タスク一覧が表示される
+**Expected Behavior**:
+- Claude Code calls the `kb_search` tool
+- Results are displayed (empty if no entries yet)
 
-#### 確認3: ツールが利用可能か確認
+#### Verification 2: Task List
 
 ```
-User: "利用可能なclauxtonツールを教えて"
+User: "List current tasks"
 ```
 
-**期待される応答**:
-```
-以下のClauxtonツールが利用可能です: 
+**Expected Behavior**:
+- Claude Code calls the `task_list` tool
+- Task list is displayed
 
-Knowledge Base (6ツール):
-- kb_search: 情報を検索
-- kb_add: 情報を追加
-- kb_list: 一覧表示
+#### Verification 3: Check Available Tools
+
+```
+User: "What clauxton tools are available?"
+```
+
+**Expected Response**:
+```
+The following Clauxton tools are available:
+
+Knowledge Base (6 tools):
+- kb_search: Search information
+- kb_add: Add information
+- kb_list: List entries
 ...
 
-Task Management (6ツール):
-- task_add: タスク追加
-- task_list: タスク一覧
+Task Management (6 tools):
+- task_add: Add task
+- task_list: List tasks
 ...
 
-Conflict Detection (3ツール):
-- detect_conflicts: 競合検出
-- recommend_safe_order: 最適順序
-- check_file_conflicts: ファイル競合確認
+Conflict Detection (3 tools):
+- detect_conflicts: Detect conflicts
+- recommend_safe_order: Optimal order
+- check_file_conflicts: Check file conflicts
 ```
 
 ---
 
-## トラブルシューティング
+## Troubleshooting
 
-### 問題1: MCPサーバーが起動しない
+### Issue 1: MCP Server Won't Start
 
-**症状**: Claude Codeでツールが表示されない
+**Symptom**: Tools not appearing in Claude Code
 
-**確認方法**:
+**How to Verify**:
 ```bash
-# 手動でMCPサーバーを起動してエラーを確認
+# Manually start MCP server to check for errors
 cd /path/to/test-project
 source /home/kishiyama-n/workspace/projects/clauxton/.venv/bin/activate
 python -m clauxton.mcp.server
 ```
 
-**よくある原因**:
-1. **Pythonパスが間違っている**
-   - `command` のパスを確認
-   - `which python` の出力と一致させる
+**Common Causes**:
+1. **Incorrect Python path**
+   - Verify the `command` path
+   - Match it with `which python` output
 
-2. **PYTHONPATHが設定されていない**
-   - 開発版を使う場合は `env.PYTHONPATH` が必須
+2. **PYTHONPATH not set**
+   - When using development version, `env.PYTHONPATH` is required
 
-3. **cwdが正しくない**
-   - `${workspaceFolder}` が展開されているか確認
+3. **Incorrect cwd**
+   - Verify that `${workspaceFolder}` is being expanded
 
-**解決方法**:
+**Solution**:
 ```json
 {
   "mcpServers": {
@@ -269,45 +269,45 @@ python -m clauxton.mcp.server
 }
 ```
 
-### 問題2: ツールは表示されるが実行できない
+### Issue 2: Tools Appear But Can't Execute
 
-**症状**: ツール呼び出し時にエラー
+**Symptom**: Error when calling tools
 
-**確認方法**:
+**How to Verify**:
 ```bash
-# プロジェクトが初期化されているか確認
+# Check if project is initialized
 cd /path/to/your-project
 ls -la .clauxton/
 
-# 初期化されていない場合
+# If not initialized
 clauxton init
 ```
 
-**よくある原因**:
-1. **Clauxtonが初期化されていない**
-   - プロジェクトで `clauxton init` を実行
+**Common Causes**:
+1. **Clauxton not initialized**
+   - Run `clauxton init` in the project
 
-2. **パーミッションエラー**
-   - `.clauxton/` のパーミッションを確認
+2. **Permission errors**
+   - Check `.clauxton/` permissions
    - `chmod 700 .clauxton`
 
-### 問題3: "Task not found"エラー
+### Issue 3: "Task not found" Error
 
-**症状**: タスク操作時にエラー
+**Symptom**: Error during task operations
 
-**確認方法**:
+**How to Verify**:
 ```bash
-# タスクが存在するか確認
+# Check if task exists
 clauxton task list
 
-# タスクIDの形式を確認
-# 正: TASK-001, TASK-002, ...
-# 誤: task-1, Task1, ...
+# Verify task ID format
+# Correct: TASK-001, TASK-002, ...
+# Incorrect: task-1, Task1, ...
 ```
 
-### 問題4: MCPサーバーのログを確認したい
+### Issue 4: Want to Check MCP Server Logs
 
-**ログの場所**(環境による):
+**Log Location** (varies by platform):
 
 Linux/WSL:
 ```bash
@@ -319,15 +319,15 @@ macOS:
 ~/Library/Logs/Claude/
 ```
 
-**ログ確認**:
+**Check Logs**:
 ```bash
-# 最新のログを確認
+# View latest logs
 tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
 ```
 
 ---
 
-## 利用可能なツール一覧
+## Available Tools Reference
 
 ### Knowledge Base Tools (6)
 
@@ -339,18 +339,18 @@ tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
   "limit": 10                   // optional
 }
 ```
-**説明**: TF-IDF relevance searchで情報を検索
+**Description**: Search information using TF-IDF relevance search
 
 #### `kb_add`
 ```json
 {
-  "title": "FastAPIを使用",
+  "title": "Using FastAPI",
   "category": "architecture",
-  "content": "バックエンドはFastAPIで構築...",
+  "content": "Backend built with FastAPI...",
   "tags": ["backend", "api"]
 }
 ```
-**説明**: Knowledge Baseに新しいエントリーを追加
+**Description**: Add a new entry to Knowledge Base
 
 #### `kb_list`
 ```json
@@ -358,7 +358,7 @@ tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
   "category": "architecture"  // optional
 }
 ```
-**説明**: すべてのエントリーを一覧表示
+**Description**: List all entries
 
 #### `kb_get`
 ```json
@@ -366,19 +366,19 @@ tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
   "entry_id": "KB-20251020-001"
 }
 ```
-**説明**: 特定のエントリーを取得
+**Description**: Get a specific entry
 
 #### `kb_update`
 ```json
 {
   "entry_id": "KB-20251020-001",
-  "title": "新しいタイトル",      // optional
-  "content": "新しい内容",        // optional
-  "category": "decision",         // optional
-  "tags": ["updated"]             // optional
+  "title": "New title",          // optional
+  "content": "New content",        // optional
+  "category": "decision",          // optional
+  "tags": ["updated"]              // optional
 }
 ```
-**説明**: エントリーを更新
+**Description**: Update an entry
 
 #### `kb_delete`
 ```json
@@ -386,7 +386,7 @@ tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
   "entry_id": "KB-20251020-001"
 }
 ```
-**説明**: エントリーを削除
+**Description**: Delete an entry
 
 ---
 
@@ -395,16 +395,16 @@ tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
 #### `task_add`
 ```json
 {
-  "name": "認証機能追加",
-  "description": "JWT認証を実装",       // optional
-  "priority": "high",                   // optional: critical, high, medium, low
-  "depends_on": ["TASK-001"],          // optional
-  "files": ["src/api/auth.py"],        // optional
-  "kb_refs": ["KB-20251020-001"],      // optional
-  "estimate": 4.0                       // optional: hours
+  "name": "Add authentication feature",
+  "description": "Implement JWT authentication",  // optional
+  "priority": "high",                             // optional: critical, high, medium, low
+  "depends_on": ["TASK-001"],                     // optional
+  "files": ["src/api/auth.py"],                   // optional
+  "kb_refs": ["KB-20251020-001"],                 // optional
+  "estimate": 4.0                                  // optional: hours
 }
 ```
-**説明**: 新しいタスクを追加(自動依存関係推論あり)
+**Description**: Add a new task (with automatic dependency inference)
 
 #### `task_list`
 ```json
@@ -413,7 +413,7 @@ tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
   "priority": "high"       // optional: critical, high, medium, low
 }
 ```
-**説明**: タスク一覧を取得(フィルタ可能)
+**Description**: Get task list (filterable)
 
 #### `task_get`
 ```json
@@ -421,7 +421,7 @@ tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
   "task_id": "TASK-001"
 }
 ```
-**説明**: 特定のタスク詳細を取得
+**Description**: Get specific task details
 
 #### `task_update`
 ```json
@@ -429,16 +429,16 @@ tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
   "task_id": "TASK-001",
   "status": "in_progress",   // optional
   "priority": "critical",    // optional
-  "name": "新しい名前"       // optional
+  "name": "New name"          // optional
 }
 ```
-**説明**: タスクを更新
+**Description**: Update a task
 
 #### `task_next`
 ```json
 {}
 ```
-**説明**: AI推奨の次タスクを取得
+**Description**: Get AI-recommended next task
 
 #### `task_delete`
 ```json
@@ -446,7 +446,7 @@ tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
   "task_id": "TASK-001"
 }
 ```
-**説明**: タスクを削除
+**Description**: Delete a task
 
 ---
 
@@ -458,18 +458,18 @@ tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
   "task_id": "TASK-002"
 }
 ```
-**説明**: タスクの競合を検出(リスクレベル付き)
+**Description**: Detect conflicts for a task (with risk level)
 
-**出力例**:
+**Output Example**:
 ```json
 {
   "task_id": "TASK-002",
-  "task_name": "認証機能追加",
+  "task_name": "Add authentication feature",
   "files": ["src/api/auth.py", "src/models/user.py"],
   "conflicts": [
     {
       "with_task_id": "TASK-003",
-      "with_task_name": "データベース接続",
+      "with_task_name": "Database connection",
       "risk_level": "HIGH",
       "overlap_percentage": 75.0,
       "conflicting_files": ["src/models/user.py"]
@@ -484,9 +484,9 @@ tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
   "task_ids": ["TASK-001", "TASK-002", "TASK-003"]
 }
 ```
-**説明**: 競合を最小化する最適な実行順序を推奨
+**Description**: Recommend optimal execution order to minimize conflicts
 
-**出力例**:
+**Output Example**:
 ```json
 {
   "recommended_order": [
@@ -518,9 +518,9 @@ tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
   "files": ["src/models/user.py", "src/api/auth.py"]
 }
 ```
-**説明**: 特定ファイルを編集中のタスクを確認
+**Description**: Check which tasks are editing specific files
 
-**出力例**:
+**Output Example**:
 ```json
 {
   "files_in_use": [
@@ -530,7 +530,7 @@ tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
       "tasks": [
         {
           "task_id": "TASK-002",
-          "task_name": "認証機能追加",
+          "task_name": "Add authentication feature",
           "status": "in_progress"
         }
       ]
@@ -546,76 +546,76 @@ tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
 
 ---
 
-## 実践例: Claude Codeでの使用
+## Practical Examples: Using with Claude Code
 
-### シナリオ1: プロジェクト開始時
+### Scenario 1: Starting a Project
 
 ```
-User: "このプロジェクトでFastAPIを使う理由を記録して"
+User: "Record the reason for using FastAPI in this project"
 
-Claude Code: kb_add ツールを使用
+Claude Code: Uses kb_add tool
 {
-  "title": "FastAPIを採用",
+  "title": "Adopting FastAPI",
   "category": "architecture",
-  "content": "非同期処理, OpenAPI自動生成, 高性能",
+  "content": "Async processing, automatic OpenAPI generation, high performance",
   "tags": ["backend", "fastapi"]
 }
 
-User: "3つのタスクを追加: 認証, データベース, API"
+User: "Add 3 tasks: authentication, database, API"
 
-Claude Code: task_add を3回呼び出し
-TASK-001: 認証機能
-TASK-002: データベース接続
-TASK-003: API実装
+Claude Code: Calls task_add 3 times
+TASK-001: Authentication feature
+TASK-002: Database connection
+TASK-003: API implementation
 
-User: "競合はある?"
+User: "Are there any conflicts?"
 
-Claude Code: recommend_safe_order 呼び出し
-推奨順序: TASK-002 → TASK-001 → TASK-003
+Claude Code: Calls recommend_safe_order
+Recommended order: TASK-002 → TASK-001 → TASK-003
 ```
 
-### シナリオ2: タスク開始前のチェック
+### Scenario 2: Pre-Task Check
 
 ```
-User: "次に何をすべき?"
+User: "What should I do next?"
 
-Claude Code: task_next 呼び出し
-推奨: TASK-002(データベース接続)
+Claude Code: Calls task_next
+Recommendation: TASK-002 (Database connection)
 
-User: "TASK-002は安全?"
+User: "Is TASK-002 safe?"
 
-Claude Code: detect_conflicts("TASK-002") 呼び出し
-結果: 競合なし, 開始可能
+Claude Code: Calls detect_conflicts("TASK-002")
+Result: No conflicts, safe to start
 
-User: "開始する"
+User: "Start it"
 
 Claude Code: task_update("TASK-002", status="in_progress")
-更新完了
+Updated successfully
 ```
 
-### シナリオ3: ファイル編集前の確認
+### Scenario 3: Pre-File-Edit Check
 
 ```
-User: "user.pyを編集したい"
+User: "I want to edit user.py"
 
 Claude Code: check_file_conflicts(["src/models/user.py"])
-結果: TASK-001が編集中
+Result: TASK-001 is editing it
 
-User: "誰が使ってる?"
+User: "Who's using it?"
 
 Claude Code: task_get("TASK-001")
-詳細表示: 認証機能タスク, in_progress
+Details displayed: Authentication feature task, in_progress
 
-User: "別のファイルで作業する"
+User: "I'll work on another file"
 
-Claude Code: 了解, 他のタスクを推奨
+Claude Code: Understood, recommending other tasks
 ```
 
 ---
 
-## 設定ファイルテンプレート
+## Configuration File Templates
 
-### 完全版(開発環境用)
+### Full Version (Development Environment)
 
 ```json
 {
@@ -633,7 +633,7 @@ Claude Code: 了解, 他のタスクを推奨
 }
 ```
 
-### シンプル版(PyPI版用· 将来)
+### Simple Version (PyPI Version - Future)
 
 ```json
 {
@@ -649,19 +649,19 @@ Claude Code: 了解, 他のタスクを推奨
 
 ---
 
-## 次のステップ
+## Next Steps
 
-1. ✅ MCP統合完了
-2. プロジェクトで `clauxton init` 実行
-3. Claude Codeで情報を追加· 検索
-4. タスク管理を開始
-5. Conflict Detectionを活用
+1. ✅ MCP integration complete
+2. Run `clauxton init` in your project
+3. Add and search information in Claude Code
+4. Start task management
+5. Utilize Conflict Detection
 
 ---
 
-## サポート
+## Support
 
-- **ドキュメント**: `docs/` ディレクトリ(420KB+)
+- **Documentation**: `docs/` directory (420KB+)
 - **GitHub Issues**: https://github.com/nakishiyaman/clauxton/issues
 - **Quick Start**: `docs/quick-start.md`
 - **Troubleshooting**: `docs/troubleshooting.md`
@@ -670,5 +670,5 @@ Claude Code: 了解, 他のタスクを推奨
 
 **Clauxton v0.9.0-beta MCP Integration** ✅
 
-*最終更新: 2025-10-20*
-*ステータス: Production Ready*
+*Last Updated: 2025-10-20*
+*Status: Production Ready*

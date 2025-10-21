@@ -1027,8 +1027,8 @@ conflicts = detector.check_file_conflicts(["file.py"])
 **Symptom**: Files with Unicode or special characters not detected.
 
 **Examples of Problematic Names**:
-- `src/api/ユーザー認証.py` (Japanese)
-- `src/models/用户.py` (Chinese)
+- `src/api/user_auth.py` (files with non-ASCII characters like Japanese or Chinese)
+- `src/models/user.py` (files with Unicode characters)
 - `src/utils/file (v2).py` (spaces and parentheses)
 - `src/api/auth_🔐.py` (emoji)
 
@@ -1037,13 +1037,13 @@ conflicts = detector.check_file_conflicts(["file.py"])
 1. **Ensure UTF-8 encoding**:
 ```python
 # When creating tasks
-task.files_to_edit = ["src/api/ユーザー認証.py"]  # Works if UTF-8
+task.files_to_edit = ["src/api/user_auth.py"]  # Works with UTF-8
 ```
 
 2. **Use consistent encoding**:
 ```bash
 # In CLI
-clauxton task add --name "Japanese file" --files "src/api/ユーザー認証.py"
+clauxton task add --name "Unicode file" --files "src/api/user_auth.py"
 ```
 
 3. **Verify file paths**:

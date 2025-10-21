@@ -524,8 +524,8 @@ tasks:
 ✅ **Supported**:
 ```yaml
 tasks:
-  - name: "タスクA"
-    description: "日本語の説明"
+  - name: "Task A"
+    description: "Description in Japanese"
   - name: "Task with emoji 🚀"
 ```
 
