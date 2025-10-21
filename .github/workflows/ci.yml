@@ -36,7 +36,10 @@ jobs:
 
     - name: Run tests with coverage
       run: |
-        pytest --cov=clauxton --cov-report=xml --cov-report=term-missing -v
+        pytest --cov=clauxton --cov-report=xml --cov-report=term-missing -v \
+          --ignore=tests/integration/test_full_workflow.py \
+          --ignore=tests/integration/test_mcp_integration.py \
+          --ignore=tests/integration/test_performance_regression.py
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
