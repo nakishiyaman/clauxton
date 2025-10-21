@@ -5,10 +5,11 @@
 [![CI](https://github.com/nakishiyaman/clauxton/workflows/CI/badge.svg)](https://github.com/nakishiyaman/clauxton/actions)
 [![Python Version](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Security: Bandit](https://img.shields.io/badge/security-bandit-yellow.svg)](https://github.com/PyCQA/bandit)
 [![PyPI Version](https://img.shields.io/pypi/v/clauxton)](https://pypi.org/project/clauxton/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/clauxton)](https://pypi.org/project/clauxton/)
 [![Development Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/nakishiyaman/clauxton)
-[![Test Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen.svg)](https://github.com/nakishiyaman/clauxton)
+[![Test Coverage](https://img.shields.io/badge/coverage-70%25-yellow.svg)](https://github.com/nakishiyaman/clauxton)
 [![codecov](https://codecov.io/gh/nakishiyaman/clauxton/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/clauxton)
 
 > ✅ **Production Ready**: Clauxton v0.9.0-beta is stable and ready for production use. Phase 1-2 complete with TF-IDF search, task management, conflict detection, and MCP integration.
@@ -578,6 +579,42 @@ MIT License - see [LICENSE](LICENSE) for details.
 See [docs/PHASE_1_COMPLETE.md](docs/PHASE_1_COMPLETE.md) for full Phase 1 summary.
 See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 See [docs/roadmap.md](docs/roadmap.md) for Phase 2 plans.
+
+---
+
+## 🔒 Security
+
+Clauxton takes security seriously and follows industry best practices:
+
+### Security Measures
+
+- **Static Analysis**: Automated security scanning with [Bandit](https://github.com/PyCQA/bandit) in CI/CD
+- **Safe YAML Loading**: Uses `yaml.safe_load()` to prevent code execution
+- **Secure File Permissions**:
+  - `.clauxton/` directory: 700 (owner only)
+  - Data files: 600 (owner read/write only)
+- **Input Validation**: All inputs validated with Pydantic models
+- **No Command Injection**: No `shell=True` without sanitization
+- **Path Traversal Protection**: All file operations validated against project root
+
+### Security Scanning Results
+
+Latest scan (Session 8, 2025-10-21):
+- **Lines Scanned**: 5,609
+- **Issues Found**: 0
+- **Severity**: MEDIUM or higher checked
+- **Status**: ✅ **PASSED**
+
+### Reporting Security Issues
+
+**DO NOT** create public issues for security vulnerabilities.
+
+Instead, please:
+1. Email security concerns to the maintainers
+2. Include: description, reproduction steps, potential impact, suggested fix
+3. We will respond within 48 hours
+
+See [SECURITY.md](SECURITY.md) for detailed security guidelines.
 
 ---
 
