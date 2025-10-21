@@ -11,11 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.10.0] - 2025-10-21
+## [0.10.0] - 2025-10-22
 
-### v0.10.0 - Transparent Integration
-**Release Date**: 2025-10-21
-**Status**: ✅ Released
+### v0.10.0 - Production Ready
+**Release Date**: 2025-10-22
+**Status**: 🚀 Released
+**Test Coverage**: 91% (758 tests)
+**Previous Version**: v0.9.0-beta
 
 ### Added
 
@@ -126,23 +128,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Individual development: "auto" mode for balanced workflow (default)
     - Rapid prototyping: "never" mode with undo capability
 
-**📚 Documentation**:
+**📚 Documentation** (13 comprehensive docs):
+- **NEW**: `docs/SESSION_8_SUMMARY.md` - KB Export feature (Week 1 Day 4)
+- **NEW**: `docs/SESSION_9_SUMMARY.md` - YAML Safety (Week 1 Day 5)
+- **NEW**: `docs/SESSION_10_SUMMARY.md` - MCP Undo Tools (Week 2 Day 1)
+- **NEW**: `docs/SESSION_11_SUMMARY.md` - Enhanced Validation (Week 2 Day 6)
+- **NEW**: `docs/SESSION_11_GAP_ANALYSIS.md` - Gap analysis and v0.10.1 planning
 - **NEW**: `docs/ERROR_HANDLING_GUIDE.md` - Complete error resolution guide
 - **NEW**: `docs/MIGRATION_v0.10.0.md` - Migration guide from v0.9.0-beta
 - **NEW**: `docs/configuration-guide.md` - Configuration reference
+- **NEW**: `docs/troubleshooting.md` - Comprehensive troubleshooting (1,300 lines!)
 - Existing: `docs/YAML_TASK_FORMAT.md` - YAML format specification
 - Existing: `docs/kb-export-guide.md` - KB export guide
 - Existing: `docs/logging-guide.md` - Logging system guide
 - Existing: `docs/performance-guide.md` - Performance optimization guide
 - Existing: `docs/backup-guide.md` - Backup management guide
-- Updated: `README.md` - v0.10.0 features, 20 MCP tools, 666 tests
+- Updated: `README.md` - v0.10.0 features, 17 MCP tools, 758 tests
+- Updated: `CLAUDE.md` - Integration philosophy, best practices (7,000+ lines!)
 - Updated: `CHANGELOG.md` - Complete v0.10.0 changelog
 
-**🧪 Quality**:
-- **+276 tests** (390 → **666 tests**)
-- **92% coverage** maintained (98% task_manager, 100% task_validator, 97% logger, 96% confirmation_manager, 95% KB/MCP, 89% backup_manager)
-- **20 MCP tools** (15 → 20, +5 tools)
-- **7 new CLI commands** (config set/get/list, logs, undo, task import, kb export)
+**🧪 Quality** (Session 11 Complete):
+- **+368 tests** (390 → **758 tests**)
+- **91% overall coverage** (target: 80%, +11% over)
+  - **99% MCP server coverage** (target: 60%, +39% over)
+  - **84-100% CLI coverage** (target: 40%, +44% over)
+  - **87-96% core modules** (KB: 95%, TaskManager: 98%, Search: 86%)
+  - **80-85% utils modules** (on target)
+- **17 MCP tools** (15 → 17, +2 tools: undo_last_operation, get_recent_operations)
+- **CI/CD**: 3 parallel jobs (test, lint, build) ~52s total
 - Integration scenarios: Happy path, error recovery, undo flow, confirmation mode, performance testing
 
 **Expected Impact**:
