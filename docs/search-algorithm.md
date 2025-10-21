@@ -244,7 +244,7 @@ clauxton kb search ""
 
 ### Unicode Content
 
-**Entry**: `"FastAPI使い方 🚀"`
+**Entry**: `"FastAPI Tutorial 🚀"`
 **Query**: `"FastAPI"`
 
 **TF-IDF**: ✅ Finds match (Unicode tokenization)
