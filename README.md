@@ -237,9 +237,13 @@ pip install clauxton==0.10.0
 ```
 
 **What's Included**:
-- ✅ Knowledge Base management (CRUD + TF-IDF search)
-- ✅ Task Management system with auto-dependencies
+- ✅ Knowledge Base management (CRUD + TF-IDF search + Markdown export)
+- ✅ Task Management system with auto-dependencies + YAML bulk import
 - ✅ Conflict Detection (pre-merge conflict prediction)
+- ✅ Undo/Rollback functionality with operation history
+- ✅ Configurable confirmation modes (always/auto/never)
+- ✅ Operation logging with 30-day retention
+- ✅ Automatic backups (last 10 retained)
 - ✅ MCP Server (17 tools for Claude Code)
 - ✅ All dependencies (scikit-learn, numpy, pydantic, click, pyyaml, gitpython, mcp)
 
@@ -281,7 +285,7 @@ pytest
 
 ## 🚀 Usage
 
-### Knowledge Base Commands (Phase 0 ✅)
+### Knowledge Base Commands
 
 ```bash
 # Initialize Clauxton in your project
@@ -309,6 +313,9 @@ clauxton kb update KB-20251019-001 --content "New content" --category decision
 # Delete entry
 clauxton kb delete KB-20251019-001
 clauxton kb delete KB-20251019-001 --yes  # Skip confirmation
+
+# Export Knowledge Base to Markdown docs (NEW v0.10.0)
+clauxton kb export --output-dir ./docs/kb
 ```
 
 ### Task Management Commands
@@ -427,6 +434,39 @@ clauxton conflict check src/api/users.py src/models/user.py
 ```
 
 See [Conflict Detection Guide](docs/conflict-detection.md) for complete documentation.
+
+### Undo/History Commands (NEW v0.10.0)
+
+```bash
+# Undo last operation (with confirmation)
+clauxton undo
+
+# View operation history
+clauxton undo --history
+clauxton undo --history --limit 20  # Show last 20 operations
+
+# Force undo without confirmation
+clauxton undo --yes
+```
+
+See [Error Handling Guide](docs/ERROR_HANDLING_GUIDE.md) for recovery strategies.
+
+### Configuration Commands (NEW v0.10.0)
+
+```bash
+# Set confirmation mode
+clauxton config set confirmation_mode always   # Strict (confirm every operation)
+clauxton config set confirmation_mode auto     # Balanced (threshold-based, default)
+clauxton config set confirmation_mode never    # Fast (no confirmations)
+
+# Get configuration value
+clauxton config get confirmation_mode
+
+# List all configuration
+clauxton config list
+```
+
+See [Configuration Guide](docs/configuration-guide.md) for all available settings.
 
 ### Knowledge Base YAML Structure
 
