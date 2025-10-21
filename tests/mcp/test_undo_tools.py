@@ -10,10 +10,7 @@ Tests cover:
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from clauxton.mcp.server import get_recent_operations, undo_last_operation
-
 
 # ============================================================================
 # Undo Tool Tests
