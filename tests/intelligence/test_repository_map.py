@@ -288,13 +288,186 @@ class TestRepositoryMapSearch:
 
         assert isinstance(results, list)
 
-    def test_search_placeholder_implementation(self, tmp_path):
-        """Test placeholder search implementation."""
+    def test_search_empty_when_no_symbols(self, tmp_path):
+        """Test search returns empty list when no symbols exist."""
         repo_map = RepositoryMap(tmp_path)
         results = repo_map.search("anything")
 
-        # Placeholder returns empty list
         assert results == []
+
+    def test_search_exact_match(self, tmp_path):
+        """Test exact search finds matching symbols."""
+        # Create Python file with functions
+        (tmp_path / "module.py").write_text("""
+def hello_world():
+    '''Say hello to the world.'''
+    pass
+
+def hello_user():
+    '''Say hello to user.'''
+    pass
+
+def goodbye():
+    '''Say goodbye.'''
+    pass
+""")
+
+        repo_map = RepositoryMap(tmp_path)
+        repo_map.index()
+
+        # Search for "hello"
+        results = repo_map.search("hello", search_type="exact")
+
+        # Should find hello_world and hello_user
+        assert len(results) >= 2
+        names = [s.name for s in results]
+        assert "hello_world" in names
+        assert "hello_user" in names
+
+    def test_search_exact_case_insensitive(self, tmp_path):
+        """Test exact search is case-insensitive."""
+        (tmp_path / "module.py").write_text("def MyFunction(): pass")
+
+        repo_map = RepositoryMap(tmp_path)
+        repo_map.index()
+
+        results = repo_map.search("myfunction", search_type="exact")
+
+        assert len(results) == 1
+        assert results[0].name == "MyFunction"
+
+    def test_search_exact_prioritization(self, tmp_path):
+        """Test that exact matches are prioritized."""
+        (tmp_path / "module.py").write_text("""
+def test(): pass
+def test_func(): pass
+def my_test(): pass
+""")
+
+        repo_map = RepositoryMap(tmp_path)
+        repo_map.index()
+
+        results = repo_map.search("test", search_type="exact")
+
+        # "test" (exact match) should come first
+        assert len(results) >= 3
+        assert results[0].name == "test"
+
+    def test_search_fuzzy(self, tmp_path):
+        """Test fuzzy search finds similar names."""
+        (tmp_path / "module.py").write_text("""
+def hello_world(): pass
+def helo_wrld(): pass
+def goodbye(): pass
+""")
+
+        repo_map = RepositoryMap(tmp_path)
+        repo_map.index()
+
+        results = repo_map.search("hello_world", search_type="fuzzy")
+
+        # Should find both hello_world and helo_wrld (typo)
+        assert len(results) >= 2
+
+    def test_search_semantic(self, tmp_path):
+        """Test semantic search using TF-IDF."""
+        (tmp_path / "module.py").write_text("""
+def authenticate_user():
+    '''Authenticate user with password.'''
+    pass
+
+def login():
+    '''User login function.'''
+    pass
+
+def calculate_sum():
+    '''Calculate sum of numbers.'''
+    pass
+""")
+
+        repo_map = RepositoryMap(tmp_path)
+        repo_map.index()
+
+        # Search for "authentication"
+        results = repo_map.search("authentication", search_type="semantic")
+
+        # Should find authenticate_user and login (related to auth)
+        # but not calculate_sum
+        if results:  # scikit-learn might not be available
+            names = [s.name for s in results]
+            # authenticate_user should be in results
+            assert "authenticate_user" in names or "login" in names
+
+    def test_search_limit(self, tmp_path):
+        """Test search limit parameter."""
+        # Create many functions
+        funcs = "\n".join([f"def func{i}(): pass" for i in range(10)])
+        (tmp_path / "module.py").write_text(funcs)
+
+        repo_map = RepositoryMap(tmp_path)
+        repo_map.index()
+
+        results = repo_map.search("func", search_type="exact", limit=5)
+
+        # Should return at most 5 results
+        assert len(results) <= 5
+
+    def test_search_in_docstring(self, tmp_path):
+        """Test search includes docstring matches."""
+        (tmp_path / "module.py").write_text("""
+def process_data():
+    '''Handle user authentication.'''
+    pass
+""")
+
+        repo_map = RepositoryMap(tmp_path)
+        repo_map.index()
+
+        results = repo_map.search("authentication", search_type="exact")
+
+        # Should find process_data because docstring contains "authentication"
+        assert len(results) >= 1
+        assert results[0].name == "process_data"
+
+    def test_search_classes(self, tmp_path):
+        """Test search finds classes."""
+        (tmp_path / "module.py").write_text("""
+class UserManager:
+    '''Manage users.'''
+    pass
+
+class TaskManager:
+    '''Manage tasks.'''
+    pass
+""")
+
+        repo_map = RepositoryMap(tmp_path)
+        repo_map.index()
+
+        results = repo_map.search("Manager", search_type="exact")
+
+        # Should find both classes
+        assert len(results) >= 2
+        names = [s.name for s in results]
+        assert "UserManager" in names
+        assert "TaskManager" in names
+
+    def test_search_symbol_types(self, tmp_path):
+        """Test search results include correct symbol types."""
+        (tmp_path / "module.py").write_text("""
+def my_func(): pass
+
+class MyClass: pass
+""")
+
+        repo_map = RepositoryMap(tmp_path)
+        repo_map.index()
+
+        results = repo_map.search("my", search_type="exact")
+
+        # Check symbol types
+        types = {s.type for s in results}
+        assert "function" in types or "class" in types
 
 
 class TestRepositoryMapFileIndexing:

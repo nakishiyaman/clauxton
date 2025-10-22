@@ -298,19 +298,170 @@ class RepositoryMap:
             search_type: Search algorithm to use
                 - "exact": Exact substring match (default)
                 - "fuzzy": Fuzzy matching (typo-tolerant)
-                - "semantic": TF-IDF semantic search (not implemented)
+                - "semantic": TF-IDF semantic search
             limit: Maximum number of results to return
 
         Returns:
             List of matching symbols, ranked by relevance
-
-        Note:
-            This is a placeholder implementation. Full implementation in Task 5.
         """
-        logger.info(f"Search called for '{query}' (placeholder)")
+        logger.info(f"Searching for '{query}' with {search_type} search")
 
-        # Placeholder return
-        return []
+        # Load symbols data
+        symbols_data = self.symbols_data
+        if not symbols_data:
+            logger.debug("No symbols available for search")
+            return []
+
+        # Collect all symbols
+        all_symbols: List[Symbol] = []
+        for file_path, file_symbols in symbols_data.items():
+            for symbol_dict in file_symbols:
+                symbol = Symbol(
+                    name=symbol_dict["name"],
+                    type=symbol_dict["type"],
+                    file_path=symbol_dict["file_path"],
+                    line_start=symbol_dict["line_start"],
+                    line_end=symbol_dict["line_end"],
+                    docstring=symbol_dict.get("docstring"),
+                    signature=symbol_dict.get("signature"),
+                )
+                all_symbols.append(symbol)
+
+        logger.debug(f"Searching through {len(all_symbols)} symbols")
+
+        # Perform search based on type
+        if search_type == "exact":
+            results = self._exact_search(query, all_symbols)
+        elif search_type == "fuzzy":
+            results = self._fuzzy_search(query, all_symbols)
+        elif search_type == "semantic":
+            results = self._semantic_search(query, all_symbols)
+        else:
+            logger.warning(f"Unknown search type: {search_type}, using exact")
+            results = self._exact_search(query, all_symbols)
+
+        # Apply limit
+        limited_results = results[:limit]
+        logger.info(f"Found {len(results)} results, returning {len(limited_results)}")
+
+        return limited_results
+
+    def _exact_search(self, query: str, symbols: List[Symbol]) -> List[Symbol]:
+        """
+        Exact substring search (case-insensitive).
+
+        Args:
+            query: Search query
+            symbols: List of symbols to search
+
+        Returns:
+            Matching symbols, sorted by relevance
+        """
+        query_lower = query.lower()
+        results = []
+
+        for symbol in symbols:
+            name_lower = symbol.name.lower()
+
+            # Exact match (highest priority)
+            if name_lower == query_lower:
+                results.append((symbol, 100))
+            # Starts with query (high priority)
+            elif name_lower.startswith(query_lower):
+                results.append((symbol, 90))
+            # Contains query (medium priority)
+            elif query_lower in name_lower:
+                results.append((symbol, 50))
+            # Search in docstring if available
+            elif symbol.docstring and query_lower in symbol.docstring.lower():
+                results.append((symbol, 30))
+
+        # Sort by score (descending)
+        results.sort(key=lambda x: x[1], reverse=True)
+
+        return [symbol for symbol, score in results]
+
+    def _fuzzy_search(self, query: str, symbols: List[Symbol]) -> List[Symbol]:
+        """
+        Fuzzy search using Levenshtein distance.
+
+        Args:
+            query: Search query
+            symbols: List of symbols to search
+
+        Returns:
+            Matching symbols, sorted by similarity
+        """
+        import difflib
+
+        query_lower = query.lower()
+        results = []
+
+        for symbol in symbols:
+            name_lower = symbol.name.lower()
+
+            # Calculate similarity ratio (0-1)
+            ratio = difflib.SequenceMatcher(None, query_lower, name_lower).ratio()
+
+            # Only include if similarity > 0.4
+            if ratio > 0.4:
+                results.append((symbol, ratio))
+
+        # Sort by similarity (descending)
+        results.sort(key=lambda x: x[1], reverse=True)
+
+        return [symbol for symbol, score in results]
+
+    def _semantic_search(self, query: str, symbols: List[Symbol]) -> List[Symbol]:
+        """
+        Semantic search using TF-IDF.
+
+        Args:
+            query: Search query
+            symbols: List of symbols to search
+
+        Returns:
+            Matching symbols, sorted by relevance
+        """
+        try:
+            from sklearn.feature_extraction.text import TfidfVectorizer
+            from sklearn.metrics.pairwise import cosine_similarity
+            import numpy as np
+
+            # Prepare documents (symbol names + docstrings)
+            documents = []
+            for symbol in symbols:
+                doc = symbol.name
+                if symbol.docstring:
+                    doc += " " + symbol.docstring
+                documents.append(doc)
+
+            if not documents:
+                return []
+
+            # Create TF-IDF matrix
+            vectorizer = TfidfVectorizer(lowercase=True, stop_words="english")
+            tfidf_matrix = vectorizer.fit_transform(documents + [query])
+
+            # Calculate cosine similarity
+            query_vector = tfidf_matrix[-1]
+            doc_vectors = tfidf_matrix[:-1]
+            similarities = cosine_similarity(query_vector, doc_vectors)[0]
+
+            # Create results with scores
+            results = []
+            for symbol, score in zip(symbols, similarities):
+                if score > 0.01:  # Threshold for relevance
+                    results.append((symbol, score))
+
+            # Sort by score (descending)
+            results.sort(key=lambda x: x[1], reverse=True)
+
+            return [symbol for symbol, score in results]
+
+        except ImportError:
+            logger.warning("scikit-learn not available, falling back to exact search")
+            return self._exact_search(query, symbols)
 
     @property
     def index_data(self) -> Dict:
