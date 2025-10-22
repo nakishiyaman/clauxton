@@ -1,11 +1,12 @@
 """CLI commands for Repository Map feature."""
 
-import click
 from pathlib import Path
 from typing import Optional
+
+import click
 from rich.console import Console
-from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
 from clauxton.intelligence.repository_map import RepositoryMap, RepositoryMapError
 
@@ -70,7 +71,7 @@ def index_command(path: str, incremental: bool) -> None:
         console.print(f"  • Duration: {result.duration_seconds:.2f}s")
 
         if result.errors:
-            console.print(f"\n[yellow]⚠ Warnings:[/yellow]")
+            console.print("\n[yellow]⚠ Warnings:[/yellow]")
             for error in result.errors[:5]:  # Show first 5 errors
                 console.print(f"  • {error}")
             if len(result.errors) > 5:
@@ -135,7 +136,7 @@ def search_command(query: str, path: str, search_type: str, limit: int) -> None:
         # Perform search
         console.print(f"[blue]Searching for:[/blue] '{query}' ({search_type} search)")
         # Cast search_type to Literal type for type checking
-        from typing import cast, Literal
+        from typing import Literal, cast
         search_type_literal = cast(Literal["semantic", "exact", "fuzzy"], search_type)
         results = repo_map.search(query, search_type=search_type_literal, limit=limit)
 
@@ -206,7 +207,7 @@ def status_command(path: str) -> None:
         symbols = repo_map.symbols_data
 
         # Display status
-        console.print(f"[blue]Repository Index Status[/blue]\n")
+        console.print("[blue]Repository Index Status[/blue]\n")
         console.print(f"  Root: {project_path}")
         console.print(f"  Index: {repo_map.map_dir}")
         console.print(f"  Version: {index['version']}")
@@ -214,22 +215,22 @@ def status_command(path: str) -> None:
 
         # Statistics
         stats = index["statistics"]
-        console.print(f"\n[cyan]Files:[/cyan]")
+        console.print("\n[cyan]Files:[/cyan]")
         console.print(f"  Total: {stats['total_files']}")
 
         if stats["by_type"]:
-            console.print(f"\n[cyan]By Type:[/cyan]")
+            console.print("\n[cyan]By Type:[/cyan]")
             for file_type, count in sorted(stats["by_type"].items()):
                 console.print(f"  {file_type}: {count}")
 
         if stats["by_language"]:
-            console.print(f"\n[cyan]By Language:[/cyan]")
+            console.print("\n[cyan]By Language:[/cyan]")
             for language, count in sorted(stats["by_language"].items()):
                 console.print(f"  {language}: {count}")
 
         # Symbol count
         total_symbols = sum(len(syms) for syms in symbols.values())
-        console.print(f"\n[cyan]Symbols:[/cyan]")
+        console.print("\n[cyan]Symbols:[/cyan]")
         console.print(f"  Total: {total_symbols}")
 
     except RepositoryMapError as e:

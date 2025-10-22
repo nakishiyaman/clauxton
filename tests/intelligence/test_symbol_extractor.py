@@ -1,10 +1,11 @@
 """Tests for clauxton.intelligence.symbol_extractor module."""
 
+
 import pytest
-from pathlib import Path
+
 from clauxton.intelligence.symbol_extractor import (
-    SymbolExtractor,
     PythonSymbolExtractor,
+    SymbolExtractor,
 )
 
 

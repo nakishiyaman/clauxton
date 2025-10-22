@@ -15,11 +15,11 @@ Example:
     >>> symbols = repo_map.search("authentication")
 """
 
-from pathlib import Path
-from typing import List, Dict, Optional, Literal, Callable
-from datetime import datetime
 import json
 import logging
+from datetime import datetime
+from pathlib import Path
+from typing import Callable, Dict, List, Literal, Optional
 
 from clauxton.core.models import ClauxtonError
 
@@ -426,7 +426,6 @@ class RepositoryMap:
         try:
             from sklearn.feature_extraction.text import TfidfVectorizer
             from sklearn.metrics.pairwise import cosine_similarity
-            import numpy as np
 
             # Prepare documents (symbol names + docstrings)
             documents = []
@@ -526,7 +525,6 @@ class RepositoryMap:
         Returns:
             List of patterns to ignore
         """
-        import fnmatch
 
         # Default patterns
         patterns = [
@@ -605,7 +603,6 @@ class RepositoryMap:
             Dictionary with file information
         """
         suffix = file_path.suffix.lower()
-        path_str = str(file_path)
 
         # Language detection
         language_map = {

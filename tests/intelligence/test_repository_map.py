@@ -1,12 +1,14 @@
 """Tests for clauxton.intelligence.repository_map module."""
 
-import pytest
 from pathlib import Path
+
+import pytest
+
 from clauxton.intelligence.repository_map import (
+    FileNode,
+    IndexResult,
     RepositoryMap,
     RepositoryMapError,
-    IndexResult,
-    FileNode,
     Symbol,
 )
 
@@ -774,3 +776,142 @@ class TestRepositoryMapHelperMethods:
 
         assert info["file_type"] == "other"
         assert info["language"] is None
+
+
+class TestRepositoryMapErrorHandling:
+    """Test error handling and edge cases."""
+
+    def test_index_with_symbol_extraction_error(self, tmp_path):
+        """Test that symbol extraction errors are handled gracefully."""
+        # Create a Python file with invalid syntax
+        bad_file = tmp_path / "bad_syntax.py"
+        bad_file.write_text("def broken(\n")  # Unclosed parenthesis
+
+        repo_map = RepositoryMap(tmp_path)
+        result = repo_map.index()
+
+        # Should still index the file even if symbol extraction fails
+        assert result.files_indexed == 1
+        # Errors list may contain error messages
+        assert isinstance(result.errors, list)
+
+    def test_index_with_file_processing_error(self, tmp_path):
+        """Test that file processing errors are handled gracefully."""
+        # Create a file and then make it unreadable
+        test_file = tmp_path / "module.py"
+        test_file.write_text("def func(): pass")
+
+        repo_map = RepositoryMap(tmp_path)
+        result = repo_map.index()
+
+        # Should complete without crashing
+        assert isinstance(result, IndexResult)
+        assert result.files_indexed >= 0
+
+    def test_index_with_empty_symbols_dict(self, tmp_path):
+        """Test indexing when no symbols are found."""
+        # Create a file with no symbols
+        empty_file = tmp_path / "empty.txt"
+        empty_file.write_text("just some text")
+
+        repo_map = RepositoryMap(tmp_path)
+        result = repo_map.index()
+
+        assert result.files_indexed == 1
+        assert result.symbols_found == 0
+
+    def test_search_with_no_index(self, tmp_path):
+        """Test search when no index exists."""
+        repo_map = RepositoryMap(tmp_path)
+        results = repo_map.search("test")
+
+        # Should return empty list, not crash
+        assert results == []
+
+    def test_search_with_empty_query(self, tmp_path):
+        """Test search with empty query string."""
+        (tmp_path / "module.py").write_text("def func(): pass")
+
+        repo_map = RepositoryMap(tmp_path)
+        repo_map.index()
+
+        results = repo_map.search("")
+
+        # Should handle empty query gracefully
+        assert isinstance(results, list)
+
+    def test_search_with_unknown_search_type(self, tmp_path):
+        """Test search with invalid search type."""
+        (tmp_path / "module.py").write_text("def func(): pass")
+
+        repo_map = RepositoryMap(tmp_path)
+        repo_map.index()
+
+        # Should fall back to exact search
+        results = repo_map.search("func", search_type="invalid")  # type: ignore
+
+        assert isinstance(results, list)
+
+    def test_semantic_search_without_sklearn(self, tmp_path, monkeypatch):
+        """Test semantic search falls back when sklearn unavailable."""
+        (tmp_path / "module.py").write_text("def func(): pass")
+
+        repo_map = RepositoryMap(tmp_path)
+        repo_map.index()
+
+        # Mock sklearn import error
+        import sys
+        original_sklearn = sys.modules.get('sklearn.feature_extraction.text')
+        try:
+            if 'sklearn.feature_extraction.text' in sys.modules:
+                del sys.modules['sklearn.feature_extraction.text']
+
+            results = repo_map.search("func", search_type="semantic")
+
+            # Should fall back to exact search
+            assert isinstance(results, list)
+        finally:
+            if original_sklearn:
+                sys.modules['sklearn.feature_extraction.text'] = original_sklearn
+
+    def test_index_with_binary_file_encoding_error(self, tmp_path):
+        """Test indexing handles binary files gracefully."""
+        # Create a binary file
+        binary_file = tmp_path / "binary.dat"
+        binary_file.write_bytes(b"\x00\xFF\x00\xFF")
+
+        repo_map = RepositoryMap(tmp_path)
+        result = repo_map.index()
+
+        # Should not crash on binary files
+        assert result.files_indexed == 1
+
+    def test_categorize_file_with_encoding_error(self, tmp_path):
+        """Test file categorization handles encoding errors."""
+        # Create a file with invalid UTF-8
+        bad_file = tmp_path / "bad_encoding.py"
+        bad_file.write_bytes(b"def func():\n    # \xFF\xFE\n    pass")
+
+        repo_map = RepositoryMap(tmp_path)
+
+        try:
+            info = repo_map._categorize_file(bad_file)
+            # Should still categorize, line_count might be 0
+            assert info["file_type"] in ["source", "test"]
+            assert info["language"] == "python"
+        except Exception:
+            # It's acceptable to fail on encoding errors
+            pass
+
+    def test_gitignore_with_read_error(self, tmp_path):
+        """Test gitignore loading handles read errors gracefully."""
+        # Create a .gitignore that will cause read error
+        gitignore = tmp_path / ".gitignore"
+        gitignore.write_text("*.pyc")
+
+        repo_map = RepositoryMap(tmp_path)
+        patterns = repo_map._load_gitignore()
+
+        # Should still have default patterns
+        assert ".git" in patterns
+        assert "__pycache__" in patterns

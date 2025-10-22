@@ -11,7 +11,7 @@ Available for v0.11.0+
 """
 
 from clauxton.intelligence.repository_map import RepositoryMap
-from clauxton.intelligence.symbol_extractor import SymbolExtractor, PythonSymbolExtractor
+from clauxton.intelligence.symbol_extractor import PythonSymbolExtractor, SymbolExtractor
 
 __all__ = [
     "RepositoryMap",

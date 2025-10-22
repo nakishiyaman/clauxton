@@ -14,9 +14,9 @@ Example:
 """
 # type: ignore  # tree-sitter has complex types
 
-from pathlib import Path
-from typing import List, Dict, Optional
 import logging
+from pathlib import Path
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -88,8 +88,8 @@ class PythonSymbolExtractor:
         self.language = None  # type: ignore
 
         try:
-            from tree_sitter import Language, Parser
             import tree_sitter_python as tspython
+            from tree_sitter import Language, Parser
 
             self.language = Language(tspython.language())
             self.parser = Parser(self.language)
