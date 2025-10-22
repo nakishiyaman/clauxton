@@ -34,7 +34,7 @@ Clauxton is a Claude Code plugin that provides **persistent project context** to
 pip install clauxton
 
 # Verify installation
-clauxton --version  # Should show: clauxton, version 0.10.0
+clauxton --version  # Should show: clauxton, version 0.10.1
 ```
 
 ### Basic Usage
@@ -230,10 +230,10 @@ Claude Code: (Begins implementation)
 pip install clauxton
 
 # Verify installation
-clauxton --version  # Should show: clauxton, version 0.10.0
+clauxton --version  # Should show: clauxton, version 0.10.1
 
 # Install specific version (example)
-pip install clauxton==0.10.0
+pip install clauxton==0.10.1
 ```
 
 **What's Included**:
