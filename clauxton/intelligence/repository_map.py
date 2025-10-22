@@ -474,7 +474,9 @@ class RepositoryMap:
         language = language_map.get(suffix)
 
         # File type detection
-        if "test" in path_str.lower() or path_str.endswith("_test.py"):
+        # Only consider it a test file if filename contains "test", not just the path
+        filename = file_path.name.lower()
+        if filename.startswith("test_") or filename.endswith("_test.py") or filename == "test.py":
             file_type = "test"
         elif suffix in [".md", ".rst", ".txt", ".adoc"]:
             file_type = "docs"
