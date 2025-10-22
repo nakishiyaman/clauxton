@@ -204,21 +204,84 @@ class RepositoryMap:
 
         Returns:
             IndexResult with statistics
-
-        Note:
-            This is a placeholder implementation. Full implementation in Task 3.
         """
-        logger.info("Index method called (placeholder)")
+        import time
+
+        logger.info(f"Starting indexing of {self.root_dir}")
+        start_time = time.time()
 
         if incremental:
-            logger.warning("Incremental indexing not yet implemented")
+            logger.warning("Incremental indexing not yet implemented, doing full index")
 
-        # Placeholder return
+        # Load gitignore patterns
+        gitignore_patterns = self._load_gitignore()
+        logger.debug(f"Loaded {len(gitignore_patterns)} gitignore patterns")
+
+        # Scan all files
+        files_indexed = 0
+        symbols_found = 0
+        errors = []
+        all_files = []
+
+        from clauxton.intelligence.symbol_extractor import SymbolExtractor
+        symbol_extractor = SymbolExtractor()
+
+        # Collect all files
+        for file_path in self.root_dir.rglob("*"):
+            if not file_path.is_file():
+                continue
+
+            # Check if should ignore
+            if self._should_ignore(file_path, gitignore_patterns):
+                continue
+
+            # Categorize file
+            try:
+                file_info = self._categorize_file(file_path)
+                all_files.append(file_info)
+                files_indexed += 1
+
+                # Extract symbols from source files
+                if file_info["file_type"] == "source" and file_info["language"]:
+                    try:
+                        symbols = symbol_extractor.extract(
+                            file_path,
+                            file_info["language"]
+                        )
+                        symbols_found += len(symbols)
+
+                        # Store symbols
+                        if symbols:
+                            self._store_symbols(file_path, symbols)
+
+                    except Exception as e:
+                        error_msg = f"Error extracting symbols from {file_path}: {e}"
+                        logger.warning(error_msg)
+                        errors.append(error_msg)
+
+                # Progress callback
+                if progress_callback:
+                    progress_callback(files_indexed, None, f"Indexing {file_path.name}")
+
+            except Exception as e:
+                error_msg = f"Error processing {file_path}: {e}"
+                logger.warning(error_msg)
+                errors.append(error_msg)
+
+        # Save index to disk
+        self._save_index(all_files)
+
+        duration = time.time() - start_time
+        logger.info(
+            f"Indexing complete: {files_indexed} files, "
+            f"{symbols_found} symbols in {duration:.2f}s"
+        )
+
         return IndexResult(
-            files_indexed=0,
-            symbols_found=0,
-            duration_seconds=0.0,
-            errors=["Not implemented yet - Task 3"]
+            files_indexed=files_indexed,
+            symbols_found=symbols_found,
+            duration_seconds=duration,
+            errors=errors
         )
 
     def search(
@@ -302,3 +365,205 @@ class RepositoryMap:
         self._index = None
         self._symbols = None
         logger.debug("Cache cleared")
+
+    # Helper methods for indexing
+
+    def _load_gitignore(self) -> List[str]:
+        """
+        Load .gitignore patterns.
+
+        Returns:
+            List of patterns to ignore
+        """
+        import fnmatch
+
+        # Default patterns
+        patterns = [
+            ".git", ".git/*",
+            "__pycache__", "__pycache__/*", "*.pyc", "*.pyo",
+            ".venv", ".venv/*", "venv", "venv/*",
+            "node_modules", "node_modules/*",
+            ".DS_Store",
+            "*.egg-info", "*.egg-info/*",
+            ".clauxton", ".clauxton/*",
+            "htmlcov", "htmlcov/*",
+            ".coverage",
+            "dist", "dist/*",
+            "build", "build/*",
+        ]
+
+        # Load from .gitignore
+        gitignore_file = self.root_dir / ".gitignore"
+        if gitignore_file.exists():
+            try:
+                with open(gitignore_file) as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith("#"):
+                            patterns.append(line)
+                            # Also add pattern with /*
+                            if not line.endswith("*") and not line.endswith("/"):
+                                patterns.append(f"{line}/*")
+            except Exception as e:
+                logger.warning(f"Error reading .gitignore: {e}")
+
+        return patterns
+
+    def _should_ignore(self, file_path: Path, patterns: List[str]) -> bool:
+        """
+        Check if file should be ignored based on patterns.
+
+        Args:
+            file_path: Path to check
+            patterns: List of gitignore patterns
+
+        Returns:
+            True if file should be ignored
+        """
+        import fnmatch
+
+        try:
+            relative = file_path.relative_to(self.root_dir)
+            path_str = str(relative)
+        except ValueError:
+            # File is not relative to root
+            return True
+
+        # Check against patterns
+        for pattern in patterns:
+            # Try direct match
+            if fnmatch.fnmatch(path_str, pattern):
+                return True
+
+            # Try matching any part of the path
+            parts = path_str.split("/")
+            for part in parts:
+                if fnmatch.fnmatch(part, pattern.rstrip("/*")):
+                    return True
+
+        return False
+
+    def _categorize_file(self, file_path: Path) -> Dict:
+        """
+        Categorize file by type and detect language.
+
+        Args:
+            file_path: Path to file
+
+        Returns:
+            Dictionary with file information
+        """
+        suffix = file_path.suffix.lower()
+        path_str = str(file_path)
+
+        # Language detection
+        language_map = {
+            ".py": "python",
+            ".js": "javascript",
+            ".jsx": "javascript",
+            ".ts": "typescript",
+            ".tsx": "typescript",
+            ".go": "go",
+            ".rs": "rust",
+            ".java": "java",
+            ".c": "c",
+            ".cpp": "cpp",
+            ".h": "c",
+            ".hpp": "cpp",
+        }
+        language = language_map.get(suffix)
+
+        # File type detection
+        if "test" in path_str.lower() or path_str.endswith("_test.py"):
+            file_type = "test"
+        elif suffix in [".md", ".rst", ".txt", ".adoc"]:
+            file_type = "docs"
+        elif suffix in [".json", ".yml", ".yaml", ".toml", ".ini", ".cfg", ".conf"]:
+            file_type = "config"
+        elif language:
+            file_type = "source"
+        else:
+            file_type = "other"
+
+        # Get file stats
+        stat = file_path.stat()
+        line_count = 0
+
+        if file_type in ["source", "test"]:
+            try:
+                with open(file_path, encoding="utf-8") as f:
+                    line_count = len(f.readlines())
+            except Exception:
+                # Binary file or encoding error
+                line_count = 0
+
+        return {
+            "path": str(file_path),
+            "relative_path": str(file_path.relative_to(self.root_dir)),
+            "file_type": file_type,
+            "language": language,
+            "size_bytes": stat.st_size,
+            "line_count": line_count,
+            "last_modified": stat.st_mtime,
+        }
+
+    def _store_symbols(self, file_path: Path, symbols: List[Dict]) -> None:
+        """
+        Store symbols for a file.
+
+        Args:
+            file_path: Path to file
+            symbols: List of extracted symbols
+        """
+        # Get or create symbols dict
+        if self._symbols is None:
+            self._symbols = {}
+
+        relative_path = str(file_path.relative_to(self.root_dir))
+        self._symbols[relative_path] = symbols
+
+    def _save_index(self, files: List[Dict]) -> None:
+        """
+        Save index to disk.
+
+        Args:
+            files: List of file information dictionaries
+        """
+        # Calculate statistics
+        stats = {
+            "total_files": len(files),
+            "by_type": {},
+            "by_language": {},
+        }
+
+        for file_info in files:
+            file_type = file_info["file_type"]
+            language = file_info["language"]
+
+            stats["by_type"][file_type] = stats["by_type"].get(file_type, 0) + 1
+            if language:
+                stats["by_language"][language] = stats["by_language"].get(language, 0) + 1
+
+        # Create index data
+        index_data = {
+            "version": "0.11.0",
+            "indexed_at": datetime.now().isoformat(),
+            "root_path": str(self.root_dir),
+            "files": files,
+            "statistics": stats,
+        }
+
+        # Write to disk
+        index_file = self.map_dir / "index.json"
+        with open(index_file, "w") as f:
+            json.dump(index_data, f, indent=2)
+
+        self._index = index_data
+        logger.debug(f"Index saved to {index_file}")
+
+        # Save symbols if any
+        if self._symbols:
+            symbols_file = self.map_dir / "symbols.json"
+            with open(symbols_file, "w") as f:
+                json.dump(self._symbols, f, indent=2)
+            logger.debug(f"Symbols saved to {symbols_file}")

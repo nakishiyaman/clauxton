@@ -267,15 +267,15 @@ class TestRepositoryMapIndex:
 
         assert isinstance(result, IndexResult)
 
-    def test_index_placeholder_implementation(self, tmp_path):
-        """Test placeholder index implementation."""
+    def test_index_empty_directory(self, tmp_path):
+        """Test indexing empty directory."""
         repo_map = RepositoryMap(tmp_path)
         result = repo_map.index()
 
-        # Placeholder returns zeros
+        # Empty directory should index successfully
         assert result.files_indexed == 0
         assert result.symbols_found == 0
-        assert len(result.errors) > 0  # Has "not implemented" error
+        assert result.duration_seconds >= 0
 
 
 class TestRepositoryMapSearch:
