@@ -683,19 +683,22 @@ class RepositoryMap:
             files: List of file information dictionaries
         """
         # Calculate statistics
-        stats = {
-            "total_files": len(files),
-            "by_type": {},
-            "by_language": {},
-        }
+        by_type: Dict[str, int] = {}
+        by_language: Dict[str, int] = {}
 
         for file_info in files:
             file_type = file_info["file_type"]
             language = file_info["language"]
 
-            stats["by_type"][file_type] = stats["by_type"].get(file_type, 0) + 1
+            by_type[file_type] = by_type.get(file_type, 0) + 1
             if language:
-                stats["by_language"][language] = stats["by_language"].get(language, 0) + 1
+                by_language[language] = by_language.get(language, 0) + 1
+
+        stats = {
+            "total_files": len(files),
+            "by_type": by_type,
+            "by_language": by_language,
+        }
 
         # Create index data
         index_data = {

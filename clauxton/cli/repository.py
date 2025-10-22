@@ -2,6 +2,7 @@
 
 import click
 from pathlib import Path
+from typing import Optional
 from rich.console import Console
 from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -12,7 +13,7 @@ console = Console()
 
 
 @click.group(name="repo")
-def repo_group():
+def repo_group() -> None:
     """Repository Map commands for codebase indexing and search."""
     pass
 
@@ -29,7 +30,7 @@ def repo_group():
     is_flag=True,
     help="Perform incremental indexing (only changed files)",
 )
-def index_command(path: str, incremental: bool):
+def index_command(path: str, incremental: bool) -> None:
     """
     Index codebase for fast symbol search.
 
@@ -54,7 +55,7 @@ def index_command(path: str, incremental: bool):
         ) as progress:
             task = progress.add_task("Indexing files...", total=None)
 
-            def progress_callback(current, total, status):
+            def progress_callback(current: int, total: Optional[int], status: str) -> None:
                 progress.update(task, description=f"Indexing: {status}")
 
             result = repo_map.index(
@@ -107,7 +108,7 @@ def index_command(path: str, incremental: bool):
     default=20,
     help="Maximum number of results to return (default: 20)",
 )
-def search_command(query: str, path: str, search_type: str, limit: int):
+def search_command(query: str, path: str, search_type: str, limit: int) -> None:
     """
     Search codebase for symbols.
 
@@ -133,7 +134,10 @@ def search_command(query: str, path: str, search_type: str, limit: int):
 
         # Perform search
         console.print(f"[blue]Searching for:[/blue] '{query}' ({search_type} search)")
-        results = repo_map.search(query, search_type=search_type, limit=limit)
+        # Cast search_type to Literal type for type checking
+        from typing import cast, Literal
+        search_type_literal = cast(Literal["semantic", "exact", "fuzzy"], search_type)
+        results = repo_map.search(query, search_type=search_type_literal, limit=limit)
 
         if not results:
             console.print("[yellow]No results found.[/yellow]")
@@ -177,7 +181,7 @@ def search_command(query: str, path: str, search_type: str, limit: int):
     default=".",
     help="Path to project root (default: current directory)",
 )
-def status_command(path: str):
+def status_command(path: str) -> None:
     """
     Show repository index status.
 
