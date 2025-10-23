@@ -636,6 +636,7 @@ class RepositoryMap:
             ".go": "go",
             ".rs": "rust",
             ".java": "java",
+            ".cs": "csharp",
             ".c": "c",
             ".cpp": "cpp",
             ".h": "c",

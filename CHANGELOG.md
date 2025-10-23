@@ -10,8 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### v0.11.0 - Repository Map (In Development)
-**Status**: 🚧 Week 1/6 Complete
-**Test Coverage**: 91% (868 tests, +110 from v0.10.1)
+**Status**: 🚧 Week 3 Day 7 Complete (Python, JavaScript, TypeScript, Go, Rust, C++, Java, C#)
+**Test Coverage**: 91% (301 intelligence tests + 403 core tests = 704 total)
 **Branch**: `feature/v0.11.0-repository-map`
 
 #### Added (Week 1 - Complete)
@@ -85,9 +85,88 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Search: <0.01s exact, <0.1s semantic for typical projects
 - Storage: ~10-50KB JSON per project
 
-#### Roadmap (Weeks 2-6)
-- 🚧 **Week 2-3**: JavaScript/TypeScript symbol extraction
-- 📋 **Week 4-5**: Go/Rust symbol extraction
+#### Added (Week 2 - Complete)
+
+**Multi-Language Symbol Extraction**:
+- ✅ **JavaScript Support** (`symbol_extractor.py`): ES6+ features
+  - tree-sitter-javascript parser
+  - Extracts: classes, functions (regular + arrow), methods
+  - Supports: async/await, export statements, lexical declarations
+  - 23 comprehensive tests with fixtures
+
+- ✅ **TypeScript Support** (`symbol_extractor.py`): Full type system
+  - tree-sitter-typescript parser
+  - Extracts: interfaces, type aliases, classes, functions, methods
+  - Supports: generics, type annotations, arrow functions
+  - 24 comprehensive tests with fixtures (including namespace and enum)
+
+- ✅ **Go Support** (`symbol_extractor.py`): Complete feature set
+  - tree-sitter-go parser
+  - Extracts: functions, methods, structs, interfaces, type aliases
+  - Supports: pointer/value receivers, generics (Go 1.18+)
+  - 22 comprehensive tests with fixtures
+
+- ✅ **Rust Support** (`symbol_extractor.py`): Full language coverage
+  - tree-sitter-rust parser
+  - Extracts: functions, methods, structs, enums, traits, type aliases
+  - Supports: self receivers (&self, &mut self, self), impl blocks, generics
+  - 29 comprehensive tests with fixtures (including trait impl, multiple impl blocks)
+
+#### Added (Week 3 Day 5-6 - Complete)
+
+**C++ Language Support** (Day 5):
+- ✅ **C++ Support** (`symbol_extractor.py`): Complete feature set
+  - tree-sitter-cpp parser
+  - Extracts: functions, classes, methods, structs, namespaces
+  - Supports: constructors/destructors, const/static/virtual methods, templates, operator overloading, nested namespaces
+  - 28 comprehensive tests with fixtures (includes edge cases)
+
+**Java Language Support** (Day 6):
+- ✅ **Java Support** (`symbol_extractor.py`): Complete feature set
+  - tree-sitter-java parser
+  - Extracts: classes, interfaces, methods, enums, annotations
+  - Supports: constructors, generics, static methods, abstract classes, inheritance, nested classes, multiple interfaces
+  - 28 comprehensive tests with fixtures (quality reviewed)
+
+**C# Language Support** (Day 7):
+- ✅ **C# Support** (`symbol_extractor.py`): Full .NET support
+  - tree-sitter-c-sharp parser
+  - Extracts: classes, interfaces, methods, properties, enums, delegates, namespaces
+  - Supports: constructors, async methods, static methods, generics, nested classes, qualified namespaces, abstract classes, inheritance
+  - 28 extractor tests + 4 parser tests = 32 comprehensive tests (all passing)
+
+**Parser Infrastructure** (`parser.py`):
+- ✅ Unified BaseParser for all languages
+- ✅ Language-specific parsers: PythonParser, JavaScriptParser, TypeScriptParser, GoParser, RustParser, CppParser, JavaParser, CSharpParser
+- ✅ Graceful fallback when tree-sitter unavailable
+- ✅ 30 parser tests (4 per language + 2 Python)
+
+#### Tests (Week 2-3)
+- ✅ **269 intelligence tests** (91% coverage):
+  - 30 parser tests (Python, JavaScript, TypeScript, Go, Rust, C++, Java)
+  - 13 Python symbol extraction tests
+  - 23 JavaScript tests + 24 TypeScript tests
+  - 22 Go tests + 29 Rust tests + 28 C++ tests + 28 Java tests
+  - 6 integration tests
+  - 81 repository map tests
+- ✅ **Quality**: All tests passing, mypy ✓, ruff ✓
+- ✅ **Error Handling**: Improved logging for C++ and Java extraction failures
+
+#### Documentation (Week 2-3)
+- ✅ **REPOSITORY_MAP_GUIDE.md**: Updated with all 7 supported languages
+- ✅ **symbol_extractor.py**: Updated docstrings
+- ✅ **WEEK2_DAY1-4_COMPLETION.md**: Complete daily implementation records
+- ✅ **WEEK3_DAY5_COMPLETION.md**: C++ implementation complete report
+- ✅ **WEEK3_DAY5_IMPROVEMENTS.md**: C++ quality improvement report
+- ✅ **WEEK3_DAY6_QUALITY_REVIEW.md**: Java quality review report
+- ✅ **README.md**: Updated roadmap (Week 3 Day 6 Complete)
+
+#### Roadmap (Weeks 3-6)
+- ✅ **Week 3 Day 5**: C++ symbol extraction (Complete)
+- ✅ **Week 3 Day 6**: Java symbol extraction (Complete)
+- ✅ **Week 3 Day 7**: C# symbol extraction (Complete)
+- 📋 **Week 4**: PHP/Ruby/Swift symbol extraction
+- 📋 **Week 5**: CLI/MCP integration enhancements
 - 📋 **Week 6**: Incremental indexing & performance optimization
 
 ---

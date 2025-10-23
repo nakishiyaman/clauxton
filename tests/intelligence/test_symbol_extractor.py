@@ -33,13 +33,72 @@ class TestSymbolExtractor:
 
     def test_extract_with_unsupported_language(self, tmp_path):
         """Test extracting from unsupported language."""
-        test_file = tmp_path / "test.go"
-        test_file.write_text("func main() {}")
+        test_file = tmp_path / "test.rb"
+        test_file.write_text("def hello() end")
 
         extractor = SymbolExtractor()
-        symbols = extractor.extract(test_file, "go")
+        symbols = extractor.extract(test_file, "ruby")
 
         # Should return empty list for unsupported language
+        assert symbols == []
+
+
+class TestSymbolExtractorIntegration:
+    """Test SymbolExtractor integration."""
+
+    def test_unsupported_language(self, tmp_path):
+        """Test extracting with unsupported language."""
+        test_file = tmp_path / "test.rb"
+        test_file.write_text("def hello\n  puts 'Hello'\nend")
+
+        extractor = SymbolExtractor()
+        symbols = extractor.extract(test_file, "ruby")
+
+        # Should return empty list for unsupported language
+        assert symbols == []
+
+    def test_language_case_sensitivity(self, tmp_path):
+        """Test language parameter is case-sensitive."""
+        test_file = tmp_path / "test.py"
+        test_file.write_text("def hello():\n    pass")
+
+        extractor = SymbolExtractor()
+
+        # Lowercase should work
+        symbols_lower = extractor.extract(test_file, "python")
+        if extractor.extractors["python"].available:
+            assert len(symbols_lower) >= 1
+
+        # Uppercase should not work (case-sensitive)
+        symbols_upper = extractor.extract(test_file, "Python")
+        assert symbols_upper == []
+
+    def test_dispatcher_has_all_languages(self):
+        """Test SymbolExtractor dispatcher includes all expected languages."""
+        extractor = SymbolExtractor()
+
+        expected_languages = {
+            "python", "javascript", "typescript", "go", "rust", "cpp", "java", "csharp"
+        }
+        actual_languages = set(extractor.extractors.keys())
+
+        assert expected_languages == actual_languages
+
+    def test_extract_with_exception_handling(self, tmp_path, monkeypatch):
+        """Test that exceptions in extractors are handled gracefully."""
+        test_file = tmp_path / "test.py"
+        test_file.write_text("def foo(): pass")
+
+        extractor = SymbolExtractor()
+
+        # Mock the Python extractor to raise an exception
+        def mock_extract(self, file_path):
+            raise RuntimeError("Mock error")
+
+        monkeypatch.setattr(PythonSymbolExtractor, "extract", mock_extract)
+
+        # Should return empty list, not crash
+        symbols = extractor.extract(test_file, "python")
         assert symbols == []
 
 
@@ -53,9 +112,10 @@ class TestPythonSymbolExtractor:
         # Should have either tree-sitter or fallback
         assert extractor.available in [True, False]
 
-        if extractor.available:
-            assert extractor.parser is not None
-            assert extractor.language is not None
+        # Parser should always be initialized (PythonParser instance)
+        assert extractor.parser is not None
+        from clauxton.intelligence.parser import PythonParser
+        assert isinstance(extractor.parser, PythonParser)
 
     def test_extract_simple_function(self, tmp_path):
         """Test extracting a simple function."""

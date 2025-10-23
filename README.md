@@ -166,8 +166,15 @@ Claude Code: (Begins implementation)
 #### 🗺️ Repository Map (v0.11.0 - In Development)
 **Automatic Codebase Intelligence**:
 - ✅ **File Indexing**: Recursive scanning with `.gitignore` support (1000+ files in <2s)
-- ✅ **Symbol Extraction**: Functions, classes, methods with signatures and docstrings
-- ✅ **Multi-Language Support**: Python (complete), JavaScript/TypeScript/Go/Rust (planned)
+- ✅ **Symbol Extraction**: Functions, classes, methods, interfaces, types with signatures
+- ✅ **Multi-Language Support**:
+  - **Python** ✅ Complete (functions, classes, methods, docstrings, type hints)
+  - **JavaScript** ✅ Complete (ES6+, classes, arrow functions, async/await)
+  - **TypeScript** ✅ Complete (interfaces, type aliases, generics, type annotations)
+  - **Go** ✅ Complete (functions, methods, structs, interfaces, type aliases, generics)
+  - **Rust** ✅ Complete (functions, methods, structs, enums, traits, type aliases, generics)
+  - **C++** ✅ Complete (functions, classes, structs, namespaces, templates)
+  - **Java** ✅ Complete (classes, interfaces, methods, enums, annotations, constructors)
 - ✅ **3 Search Modes**:
   - **Exact**: Fast substring matching with priority scoring
   - **Fuzzy**: Typo-tolerant using Levenshtein distance
@@ -179,18 +186,65 @@ Claude Code: (Begins implementation)
 
 **Example Usage**:
 ```bash
-# Index your codebase
+# Index your codebase (Python, JavaScript, TypeScript)
 clauxton repo index
 # → Indexed 50 files, found 200 symbols in 0.15s
+#   - 15 Python files (50 functions, 20 classes)
+#   - 20 TypeScript files (80 functions, 15 interfaces, 10 type aliases)
+#   - 15 JavaScript files (40 functions, 10 classes)
 
-# Search for symbols
+# Search for functions
 clauxton repo search "authenticate" --mode exact
 # → authenticate_user (function) at auth.py:10-20
-#   get_auth_token (function) at auth.py:30-35
+#   getAuthToken (function) at auth.ts:30-35
+#   AuthService.verify (method) at auth-service.ts:45-60
+
+# Search for TypeScript interfaces
+clauxton repo search "User" --mode exact
+# → User (interface) at types.ts:5-10
+#   UserService (class) at user-service.ts:15-50
+#   getUserById (function) at api.ts:100-110
 
 # Semantic search by meaning
 clauxton repo search "user login" --mode semantic
 # → authenticate_user, verify_credentials, check_session...
+#   AuthService, LoginRequest, validateToken...
+```
+
+**Programming API**:
+```python
+from pathlib import Path
+from clauxton.intelligence.symbol_extractor import (
+    PythonSymbolExtractor,
+    JavaScriptSymbolExtractor,
+    TypeScriptSymbolExtractor,
+    GoSymbolExtractor,
+)
+
+# Extract TypeScript symbols
+ts_extractor = TypeScriptSymbolExtractor()
+symbols = ts_extractor.extract(Path("src/types.ts"))
+
+for symbol in symbols:
+    print(f"{symbol['name']} ({symbol['type']}) at line {symbol['line_start']}")
+    # Output:
+    # User (interface) at line 5
+    # AuthRequest (type_alias) at line 10
+    # AuthService (class) at line 15
+
+# Extract Go symbols
+go_extractor = GoSymbolExtractor()
+go_symbols = go_extractor.extract(Path("pkg/user.go"))
+
+for symbol in go_symbols:
+    if symbol['type'] == 'method':
+        print(f"{symbol['name']} (method on {symbol['receiver']})")
+    else:
+        print(f"{symbol['name']} ({symbol['type']})")
+    # Output:
+    # User (struct)
+    # GetName (method on *User)
+    # SetName (method on *User)
 ```
 
 **Total**: Week 1 complete (81 tests, 92%/90% coverage)
@@ -252,10 +306,11 @@ clauxton repo search "user login" --mode semantic
 - ✅ **MCP Tools**: Full integration for Claude Code
 
 ### 🔮 Future Enhancements
-**v0.11.0 Roadmap** (In Progress - Week 1/6 Complete):
+**v0.11.0 Roadmap** (In Progress - Week 2/6 Complete):
 - ✅ **Week 1**: Python symbol extraction with 3 search modes (Complete)
-- 🚧 **Week 2-3**: JavaScript/TypeScript support
-- 📋 **Week 4-5**: Go/Rust support
+- ✅ **Week 2**: JavaScript/TypeScript/Go/Rust support (Complete - 199 tests)
+- 📋 **Week 3-4**: Additional languages (C++, Java, C#)
+- 📋 **Week 5**: CLI/MCP integration
 - 📋 **Week 6**: Incremental indexing & performance optimization
 
 **Post v0.11.0**:

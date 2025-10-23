@@ -24,7 +24,7 @@ clauxton repo index --path /path/to/project
 **What it does:**
 - Scans all files recursively
 - Respects `.gitignore` patterns
-- Extracts symbols from Python files (more languages coming in v0.11.1)
+- Extracts symbols from Python, JavaScript, TypeScript, Go, Rust, and C++ files
 - Creates index in `.clauxton/map/`
 
 ### 2. Search for Symbols
@@ -178,15 +178,35 @@ Benchmarks on typical projects:
 
 ## Supported Languages
 
-### v0.11.0
-- **Python** (full support)
+### v0.11.0 (Current)
+- **Python** ✅ (functions, classes, methods, docstrings, type hints)
   - tree-sitter for accurate parsing
   - ast module fallback
+- **JavaScript** ✅ (ES6+, classes, arrow functions, async/await)
+  - tree-sitter-javascript
+- **TypeScript** ✅ (interfaces, type aliases, generics, type annotations)
+  - tree-sitter-typescript
+- **Go** ✅ (functions, methods, structs, interfaces, type aliases, generics)
+  - tree-sitter-go
+- **Rust** ✅ (functions, methods, structs, enums, traits, type aliases, generics)
+  - tree-sitter-rust
+- **C++** ✅ (functions, classes, structs, namespaces, templates)
+  - tree-sitter-cpp
+  - Supports: constructors/destructors, const/static/virtual methods, operator overloading
+  - Limitations: Method bodies not extracted separately (captured within class), Doxygen comments not parsed yet
+- **Java** ✅ (classes, interfaces, methods, enums, annotations)
+  - tree-sitter-java
+  - Supports: constructors, generics, static methods, abstract classes, inheritance
+  - Limitations: Javadoc comments not parsed yet, package declarations not extracted
+- **C#** ✅ (classes, interfaces, methods, properties, enums, delegates, namespaces)
+  - tree-sitter-c-sharp
+  - Supports: constructors, async methods, static methods, generics, qualified namespaces
+  - Limitations: XML documentation comments not parsed yet, using statements not extracted
 
 ### v0.11.1 (Planned)
-- JavaScript/TypeScript
-- Go
-- Rust
+- PHP
+- Ruby
+- Swift
 
 ## Integration with Claude Code
 
@@ -292,7 +312,7 @@ for symbol in symbols:
 ## FAQ
 
 **Q: Does it support other languages besides Python?**
-A: v0.11.0 supports Python only. JavaScript/TypeScript/Go/Rust coming in v0.11.1.
+A: v0.11.0 supports Python, JavaScript, TypeScript, Go, Rust, and C++. Java/C# coming in v0.11.1.
 
 **Q: Is the index stored in version control?**
 A: No. `.clauxton/` is automatically added to `.gitignore`.
