@@ -39,6 +39,9 @@ class IndexResult:
         files_indexed: int,
         symbols_found: int,
         duration_seconds: float,
+        by_type: Optional[Dict[str, int]] = None,
+        by_language: Optional[Dict[str, int]] = None,
+        indexed_at: Optional[datetime] = None,
         errors: Optional[List[str]] = None
     ):
         """
@@ -48,11 +51,17 @@ class IndexResult:
             files_indexed: Number of files successfully indexed
             symbols_found: Number of symbols extracted
             duration_seconds: Time taken for indexing
+            by_type: Breakdown of files by type (source/test/config/docs/other)
+            by_language: Breakdown of files by language
+            indexed_at: Timestamp of indexing
             errors: List of error messages (if any)
         """
         self.files_indexed = files_indexed
         self.symbols_found = symbols_found
         self.duration_seconds = duration_seconds
+        self.by_type = by_type or {}
+        self.by_language = by_language or {}
+        self.indexed_at = indexed_at or datetime.now()
         self.errors = errors or []
 
     def __repr__(self) -> str:
@@ -222,6 +231,8 @@ class RepositoryMap:
         symbols_found = 0
         errors = []
         all_files = []
+        by_type: Dict[str, int] = {}
+        by_language: Dict[str, int] = {}
 
         from clauxton.intelligence.symbol_extractor import SymbolExtractor
         symbol_extractor = SymbolExtractor()
@@ -240,6 +251,13 @@ class RepositoryMap:
                 file_info = self._categorize_file(file_path)
                 all_files.append(file_info)
                 files_indexed += 1
+
+                # Track statistics
+                file_type = file_info["file_type"]
+                language = file_info["language"]
+                by_type[file_type] = by_type.get(file_type, 0) + 1
+                if language:
+                    by_language[language] = by_language.get(language, 0) + 1
 
                 # Extract symbols from source files
                 if file_info["file_type"] == "source" and file_info["language"]:
@@ -272,6 +290,7 @@ class RepositoryMap:
         self._save_index(all_files)
 
         duration = time.time() - start_time
+        indexed_at = datetime.now()
         logger.info(
             f"Indexing complete: {files_indexed} files, "
             f"{symbols_found} symbols in {duration:.2f}s"
@@ -281,6 +300,9 @@ class RepositoryMap:
             files_indexed=files_indexed,
             symbols_found=symbols_found,
             duration_seconds=duration,
+            by_type=by_type,
+            by_language=by_language,
+            indexed_at=indexed_at,
             errors=errors
         )
 
