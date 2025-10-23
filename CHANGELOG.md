@@ -9,6 +9,87 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### v0.11.0 - Repository Map (In Development)
+**Status**: 🚧 Week 1/6 Complete
+**Test Coverage**: 91% (868 tests, +110 from v0.10.1)
+**Branch**: `feature/v0.11.0-repository-map`
+
+#### Added (Week 1 - Complete)
+
+**Repository Map - Python Support**:
+- ✅ **File Indexing** (`repository_map.py`): Recursive codebase scanning
+  - Respects `.gitignore` patterns with default exclusions (.git, __pycache__, .venv, etc.)
+  - File categorization: source/test/config/docs/other
+  - Language detection: Python, JavaScript, TypeScript, Go, Rust, Java, C/C++, and more
+  - Statistics collection: by_type, by_language breakdowns
+  - Performance: 1000+ files in <2 seconds
+  - Storage: JSON format in `.clauxton/map/` (~10-50KB per project)
+
+- ✅ **Symbol Extraction** (`symbol_extractor.py`): Python code analysis
+  - tree-sitter parser (v0.25.2) for accurate extraction
+  - ast module fallback when tree-sitter unavailable
+  - Extracts: functions, classes, methods with full metadata
+  - Captures: signatures, docstrings, line numbers (start/end)
+  - Handles: nested functions, complex signatures, Unicode characters
+  - Graceful error handling for syntax errors
+
+- ✅ **Symbol Search** (`repository_map.py`): 3 intelligent search modes
+  - **Exact mode** (default): Fast substring matching with priority scoring
+    - Exact match: 100 points, starts with: 90, contains: 50, docstring: 30
+    - Performance: <0.01s for 1000 symbols
+  - **Fuzzy mode**: Typo-tolerant using Levenshtein distance (difflib)
+    - Similarity threshold: 0.4
+    - Example: "authentcate" finds "authenticate_user"
+  - **Semantic mode**: TF-IDF meaning-based search
+    - Requires scikit-learn (graceful fallback to exact if unavailable)
+    - Searches by concept, not just text
+    - Example: "user login" finds authenticate_user, verify_credentials, etc.
+
+- ✅ **CLI Commands** (`cli/repository.py`): 3 commands with Rich UI
+  - `clauxton repo index [--path PATH]` - Index repository with progress tracking
+  - `clauxton repo search QUERY [--mode MODE] [--limit N]` - Search symbols
+  - `clauxton repo status` - Display statistics (files, symbols, categories)
+  - Rich console UI: colors, tables, progress bars
+  - Formatted output with docstrings and file locations
+
+- ✅ **MCP Tools** (`mcp/server.py`): 2 new tools (20 → 22 total)
+  - `index_repository(root_path)` - Index codebase with statistics
+    - Returns: files_indexed, symbols_found, duration, by_type, by_language, indexed_at
+    - Error handling: nonexistent paths, indexing failures
+  - `search_symbols(query, mode, limit, root_path)` - Search with 3 modes
+    - Returns: count, symbols list with name/type/file/lines/docstring/signature
+    - Validation: mode validation, empty results handling
+    - Supports: special characters (__init__), Unicode (日本語)
+
+#### Tests (Week 1)
+- ✅ **81 intelligence tests** (92%/90% coverage):
+  - 64 repository_map tests: initialization, lazy loading, data models, indexing, search, helpers, errors
+  - 17 symbol_extractor tests: tree-sitter, ast fallback, edge cases
+- ✅ **18 MCP tests** (comprehensive scenarios):
+  - Basic: default path, custom path, statistics
+  - Errors: nonexistent paths, indexing/search failures, invalid modes
+  - Edge cases: empty directory, no index, limit validation, special/Unicode characters
+- ✅ **Total**: 868 tests (+110), all passing
+- ✅ **Quality**: mypy ✓, ruff ✓, 100% test success rate
+
+#### Documentation (Week 1)
+- ✅ **REPOSITORY_MAP_GUIDE.md** (300 lines): Complete usage guide
+  - Quick start, search algorithms, use cases, performance, troubleshooting
+- ✅ **mcp-server.md** (+199 lines): MCP integration documentation
+  - Tool descriptions, integration workflow, performance notes, troubleshooting (12 items)
+- ✅ **SESSION_15_SUMMARY.md** (553 lines): Complete Week 1 implementation record
+- ✅ **README.md**: Updated with v0.11.0 features and roadmap
+
+#### Performance (Week 1)
+- Indexing: FastAPI (1,175 files) in 0.73s - **63.5% faster** than 2s target
+- Search: <0.01s exact, <0.1s semantic for typical projects
+- Storage: ~10-50KB JSON per project
+
+#### Roadmap (Weeks 2-6)
+- 🚧 **Week 2-3**: JavaScript/TypeScript symbol extraction
+- 📋 **Week 4-5**: Go/Rust symbol extraction
+- 📋 **Week 6**: Incremental indexing & performance optimization
+
 ---
 
 ## [0.10.1] - 2025-10-22
