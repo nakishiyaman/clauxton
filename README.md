@@ -56,6 +56,18 @@ clauxton kb search "FastAPI authentication"
 # Get next recommended task (AI-powered)
 clauxton task next
 
+# 🆕 v0.11.0: Index your codebase (Repository Map)
+clauxton repo index
+# → Indexed 50 files, found 200 symbols (Python, TypeScript, JavaScript)
+
+# 🆕 v0.11.0: Search symbols across codebase
+clauxton repo search "authenticate" --mode exact
+# → authenticate_user (function) at auth.py:10-20
+#   AuthService.verify (method) at auth.ts:45-60
+
+clauxton repo search "user login" --mode semantic
+# → Find symbols by meaning (requires scikit-learn)
+
 # Undo last operation (v0.10.0 feature)
 clauxton undo                   # Undo with confirmation
 clauxton undo --history         # View operation history
@@ -77,7 +89,7 @@ pip install -e .
 
 ### MCP Integration with Claude Code
 
-Set up Clauxton as MCP tools in Claude Code (17 tools available):
+Set up Clauxton as MCP tools in Claude Code (22 tools available):
 
 ```bash
 # Automatic setup (Linux/macOS)
@@ -299,7 +311,7 @@ for symbol in go_symbols:
   - Utils modules: 15-29% coverage (targeted for future improvement)
 - ✅ **91% Coverage** - High code quality maintained across all modules
 - ✅ **Type Safe** - Full Pydantic validation with strict mode
-- ✅ **Production Ready** - Stable v0.10.1 release, v0.11.0 in active development
+- ✅ **Production Ready** - Stable v0.11.0 release with 12-language Repository Map
 
 ### ⚠️ Conflict Detection
 
@@ -312,15 +324,15 @@ for symbol in go_symbols:
 - ✅ **MCP Tools**: Full integration for Claude Code
 
 ### 🔮 Future Enhancements
-**v0.11.0 Roadmap** (In Progress - Week 5/6 Complete ✅):
-- ✅ **Week 1**: Python symbol extraction with 3 search modes (Complete)
-- ✅ **Week 2**: JavaScript/TypeScript/Go/Rust support (Complete)
-- ✅ **Week 3**: C++/Java/C# support (Complete)
-- ✅ **Week 4**: PHP/Ruby/Swift support (Complete)
-- ✅ **Week 5**: Kotlin support (Complete - 12 languages total!)
-- 📋 **Week 6**: Integration enhancements & performance optimization
 
-**Post v0.11.0**:
+**v0.11.0 Complete** (Released 2025-10-24) ✅:
+- ✅ **Repository Map**: 12-language symbol extraction
+- ✅ **3 Search Modes**: Exact, Fuzzy, Semantic
+- ✅ **441 intelligence tests** across all languages
+- ✅ **Performance**: 1000+ files in 1-2s
+- ✅ **MCP Integration**: 2 new tools (22 total)
+
+**v0.12.0 Roadmap** (Planned):
 - 📋 **Line-Level Conflict Detection**: Detect conflicts at code line level
 - 📋 **Drift Detection**: Track scope expansion in tasks
 - 📋 **Enhanced Event Logging**: Complete audit trail with events.jsonl
@@ -352,7 +364,7 @@ pip install clauxton==0.10.1
 - ✅ Configurable confirmation modes (always/auto/never)
 - ✅ Operation logging with 30-day retention
 - ✅ Automatic backups (last 10 retained)
-- ✅ MCP Server (17 tools for Claude Code)
+- ✅ MCP Server (22 tools for Claude Code)
 - ✅ All dependencies (scikit-learn, numpy, pydantic, click, pyyaml, gitpython, mcp)
 
 ### Development Installation
@@ -660,7 +672,7 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 - [Quick Start Guide](docs/quick-start.md) - Get started in 5 minutes (CLI)
 - **[Developer Workflow Guide](docs/DEVELOPER_WORKFLOW_GUIDE.md)** - Complete development workflow with examples and diagrams ✨ v0.10.0
 - **[Installation Guide](docs/INSTALLATION_GUIDE.md)** - Shell alias setup, virtual environment isolation explained
-- **[MCP Integration Guide](docs/MCP_INTEGRATION_GUIDE.md)** - Step-by-step Claude Code integration (17 tools)
+- **[MCP Integration Guide](docs/MCP_INTEGRATION_GUIDE.md)** - Step-by-step Claude Code integration (22 tools)
 - [Tutorial: Your First Knowledge Base](docs/tutorial-first-kb.md) - 30-minute beginner guide
 - [Use Cases & Examples](docs/use-cases.md) - Real-world scenarios and implementations
 - [MCP Server Quick Start](docs/mcp-server-quickstart.md) - Get started with Claude Code
@@ -705,7 +717,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 | **Phase 1: Core Engine** | ✅ Complete | 100% | v0.8.0 |
 | **Phase 2: Conflict Detection** | ✅ Complete | 100% | v0.9.0-beta |
 | **Phase 3: Enhanced UX** | ✅ Complete | 100% | **v0.10.0** (Released 2025-10-22) |
-| Polish & Documentation | 📋 Planned | 0% | v0.10.1 (target) |
+| **Phase 4: Repository Map** | ✅ Complete | 100% | **v0.11.0** (Released 2025-10-24) |
+| Polish & Documentation | 📋 Planned | 0% | v0.12.0 (target) |
 | v1.0 Public Launch | 📋 Planned | 0% | v1.0.0 (target) |
 
 **Phase 1 Complete** (v0.8.0 - Released 2025-10-19) ✅:
@@ -738,8 +751,19 @@ MIT License - see [LICENSE](LICENSE) for details.
 - 🆕 **13 comprehensive documentation files**
 - 🆕 **Production ready, stable release**
 
+**Phase 4 Complete** (v0.11.0 - Released 2025-10-24) ✅:
+- 🗺️ **Repository Map** - Automatic codebase intelligence
+- 🆕 **12-Language Support**: Python, JavaScript, TypeScript, Go, Rust, C++, Java, C#, PHP, Ruby, Swift, Kotlin
+- 🆕 **Multi-Language Symbol Extraction**: Functions, classes, methods, interfaces, types with full metadata
+- 🆕 **3 Search Modes**: Exact (fast substring), Fuzzy (typo-tolerant), Semantic (TF-IDF meaning-based)
+- 🆕 **CLI Commands**: `repo index`, `repo search`, `repo status`
+- 🆕 **2 new MCP Tools** (22 tools total: index_repository, search_symbols)
+- 🆕 **Performance**: 1000+ files in 1-2s indexing, <0.01s search
+- 🆕 **441 intelligence tests** (12 languages, 91% coverage)
+- 🆕 **1,228 total tests** (+470 from v0.10.0)
+- 🆕 **Production ready with comprehensive error handling**
+
 See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
-See [docs/RELEASE_NOTES_v0.10.0.md](docs/RELEASE_NOTES_v0.10.0.md) for complete v0.10.0 release notes.
 
 ---
 
