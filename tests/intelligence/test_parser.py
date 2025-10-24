@@ -610,3 +610,56 @@ class TestSwiftParser:
 
         result = parser.parse(test_file)
         assert result is None
+
+
+# ============================================================================
+# Kotlin Parser Tests
+# ============================================================================
+
+
+def test_kotlin_parser_init():
+    """Test KotlinParser initialization."""
+    from clauxton.intelligence.parser import KotlinParser
+
+    parser = KotlinParser()
+    assert parser is not None
+
+
+def test_kotlin_parser_parse_simple_file():
+    """Test KotlinParser can parse a simple Kotlin file."""
+    from clauxton.intelligence.parser import KotlinParser
+
+    parser = KotlinParser()
+    if not parser.available:
+        pytest.skip("tree-sitter-kotlin not available")
+
+    sample_file = Path(__file__).parent.parent / "fixtures" / "kotlin" / "sample.kt"
+    tree = parser.parse(sample_file)
+
+    assert tree is not None
+    assert tree.root_node is not None
+    assert tree.root_node.type == "source_file"
+
+
+def test_kotlin_parser_parse_nonexistent_file():
+    """Test KotlinParser raises FileNotFoundError for nonexistent file."""
+    from clauxton.intelligence.parser import KotlinParser
+
+    parser = KotlinParser()
+    if not parser.available:
+        pytest.skip("tree-sitter-kotlin not available")
+
+    with pytest.raises(FileNotFoundError):
+        parser.parse(Path("/nonexistent/file.kt"))
+
+
+def test_kotlin_parser_when_unavailable():
+    """Test KotlinParser when tree-sitter-kotlin is unavailable."""
+    from clauxton.intelligence.parser import KotlinParser
+
+    parser = KotlinParser()
+    parser.available = False
+
+    sample_file = Path(__file__).parent.parent / "fixtures" / "kotlin" / "sample.kt"
+    tree = parser.parse(sample_file)
+    assert tree is None

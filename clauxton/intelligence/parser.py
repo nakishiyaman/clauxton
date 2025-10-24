@@ -2,12 +2,14 @@
 Multi-language parser using tree-sitter.
 
 This module provides parsers for extracting AST nodes from source files.
-Supports Python, JavaScript (ES6+), TypeScript, Go, Rust, C++, Java, C#, PHP, Ruby, and Swift.
+Supports Python, JavaScript (ES6+), TypeScript, Go, Rust, C++, Java, C#, PHP,
+Ruby, Swift, and Kotlin.
 
 Example:
     >>> from clauxton.intelligence.parser import (
     ...     PythonParser, JavaScriptParser, TypeScriptParser, GoParser,
-    ...     RustParser, CppParser, JavaParser, CSharpParser, PhpParser, RubyParser, SwiftParser
+    ...     RustParser, CppParser, JavaParser, CSharpParser, PhpParser, RubyParser,
+    ...     SwiftParser, KotlinParser
     ... )
     >>> py_parser = PythonParser()
     >>> js_parser = JavaScriptParser()
@@ -20,6 +22,7 @@ Example:
     >>> php_parser = PhpParser()
     >>> rb_parser = RubyParser()
     >>> swift_parser = SwiftParser()
+    >>> kt_parser = KotlinParser()
     >>> py_tree = py_parser.parse(Path("script.py"))
     >>> js_tree = js_parser.parse(Path("script.js"))
     >>> ts_tree = ts_parser.parse(Path("script.ts"))
@@ -31,6 +34,7 @@ Example:
     >>> php_tree = php_parser.parse(Path("script.php"))
     >>> rb_tree = rb_parser.parse(Path("script.rb"))
     >>> swift_tree = swift_parser.parse(Path("Main.swift"))
+    >>> kt_tree = kt_parser.parse(Path("Main.kt"))
 """
 # type: ignore  # tree-sitter has complex types
 
@@ -430,4 +434,37 @@ class SwiftParser(BaseParser):
             logger.info("SwiftParser initialized successfully")
         except ImportError as e:
             logger.warning(f"tree-sitter-swift not available: {e}")
+            self.available = False
+
+
+class KotlinParser(BaseParser):
+    """
+    Kotlin parser using tree-sitter.
+
+    Parses Kotlin source files and returns AST for symbol extraction.
+    Supports:
+    - Classes (regular, data, sealed)
+    - Interfaces
+    - Objects (singleton, companion)
+    - Functions (regular, extension, suspend)
+    - Properties
+    - Enums
+    """
+
+    def __init__(self) -> None:
+        """Initialize Kotlin parser."""
+        self.available = False
+        self.parser = None  # type: ignore
+        self.language = None  # type: ignore
+
+        try:
+            import tree_sitter_kotlin as tskotlin
+            from tree_sitter import Language, Parser
+
+            self.language = Language(tskotlin.language())
+            self.parser = Parser(self.language)
+            self.available = True
+            logger.info("KotlinParser initialized successfully")
+        except ImportError as e:
+            logger.warning(f"tree-sitter-kotlin not available: {e}")
             self.available = False

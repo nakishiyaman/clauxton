@@ -10,8 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### v0.11.0 - Repository Map (In Development)
-**Status**: 🚧 Week 4 Day 10 Complete (11 Languages: Python, JavaScript, TypeScript, Go, Rust, C++, Java, C#, PHP, Ruby, Swift)
-**Test Coverage**: 92% for intelligence (412 intelligence tests + 787 core/other tests = 1199 total)
+**Status**: 🚧 Week 5 Complete (12 Languages: Python, JavaScript, TypeScript, Go, Rust, C++, Java, C#, PHP, Ruby, Swift, Kotlin)
+**Test Coverage**: 91% for intelligence (441 intelligence tests + 787 core/other tests = 1228 total)
 **Branch**: `feature/v0.11.0-repository-map`
 
 #### Added (Week 1 - Complete)
@@ -159,18 +159,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 32 extractor tests + 4 parser tests = 36 comprehensive tests (all passing)
   - Coverage: 92% for symbol_extractor.py, 79% for parser.py
 
+**Kotlin Language Support** (Week 5):
+- ✅ **Kotlin Support** (`symbol_extractor.py`): Complete Kotlin 1.x+ support
+  - tree-sitter-kotlin parser (v1.1.0, released Jan 2025)
+  - Extracts: classes, data classes, sealed classes, interfaces, objects, companion objects, enums, functions, suspend functions, methods, properties
+  - Supports: data classes, sealed classes, companion objects, extension functions, suspend functions (coroutines), infix functions, generic types, default parameters, enum classes, object declarations (singletons), interface declarations
+  - 25 extractor tests + 4 parser tests = 29 comprehensive tests (all passing)
+  - Coverage: 91% for symbol_extractor.py, 82% for parser.py
+
 **Parser Infrastructure** (`parser.py`):
 - ✅ Unified BaseParser for all languages
-- ✅ Language-specific parsers: PythonParser, JavaScriptParser, TypeScriptParser, GoParser, RustParser, CppParser, JavaParser, CSharpParser, PhpParser, RubyParser, SwiftParser
+- ✅ Language-specific parsers: PythonParser, JavaScriptParser, TypeScriptParser, GoParser, RustParser, CppParser, JavaParser, CSharpParser, PhpParser, RubyParser, SwiftParser, KotlinParser
 - ✅ Graceful fallback when tree-sitter unavailable
-- ✅ 42 parser tests (4 per language except Python with 6)
+- ✅ 46 parser tests (4 per language except Python with 6)
 
-#### Tests (Week 2-4)
-- ✅ **412 intelligence tests** (92% coverage for symbol_extractor.py, 79% for parser.py):
-  - 42 parser tests (Python, JavaScript, TypeScript, Go, Rust, C++, Java, C#, PHP, Ruby, Swift)
+#### Tests (Week 2-5)
+- ✅ **441 intelligence tests** (91% coverage for symbol_extractor.py, 82% for parser.py):
+  - 46 parser tests (Python, JavaScript, TypeScript, Go, Rust, C++, Java, C#, PHP, Ruby, Swift, Kotlin)
   - 13 Python symbol extraction tests
   - 23 JavaScript tests + 24 TypeScript tests
-  - 22 Go tests + 29 Rust tests + 28 C++ tests + 28 Java tests + 32 C# tests + 38 PHP tests + 29 Ruby tests + 32 Swift tests
+  - 22 Go tests + 29 Rust tests + 28 C++ tests + 28 Java tests + 32 C# tests + 38 PHP tests + 29 Ruby tests + 32 Swift tests + 25 Kotlin tests
   - 7 integration tests
   - 81 repository map tests
 - ✅ **Quality**: All tests passing, mypy ✓, ruff ✓
@@ -178,7 +186,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ **PHP 8+ Features**: Comprehensive tests for enums, match expressions, promoted properties, attributes, readonly, final
 - ✅ **Ruby Features**: Comprehensive tests for module mixins, singleton methods, attr_accessor/reader/writer, nested classes/modules
 - ✅ **Swift Features**: Comprehensive tests for init methods, protocols, extensions, generic types, computed properties, optional types, access modifiers, method parameters, inheritance, empty classes/structs
-- ✅ **Total project tests**: 1199 tests
+- ✅ **Kotlin Features**: Comprehensive tests for data classes, sealed classes, companion objects, extension functions, suspend functions, infix functions, generic types, enum classes, object declarations, interface declarations
+- ✅ **Total project tests**: 1228 tests
 
 #### Documentation (Week 2-4)
 - ✅ **REPOSITORY_MAP_GUIDE.md**: Updated with all 11 supported languages
@@ -200,7 +209,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ **Week 4 Day 8**: PHP symbol extraction (Complete)
 - ✅ **Week 4 Day 9**: Ruby symbol extraction (Complete)
 - ✅ **Week 4 Day 10**: Swift symbol extraction (Complete)
-- 📋 **Week 5**: Kotlin symbol extraction
+- ✅ **Week 5**: Kotlin symbol extraction (Complete)
 - 📋 **Week 5-6**: CLI/MCP integration enhancements
 - 📋 **Week 6**: Incremental indexing & performance optimization
 

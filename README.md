@@ -167,7 +167,7 @@ Claude Code: (Begins implementation)
 **Automatic Codebase Intelligence**:
 - ✅ **File Indexing**: Recursive scanning with `.gitignore` support (1000+ files in <2s)
 - ✅ **Symbol Extraction**: Functions, classes, methods, interfaces, types with signatures
-- ✅ **Multi-Language Support**:
+- ✅ **Multi-Language Support** (12 languages):
   - **Python** ✅ Complete (functions, classes, methods, docstrings, type hints)
   - **JavaScript** ✅ Complete (ES6+, classes, arrow functions, async/await)
   - **TypeScript** ✅ Complete (interfaces, type aliases, generics, type annotations)
@@ -175,6 +175,11 @@ Claude Code: (Begins implementation)
   - **Rust** ✅ Complete (functions, methods, structs, enums, traits, type aliases, generics)
   - **C++** ✅ Complete (functions, classes, structs, namespaces, templates)
   - **Java** ✅ Complete (classes, interfaces, methods, enums, annotations, constructors)
+  - **C#** ✅ Complete (classes, interfaces, structs, methods, properties, records, extensions)
+  - **PHP** ✅ Complete (classes, functions, methods, traits, enums, promoted properties, attributes)
+  - **Ruby** ✅ Complete (classes, modules, methods, module mixins, singleton methods, attr_*)
+  - **Swift** ✅ Complete (classes, structs, protocols, extensions, enums, init methods, properties)
+  - **Kotlin** ✅ Complete (classes, data/sealed classes, interfaces, objects, companion objects, suspend functions)
 - ✅ **3 Search Modes**:
   - **Exact**: Fast substring matching with priority scoring
   - **Fuzzy**: Typo-tolerant using Levenshtein distance
@@ -285,9 +290,10 @@ for symbol in go_symbols:
 - ✅ `search_symbols` - Search symbols with exact/fuzzy/semantic modes
 
 #### 📊 Quality Metrics
-- ✅ **868 Tests** - Comprehensive test coverage (758 → 868, +110 tests in v0.11.0):
+- ✅ **1228 Tests** - Comprehensive test coverage (758 → 1228, +470 tests in v0.11.0):
   - Core modules: 87-96% coverage (knowledge_base, task_manager, conflict_detector, etc.)
-  - Intelligence modules: 90-92% coverage (repository_map, symbol_extractor) - **NEW v0.11.0**
+  - Intelligence modules: 91-92% coverage (repository_map, symbol_extractor, parser) - **NEW v0.11.0**
+    - 441 intelligence tests covering 12 languages (Python, JS, TS, Go, Rust, C++, Java, C#, PHP, Ruby, Swift, Kotlin)
   - MCP server: 35% coverage (22 tools, all tested individually)
   - CLI modules: 84-100% coverage (main, tasks, conflicts, config, repository)
   - Utils modules: 15-29% coverage (targeted for future improvement)
@@ -306,12 +312,13 @@ for symbol in go_symbols:
 - ✅ **MCP Tools**: Full integration for Claude Code
 
 ### 🔮 Future Enhancements
-**v0.11.0 Roadmap** (In Progress - Week 2/6 Complete):
+**v0.11.0 Roadmap** (In Progress - Week 5/6 Complete ✅):
 - ✅ **Week 1**: Python symbol extraction with 3 search modes (Complete)
-- ✅ **Week 2**: JavaScript/TypeScript/Go/Rust support (Complete - 199 tests)
-- 📋 **Week 3-4**: Additional languages (C++, Java, C#)
-- 📋 **Week 5**: CLI/MCP integration
-- 📋 **Week 6**: Incremental indexing & performance optimization
+- ✅ **Week 2**: JavaScript/TypeScript/Go/Rust support (Complete)
+- ✅ **Week 3**: C++/Java/C# support (Complete)
+- ✅ **Week 4**: PHP/Ruby/Swift support (Complete)
+- ✅ **Week 5**: Kotlin support (Complete - 12 languages total!)
+- 📋 **Week 6**: Integration enhancements & performance optimization
 
 **Post v0.11.0**:
 - 📋 **Line-Level Conflict Detection**: Detect conflicts at code line level

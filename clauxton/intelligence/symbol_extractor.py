@@ -37,7 +37,7 @@ class SymbolExtractor:
 
     Dispatches to language-specific extractors based on file extension.
     Supports Python, JavaScript, TypeScript, Go, Rust, C++, Java, C#, PHP, Ruby,
-    and Swift (v0.11.0).
+    Swift, and Kotlin (v0.11.0).
     """
 
     def __init__(self) -> None:
@@ -54,6 +54,7 @@ class SymbolExtractor:
             "php": PhpSymbolExtractor(),
             "ruby": RubySymbolExtractor(),
             "swift": SwiftSymbolExtractor(),
+            "kotlin": KotlinSymbolExtractor(),
         }
         logger.debug(f"SymbolExtractor initialized with {len(self.extractors)} languages")
 
@@ -2539,4 +2540,369 @@ class SwiftSymbolExtractor:
             return signature  # type: ignore
         except (AttributeError, UnicodeDecodeError) as e:
             logger.debug(f"Failed to extract Swift signature: {e}")
+            return None
+
+class KotlinSymbolExtractor:
+    """
+    Extract symbols from Kotlin source files using tree-sitter.
+
+    Supports:
+    - Classes (regular, data, sealed)
+    - Interfaces
+    - Objects (singleton, companion)
+    - Functions (regular, extension, suspend)
+    - Properties
+    - Enums
+    """
+
+    def __init__(self) -> None:
+        """Initialize Kotlin symbol extractor."""
+        from clauxton.intelligence.parser import KotlinParser
+
+        self.parser = KotlinParser()
+
+    def extract(self, file_path: Path) -> list[dict[str, any]]:  # type: ignore  # noqa: ANN401
+        """
+        Extract symbols from Kotlin file.
+
+        Args:
+            file_path: Path to Kotlin file
+
+        Returns:
+            List of symbol dictionaries with keys:
+                - name: Symbol name
+                - type: Symbol type (class/interface/object/function/method/property/enum)
+                - file_path: Source file path
+                - line_start: Starting line number
+                - line_end: Ending line number
+                - docstring: Documentation comment (if available)
+                - signature: Full symbol signature (if applicable)
+        """
+        if not self.parser.available:
+            logger.warning("KotlinParser not available, cannot extract symbols")
+            return []
+
+        try:
+            tree = self.parser.parse(file_path)
+            if tree is None:
+                return []
+
+            symbols: list[dict[str, any]] = []  # type: ignore  # noqa: ANN401
+            self._walk_tree(tree.root_node, symbols, str(file_path))
+            return symbols
+
+        except Exception as e:
+            logger.error(f"Failed to extract symbols from {file_path}: {e}")
+            return []
+
+    def _walk_tree(
+        self, node: any, symbols: list[dict[str, any]], file_path: str  # type: ignore  # noqa: ANN401
+    ) -> None:
+        """
+        Walk AST tree and extract symbols.
+
+        Args:
+            node: tree-sitter Node
+            symbols: List to append symbols to
+            file_path: Source file path
+        """
+        # Class/Interface/Enum declaration (Kotlin uses class_declaration for all)
+        if node.type == "class_declaration":
+            # Check if it's an interface
+            is_interface = any(child.type == "interface" for child in node.children)
+            if is_interface:
+                self._extract_interface(node, symbols, file_path)
+            else:
+                self._extract_class(node, symbols, file_path)
+            return  # Don't recurse - already handled
+
+        # Object declaration (singleton or companion object)
+        elif node.type == "object_declaration":
+            self._extract_object(node, symbols, file_path)
+            return
+
+        # Companion object
+        elif node.type == "companion_object":
+            self._extract_companion_object(node, symbols, file_path)
+            return
+
+        # Function declaration (top-level only)
+        elif node.type == "function_declaration":
+            # Only extract if it's top-level (parent is source_file)
+            parent = node.parent
+            if parent and parent.type == "source_file":
+                self._extract_function(node, symbols, file_path)
+                return
+
+        # Property declaration (top-level only)
+        elif node.type == "property_declaration":
+            # Only extract if it's top-level
+            parent = node.parent
+            if parent and parent.type == "source_file":
+                self._extract_property(node, symbols, file_path)
+                return
+
+        # Recurse into children
+        for child in node.children:
+            self._walk_tree(child, symbols, file_path)
+
+    def _extract_class(
+        self, node: any, symbols: list[dict[str, any]], file_path: str  # type: ignore  # noqa: ANN401
+    ) -> None:
+        """
+        Extract class (regular, data, sealed, or enum).
+
+        Kotlin classes can have modifiers like 'data', 'sealed', 'abstract', etc.
+        Enums are also class_declaration with 'enum' keyword.
+        """
+        # Check if it's an enum (modifiers contains 'enum' text)
+        is_enum = False
+        modifiers = []
+        for child in node.children:
+            if child.type == "modifiers":
+                modifier_text = child.text.decode() if child.text else ""
+                if "enum" in modifier_text:
+                    is_enum = True
+                # Collect other modifiers
+                for modifier_child in child.children:
+                    if modifier_child.type in ["data", "sealed", "class_modifier"]:
+                        mod_txt = modifier_child.text.decode() if modifier_child.text else ""
+                        if mod_txt in ["data", "sealed", "abstract", "open", "final"]:
+                            modifiers.append(mod_txt)
+
+        # Determine class type based on enum or modifiers
+        class_type = "enum" if is_enum else "class"
+
+        # Use first meaningful modifier as type prefix (unless it's an enum)
+        if not is_enum:
+            if "data" in modifiers:
+                class_type = "data class"
+            elif "sealed" in modifiers:
+                class_type = "sealed class"
+
+        # Get name
+        name_node = node.child_by_field_name("name")
+        if name_node:
+            symbol = {
+                "name": name_node.text.decode(),
+                "type": class_type,
+                "file_path": file_path,
+                "line_start": node.start_point[0] + 1,
+                "line_end": node.end_point[0] + 1,
+                "docstring": self._extract_docstring(node),
+                "signature": self._extract_signature(node),
+            }
+            symbols.append(symbol)
+
+        # Extract methods and properties from body
+        body_node = None
+        for child in node.children:
+            if child.type == "class_body":
+                body_node = child
+                break
+
+        if body_node:
+            for child in body_node.children:
+                if child.type == "function_declaration":
+                    self._extract_method(child, symbols, file_path)
+                elif child.type == "property_declaration":
+                    self._extract_property(child, symbols, file_path)
+                elif child.type == "companion_object":
+                    self._extract_companion_object(child, symbols, file_path)
+
+    def _extract_object(
+        self, node: any, symbols: list[dict[str, any]], file_path: str  # type: ignore  # noqa: ANN401
+    ) -> None:
+        """Extract object declaration (singleton)."""
+        name_node = node.child_by_field_name("name")
+        if name_node:
+            symbol = {
+                "name": name_node.text.decode(),
+                "type": "object",
+                "file_path": file_path,
+                "line_start": node.start_point[0] + 1,
+                "line_end": node.end_point[0] + 1,
+                "docstring": self._extract_docstring(node),
+                "signature": self._extract_signature(node),
+            }
+            symbols.append(symbol)
+
+        # Extract methods from body
+        body_node = None
+        for child in node.children:
+            if child.type == "class_body":
+                body_node = child
+                break
+
+        if body_node:
+            for child in body_node.children:
+                if child.type == "function_declaration":
+                    self._extract_method(child, symbols, file_path)
+
+    def _extract_companion_object(
+        self, node: any, symbols: list[dict[str, any]], file_path: str  # type: ignore  # noqa: ANN401
+    ) -> None:
+        """Extract companion object."""
+        # Companion objects may or may not have a name
+        name_node = node.child_by_field_name("name")
+        name = name_node.text.decode() if name_node else "Companion"
+
+        symbol = {
+            "name": name,
+            "type": "companion object",
+            "file_path": file_path,
+            "line_start": node.start_point[0] + 1,
+            "line_end": node.end_point[0] + 1,
+            "docstring": self._extract_docstring(node),
+            "signature": "companion object" + (f" {name}" if name_node else ""),
+        }
+        symbols.append(symbol)
+
+        # Extract methods from companion object
+        body_node = None
+        for child in node.children:
+            if child.type == "class_body":
+                body_node = child
+                break
+
+        if body_node:
+            for child in body_node.children:
+                if child.type == "function_declaration":
+                    self._extract_method(child, symbols, file_path)
+
+    def _extract_interface(
+        self, node: any, symbols: list[dict[str, any]], file_path: str  # type: ignore  # noqa: ANN401
+    ) -> None:
+        """Extract interface declaration."""
+        name_node = node.child_by_field_name("name")
+        if name_node:
+            symbol = {
+                "name": name_node.text.decode(),
+                "type": "interface",
+                "file_path": file_path,
+                "line_start": node.start_point[0] + 1,
+                "line_end": node.end_point[0] + 1,
+                "docstring": self._extract_docstring(node),
+                "signature": self._extract_signature(node),
+            }
+            symbols.append(symbol)
+
+    def _extract_function(
+        self, node: any, symbols: list[dict[str, any]], file_path: str  # type: ignore  # noqa: ANN401
+    ) -> None:
+        """Extract top-level function (including extension and suspend functions)."""
+        name_node = node.child_by_field_name("name")
+        if name_node:
+            # Check for modifiers (suspend, inline, etc.)
+            function_type = "function"
+            for child in node.children:
+                if child.type == "modifiers":
+                    for modifier_child in child.children:
+                        if modifier_child.type == "function_modifier":
+                            modifier_text = (
+                                modifier_child.text.decode() if modifier_child.text else ""
+                            )
+                            if "suspend" in modifier_text:
+                                function_type = "suspend function"
+                                break
+
+            symbol = {
+                "name": name_node.text.decode(),
+                "type": function_type,
+                "file_path": file_path,
+                "line_start": node.start_point[0] + 1,
+                "line_end": node.end_point[0] + 1,
+                "docstring": self._extract_docstring(node),
+                "signature": self._extract_signature(node),
+            }
+            symbols.append(symbol)
+
+    def _extract_method(
+        self, node: any, symbols: list[dict[str, any]], file_path: str  # type: ignore  # noqa: ANN401
+    ) -> None:
+        """Extract method from class/object/interface."""
+        name_node = node.child_by_field_name("name")
+        if name_node:
+            symbol = {
+                "name": name_node.text.decode(),
+                "type": "method",
+                "file_path": file_path,
+                "line_start": node.start_point[0] + 1,
+                "line_end": node.end_point[0] + 1,
+                "docstring": self._extract_docstring(node),
+                "signature": self._extract_signature(node),
+            }
+            symbols.append(symbol)
+
+    def _extract_property(
+        self, node: any, symbols: list[dict[str, any]], file_path: str  # type: ignore  # noqa: ANN401
+    ) -> None:
+        """Extract property declaration."""
+        # Get variable declaration name
+        var_decl = None
+        for child in node.children:
+            if child.type == "variable_declaration":
+                var_decl = child
+                break
+
+        if var_decl:
+            name_node = var_decl.child_by_field_name("name")
+            if name_node:
+                symbol = {
+                    "name": name_node.text.decode(),
+                    "type": "property",
+                    "file_path": file_path,
+                    "line_start": node.start_point[0] + 1,
+                    "line_end": node.end_point[0] + 1,
+                    "docstring": self._extract_docstring(node),
+                    "signature": self._extract_signature(node),
+                }
+                symbols.append(symbol)
+
+    def _extract_docstring(self, node: any) -> Optional[str]:  # type: ignore  # noqa: ANN401
+        """
+        Extract documentation comment from node.
+
+        Kotlin uses /** */ (KDoc) for documentation comments.
+        """
+        try:
+            # Look for comment before the node
+            prev_sibling = node.prev_sibling
+            comment_types = ["comment", "block_comment", "multiline_comment"]
+            if prev_sibling and prev_sibling.type in comment_types:
+                comment_text = prev_sibling.text.decode()
+                # Remove /** */ markers and clean up
+                cleaned = (
+                    comment_text.replace("/**", "")
+                    .replace("*/", "")
+                    .replace("*", "")
+                    .strip()
+                )
+                if cleaned:
+                    return cleaned
+            return None
+        except (AttributeError, UnicodeDecodeError) as e:
+            logger.debug(f"Failed to extract Kotlin docstring: {e}")
+            return None
+
+    def _extract_signature(self, node: any) -> Optional[str]:  # type: ignore  # noqa: ANN401
+        """
+        Extract signature from node.
+
+        Args:
+            node: tree-sitter Node
+
+        Returns:
+            Signature string or None
+        """
+        try:
+            # Get the first line of the declaration
+            text = node.text.decode()
+            signature = text.split("\n")[0].strip()
+            # Remove opening brace if present
+            if "{" in signature:
+                signature = signature.split("{")[0].strip()
+            return signature  # type: ignore
+        except (AttributeError, UnicodeDecodeError) as e:
+            logger.debug(f"Failed to extract Kotlin signature: {e}")
             return None
