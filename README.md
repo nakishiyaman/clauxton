@@ -12,8 +12,8 @@
 [![Test Coverage](https://img.shields.io/badge/coverage-91%25-brightgreen.svg)](https://github.com/nakishiyaman/clauxton)
 [![codecov](https://codecov.io/gh/nakishiyaman/clauxton/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/clauxton)
 
-> ✅ **Production Ready**: Clauxton v0.10.1 is stable and ready for production use. Phase 1-3 complete with TF-IDF search, task management, conflict detection, and comprehensive testing (868 tests, 91% coverage).
-> 🚀 **NEW v0.11.0** (In Development): Repository Map - Automatic codebase indexing with symbol search (exact/fuzzy/semantic)!
+> ✅ **Production Ready**: Clauxton v0.11.0 is stable and ready for production use. Complete with Repository Map (12-language support), TF-IDF search, task management, conflict detection, and comprehensive testing (1,228 tests, 91% coverage).
+> 🚀 **NEW v0.11.0** (2025-10-24): Repository Map - Multi-language symbol extraction (12 languages), 3 search modes (exact/fuzzy/semantic), 441 intelligence tests!
 > ✨ **v0.10.0** (2025-10-22): Bulk operations, undo functionality, human-in-the-loop confirmations, and 20 MCP tools!
 
 Clauxton is a Claude Code plugin that provides **persistent project context** to solve AI-assisted development pain points.
@@ -35,7 +35,7 @@ Clauxton is a Claude Code plugin that provides **persistent project context** to
 pip install clauxton
 
 # Verify installation
-clauxton --version  # Should show: clauxton, version 0.10.1
+clauxton --version  # Should show: clauxton, version 0.11.0
 ```
 
 ### Basic Usage
@@ -163,7 +163,7 @@ Claude Code: (Begins implementation)
 
 **Total**: 13 new features in v0.10.0
 
-#### 🗺️ Repository Map (v0.11.0 - In Development)
+#### 🗺️ Repository Map (v0.11.0 - Released 2025-10-24)
 **Automatic Codebase Intelligence**:
 - ✅ **File Indexing**: Recursive scanning with `.gitignore` support (1000+ files in <2s)
 - ✅ **Symbol Extraction**: Functions, classes, methods, interfaces, types with signatures
@@ -338,7 +338,7 @@ for symbol in go_symbols:
 pip install clauxton
 
 # Verify installation
-clauxton --version  # Should show: clauxton, version 0.10.1
+clauxton --version  # Should show: clauxton, version 0.11.0
 
 # Install specific version (example)
 pip install clauxton==0.10.1

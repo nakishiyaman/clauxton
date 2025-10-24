@@ -9,10 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### v0.11.0 - Repository Map (In Development)
-**Status**: 🚧 Week 5 Complete (12 Languages: Python, JavaScript, TypeScript, Go, Rust, C++, Java, C#, PHP, Ruby, Swift, Kotlin)
+## [0.11.0] - 2025-10-24
+
+### v0.11.0 - Repository Map
+**Status**: ✅ Production Ready (12 Languages: Python, JavaScript, TypeScript, Go, Rust, C++, Java, C#, PHP, Ruby, Swift, Kotlin)
 **Test Coverage**: 91% for intelligence (441 intelligence tests + 787 core/other tests = 1228 total)
-**Branch**: `feature/v0.11.0-repository-map`
 
 #### Added (Week 1 - Complete)
 
