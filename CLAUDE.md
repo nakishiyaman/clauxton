@@ -8,9 +8,10 @@ Clauxton is a Claude Code plugin providing **persistent project context** throug
 - **Knowledge Base**: Store architecture decisions, patterns, constraints, and conventions
 - **Task Management**: Auto-inferred task dependencies with DAG validation
 - **Conflict Detection**: Pre-merge conflict prediction (Phase 2)
+- **Repository Map**: Code intelligence with multi-language symbol extraction (v0.11.0+)
 
-**Status**: v0.9.0-beta - Production ready (94% test coverage, 390 tests)
-**v0.10.0 Progress**: Week 2 Day 6 Complete! (528 tests, Enhanced Validation added)
+**Status**: v0.10.0 - Production ready (528 tests, Enhanced Validation)
+**v0.11.0 Progress**: Week 3 Day 7 Complete! (301 intelligence tests, 8 languages: Python/JavaScript/TypeScript/Go/Rust/C++/Java/C#)
 
 ## Build/Test Commands
 
@@ -103,9 +104,14 @@ clauxton/
 ├── cli/                           # Click-based CLI interface
 │   ├── main.py                    # Main CLI + KB commands
 │   ├── tasks.py                   # Task management commands
-│   └── conflicts.py               # Conflict detection commands
+│   ├── conflicts.py               # Conflict detection commands
+│   └── repository.py              # Repository map commands (v0.11.0+)
 ├── mcp/                           # MCP Server integration
-│   └── server.py                  # 15 MCP tools (kb_*, task_*, conflict detection)
+│   └── server.py                  # 17 MCP tools (kb_*, task_*, conflict_*, repository_*)
+├── intelligence/                  # Code intelligence (v0.11.0+)
+│   ├── symbol_extractor.py        # Multi-language symbol extraction (Python, JavaScript, TypeScript)
+│   ├── parser.py                  # Tree-sitter parsers (Python, JavaScript, TypeScript)
+│   └── repository_map.py          # Repository indexing and symbol search
 └── utils/                         # Utility modules
     ├── yaml_utils.py              # Safe YAML I/O with atomic writes
     └── file_utils.py              # Secure file operations

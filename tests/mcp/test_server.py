@@ -16,6 +16,7 @@ import pytest
 from clauxton.mcp.server import (
     check_file_conflicts,
     detect_conflicts,
+    index_repository,
     kb_add,
     kb_delete,
     kb_get,
@@ -24,6 +25,7 @@ from clauxton.mcp.server import (
     kb_update,
     mcp,
     recommend_safe_order,
+    search_symbols,
     task_add,
     task_delete,
     task_get,
@@ -755,3 +757,472 @@ def test_kb_export_docs_error_handling(mock_kb_class: MagicMock, tmp_path: Path)
     assert result["status"] == "error"
     assert "Export failed" in result["error"]
     assert "Failed to export KB" in result["message"]
+
+
+# ============================================================================
+# Repository Map Tests
+# ============================================================================
+
+
+@patch("clauxton.mcp.server.RepositoryMap")
+def test_index_repository_default_path(mock_repo_map_class: MagicMock, tmp_path: Path) -> None:
+    """Test index_repository tool with default path."""
+    from datetime import datetime
+
+    # Setup mock
+    mock_repo_map = MagicMock()
+    mock_repo_map_class.return_value = mock_repo_map
+
+    mock_result = MagicMock()
+    mock_result.files_indexed = 50
+    mock_result.symbols_found = 200
+    mock_result.by_type = {"source": 30, "test": 15, "config": 5}
+    mock_result.by_language = {"python": 45, "yaml": 5}
+    mock_result.indexed_at = datetime(2025, 10, 23, 10, 30, 0)
+    mock_repo_map.index.return_value = mock_result
+
+    # Execute tool
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        result = index_repository()
+
+    # Verify
+    assert result["status"] == "success"
+    assert result["files_indexed"] == 50
+    assert result["symbols_found"] == 200
+    assert result["duration"] >= 0
+    assert result["by_type"] == {"source": 30, "test": 15, "config": 5}
+    assert result["by_language"] == {"python": 45, "yaml": 5}
+    assert result["indexed_at"] == "2025-10-23T10:30:00"
+    mock_repo_map_class.assert_called_once_with(tmp_path)
+    mock_repo_map.index.assert_called_once()
+
+
+@patch("clauxton.mcp.server.RepositoryMap")
+def test_index_repository_custom_path(mock_repo_map_class: MagicMock, tmp_path: Path) -> None:
+    """Test index_repository tool with custom path."""
+    from datetime import datetime
+
+    # Create custom directory
+    custom_dir = tmp_path / "custom-repo"
+    custom_dir.mkdir()
+
+    # Setup mock
+    mock_repo_map = MagicMock()
+    mock_repo_map_class.return_value = mock_repo_map
+
+    mock_result = MagicMock()
+    mock_result.files_indexed = 100
+    mock_result.symbols_found = 500
+    mock_result.by_type = {"source": 80, "test": 20}
+    mock_result.by_language = {"python": 100}
+    mock_result.indexed_at = datetime(2025, 10, 23, 11, 0, 0)
+    mock_repo_map.index.return_value = mock_result
+
+    # Execute tool
+    result = index_repository(root_path=str(custom_dir))
+
+    # Verify
+    assert result["status"] == "success"
+    assert result["files_indexed"] == 100
+    assert result["symbols_found"] == 500
+    mock_repo_map_class.assert_called_once_with(custom_dir)
+
+
+def test_index_repository_nonexistent_path() -> None:
+    """Test index_repository tool with nonexistent path."""
+    result = index_repository(root_path="/nonexistent/directory")
+
+    # Verify error response
+    assert result["status"] == "error"
+    assert "Directory not found" in result["message"]
+
+
+@patch("clauxton.mcp.server.RepositoryMap")
+def test_index_repository_error_handling(mock_repo_map_class: MagicMock, tmp_path: Path) -> None:
+    """Test index_repository tool error handling."""
+    # Setup mock to raise exception
+    mock_repo_map = MagicMock()
+    mock_repo_map_class.return_value = mock_repo_map
+    mock_repo_map.index.side_effect = Exception("Indexing failed")
+
+    # Execute tool
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        result = index_repository()
+
+    # Verify error response
+    assert result["status"] == "error"
+    assert "Indexing failed" in result["message"]
+
+
+@patch("clauxton.mcp.server.RepositoryMap")
+def test_search_symbols_exact_mode(mock_repo_map_class: MagicMock, tmp_path: Path) -> None:
+    """Test search_symbols tool with exact mode."""
+    # Setup mock
+    mock_repo_map = MagicMock()
+    mock_repo_map_class.return_value = mock_repo_map
+
+    mock_symbol1 = MagicMock()
+    mock_symbol1.name = "authenticate_user"
+    mock_symbol1.type = "function"
+    mock_symbol1.file_path = "/path/to/auth.py"
+    mock_symbol1.line_start = 10
+    mock_symbol1.line_end = 20
+    mock_symbol1.docstring = "Authenticate user with credentials."
+    mock_symbol1.signature = "def authenticate_user(username: str, password: str) -> bool"
+
+    mock_symbol2 = MagicMock()
+    mock_symbol2.name = "get_auth_token"
+    mock_symbol2.type = "function"
+    mock_symbol2.file_path = "/path/to/auth.py"
+    mock_symbol2.line_start = 30
+    mock_symbol2.line_end = 35
+    mock_symbol2.docstring = "Get authentication token."
+    mock_symbol2.signature = "def get_auth_token(user_id: int) -> str"
+
+    mock_repo_map.search.return_value = [mock_symbol1, mock_symbol2]
+
+    # Execute tool
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        result = search_symbols(query="auth", mode="exact", limit=10)
+
+    # Verify
+    assert result["status"] == "success"
+    assert result["count"] == 2
+    assert len(result["symbols"]) == 2
+    assert result["symbols"][0]["name"] == "authenticate_user"
+    assert result["symbols"][0]["type"] == "function"
+    assert result["symbols"][0]["docstring"] == "Authenticate user with credentials."
+    assert result["symbols"][1]["name"] == "get_auth_token"
+    mock_repo_map.search.assert_called_once_with("auth", search_type="exact", limit=10)
+
+
+@patch("clauxton.mcp.server.RepositoryMap")
+def test_search_symbols_fuzzy_mode(mock_repo_map_class: MagicMock, tmp_path: Path) -> None:
+    """Test search_symbols tool with fuzzy mode."""
+    # Setup mock
+    mock_repo_map = MagicMock()
+    mock_repo_map_class.return_value = mock_repo_map
+
+    mock_symbol = MagicMock()
+    mock_symbol.name = "authenticate_user"
+    mock_symbol.type = "function"
+    mock_symbol.file_path = "/path/to/auth.py"
+    mock_symbol.line_start = 10
+    mock_symbol.line_end = 20
+    mock_symbol.docstring = "Authenticate user."
+    mock_symbol.signature = "def authenticate_user(username: str) -> bool"
+
+    mock_repo_map.search.return_value = [mock_symbol]
+
+    # Execute tool (with typo)
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        result = search_symbols(query="authentcate", mode="fuzzy", limit=5)
+
+    # Verify
+    assert result["status"] == "success"
+    assert result["count"] == 1
+    assert result["symbols"][0]["name"] == "authenticate_user"
+    mock_repo_map.search.assert_called_once_with("authentcate", search_type="fuzzy", limit=5)
+
+
+@patch("clauxton.mcp.server.RepositoryMap")
+def test_search_symbols_semantic_mode(mock_repo_map_class: MagicMock, tmp_path: Path) -> None:
+    """Test search_symbols tool with semantic mode."""
+    # Setup mock
+    mock_repo_map = MagicMock()
+    mock_repo_map_class.return_value = mock_repo_map
+
+    mock_symbol1 = MagicMock()
+    mock_symbol1.name = "authenticate_user"
+    mock_symbol1.type = "function"
+    mock_symbol1.file_path = "/path/to/auth.py"
+    mock_symbol1.line_start = 10
+    mock_symbol1.line_end = 20
+    mock_symbol1.docstring = "Authenticate user with username and password."
+    mock_symbol1.signature = "def authenticate_user(username: str, password: str) -> bool"
+
+    mock_symbol2 = MagicMock()
+    mock_symbol2.name = "verify_credentials"
+    mock_symbol2.type = "function"
+    mock_symbol2.file_path = "/path/to/auth.py"
+    mock_symbol2.line_start = 30
+    mock_symbol2.line_end = 40
+    mock_symbol2.docstring = "Verify user login credentials."
+    mock_symbol2.signature = "def verify_credentials(username: str, password: str) -> bool"
+
+    mock_repo_map.search.return_value = [mock_symbol1, mock_symbol2]
+
+    # Execute tool (semantic search)
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        result = search_symbols(query="user login", mode="semantic", limit=10)
+
+    # Verify
+    assert result["status"] == "success"
+    assert result["count"] == 2
+    assert result["symbols"][0]["name"] == "authenticate_user"
+    assert result["symbols"][1]["name"] == "verify_credentials"
+    mock_repo_map.search.assert_called_once_with("user login", search_type="semantic", limit=10)
+
+
+@patch("clauxton.mcp.server.RepositoryMap")
+def test_search_symbols_custom_path(mock_repo_map_class: MagicMock, tmp_path: Path) -> None:
+    """Test search_symbols tool with custom path."""
+    # Create custom directory
+    custom_dir = tmp_path / "custom-repo"
+    custom_dir.mkdir()
+
+    # Setup mock
+    mock_repo_map = MagicMock()
+    mock_repo_map_class.return_value = mock_repo_map
+    mock_repo_map.search.return_value = []
+
+    # Execute tool
+    result = search_symbols(query="test", mode="exact", root_path=str(custom_dir))
+
+    # Verify
+    assert result["status"] == "success"
+    assert result["count"] == 0
+    mock_repo_map_class.assert_called_once_with(custom_dir)
+
+
+def test_search_symbols_nonexistent_path() -> None:
+    """Test search_symbols tool with nonexistent path."""
+    result = search_symbols(query="test", root_path="/nonexistent/directory")
+
+    # Verify error response
+    assert result["status"] == "error"
+    assert "Directory not found" in result["message"]
+
+
+def test_search_symbols_invalid_mode(tmp_path: Path) -> None:
+    """Test search_symbols tool with invalid search mode."""
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        result = search_symbols(query="test", mode="invalid_mode")
+
+    # Verify error response
+    assert result["status"] == "error"
+    assert "Invalid search mode" in result["message"]
+    assert "invalid_mode" in result["message"]
+
+
+@patch("clauxton.mcp.server.RepositoryMap")
+def test_search_symbols_error_handling(mock_repo_map_class: MagicMock, tmp_path: Path) -> None:
+    """Test search_symbols tool error handling."""
+    # Setup mock to raise exception
+    mock_repo_map = MagicMock()
+    mock_repo_map_class.return_value = mock_repo_map
+    mock_repo_map.search.side_effect = Exception("Search failed")
+
+    # Execute tool
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        result = search_symbols(query="test", mode="exact")
+
+    # Verify error response
+    assert result["status"] == "error"
+    assert "Search failed" in result["message"]
+
+
+@patch("clauxton.mcp.server.RepositoryMap")
+def test_search_symbols_empty_results(mock_repo_map_class: MagicMock, tmp_path: Path) -> None:
+    """Test search_symbols tool with no results."""
+    # Setup mock
+    mock_repo_map = MagicMock()
+    mock_repo_map_class.return_value = mock_repo_map
+    mock_repo_map.search.return_value = []
+
+    # Execute tool
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        result = search_symbols(query="nonexistent_function", mode="exact")
+
+    # Verify
+    assert result["status"] == "success"
+    assert result["count"] == 0
+    assert result["symbols"] == []
+
+
+@patch("clauxton.mcp.server.RepositoryMap")
+def test_index_repository_empty_directory(mock_repo_map_class: MagicMock, tmp_path: Path) -> None:
+    """Test index_repository with empty directory."""
+    from datetime import datetime
+
+    # Setup mock for empty directory
+    mock_repo_map = MagicMock()
+    mock_repo_map_class.return_value = mock_repo_map
+
+    mock_result = MagicMock()
+    mock_result.files_indexed = 0
+    mock_result.symbols_found = 0
+    mock_result.by_type = {}
+    mock_result.by_language = {}
+    mock_result.indexed_at = datetime(2025, 10, 23, 12, 0, 0)
+    mock_repo_map.index.return_value = mock_result
+
+    # Execute tool
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        result = index_repository()
+
+    # Verify empty result
+    assert result["status"] == "success"
+    assert result["files_indexed"] == 0
+    assert result["symbols_found"] == 0
+    assert result["by_type"] == {}
+    assert result["by_language"] == {}
+
+
+@patch("clauxton.mcp.server.RepositoryMap")
+def test_search_symbols_no_index_exists(mock_repo_map_class: MagicMock, tmp_path: Path) -> None:
+    """Test search_symbols when no index exists yet."""
+    # Setup mock - no symbols data
+    mock_repo_map = MagicMock()
+    mock_repo_map_class.return_value = mock_repo_map
+    mock_repo_map.search.return_value = []
+
+    # Execute tool
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        result = search_symbols(query="test", mode="exact")
+
+    # Verify - should return empty results, not error
+    assert result["status"] == "success"
+    assert result["count"] == 0
+    assert result["symbols"] == []
+
+
+@patch("clauxton.mcp.server.RepositoryMap")
+def test_search_symbols_limit_validation(mock_repo_map_class: MagicMock, tmp_path: Path) -> None:
+    """Test search_symbols respects limit parameter."""
+    # Setup mock with many symbols
+    mock_repo_map = MagicMock()
+    mock_repo_map_class.return_value = mock_repo_map
+
+    # Create 20 mock symbols
+    mock_symbols = []
+    for i in range(20):
+        mock_symbol = MagicMock()
+        mock_symbol.name = f"test_function_{i}"
+        mock_symbol.type = "function"
+        mock_symbol.file_path = f"/path/to/file_{i}.py"
+        mock_symbol.line_start = 10
+        mock_symbol.line_end = 20
+        mock_symbol.docstring = f"Test function {i}"
+        mock_symbol.signature = f"def test_function_{i}()"
+        mock_symbols.append(mock_symbol)
+
+    # Mock should return only first 5 (respecting limit)
+    mock_repo_map.search.return_value = mock_symbols[:5]
+
+    # Execute tool with limit=5
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        result = search_symbols(query="test", mode="exact", limit=5)
+
+    # Verify limit is respected
+    assert result["status"] == "success"
+    assert result["count"] == 5
+    assert len(result["symbols"]) == 5
+    mock_repo_map.search.assert_called_once_with("test", search_type="exact", limit=5)
+
+
+@patch("clauxton.mcp.server.RepositoryMap")
+def test_search_symbols_special_characters(mock_repo_map_class: MagicMock, tmp_path: Path) -> None:
+    """Test search_symbols with special characters in query."""
+    # Setup mock
+    mock_repo_map = MagicMock()
+    mock_repo_map_class.return_value = mock_repo_map
+
+    mock_symbol = MagicMock()
+    mock_symbol.name = "__init__"
+    mock_symbol.type = "function"
+    mock_symbol.file_path = "/path/to/module.py"
+    mock_symbol.line_start = 1
+    mock_symbol.line_end = 5
+    mock_symbol.docstring = "Initialize module"
+    mock_symbol.signature = "def __init__(self)"
+
+    mock_repo_map.search.return_value = [mock_symbol]
+
+    # Execute tool with special characters
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        result = search_symbols(query="__init__", mode="exact")
+
+    # Verify
+    assert result["status"] == "success"
+    assert result["count"] == 1
+    assert result["symbols"][0]["name"] == "__init__"
+
+
+@patch("clauxton.mcp.server.RepositoryMap")
+def test_search_symbols_unicode_names(mock_repo_map_class: MagicMock, tmp_path: Path) -> None:
+    """Test search_symbols with Unicode characters in symbol names."""
+    # Setup mock
+    mock_repo_map = MagicMock()
+    mock_repo_map_class.return_value = mock_repo_map
+
+    mock_symbol = MagicMock()
+    mock_symbol.name = "処理_データ"  # Japanese characters
+    mock_symbol.type = "function"
+    mock_symbol.file_path = "/path/to/module.py"
+    mock_symbol.line_start = 10
+    mock_symbol.line_end = 20
+    mock_symbol.docstring = "Process data"
+    mock_symbol.signature = "def 処理_データ(data)"
+
+    mock_repo_map.search.return_value = [mock_symbol]
+
+    # Execute tool with Unicode query
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        result = search_symbols(query="処理", mode="exact")
+
+    # Verify
+    assert result["status"] == "success"
+    assert result["count"] == 1
+    assert result["symbols"][0]["name"] == "処理_データ"
+
+
+@patch("clauxton.mcp.server.RepositoryMap")
+def test_index_repository_statistics_accuracy(
+    mock_repo_map_class: MagicMock, tmp_path: Path
+) -> None:
+    """Test index_repository returns accurate statistics."""
+    from datetime import datetime
+
+    # Setup mock with detailed statistics
+    mock_repo_map = MagicMock()
+    mock_repo_map_class.return_value = mock_repo_map
+
+    mock_result = MagicMock()
+    mock_result.files_indexed = 100
+    mock_result.symbols_found = 500
+    mock_result.by_type = {
+        "source": 80,
+        "test": 15,
+        "config": 3,
+        "docs": 2
+    }
+    mock_result.by_language = {
+        "python": 85,
+        "javascript": 10,
+        "yaml": 3,
+        "markdown": 2
+    }
+    mock_result.indexed_at = datetime(2025, 10, 23, 14, 30, 0)
+    mock_repo_map.index.return_value = mock_result
+
+    # Execute tool
+    with patch("clauxton.mcp.server.Path.cwd", return_value=tmp_path):
+        result = index_repository()
+
+    # Verify statistics accuracy
+    assert result["status"] == "success"
+    assert result["files_indexed"] == 100
+    assert result["symbols_found"] == 500
+
+    # Verify by_type totals match files_indexed
+    assert sum(result["by_type"].values()) == 100
+    assert result["by_type"]["source"] == 80
+    assert result["by_type"]["test"] == 15
+
+    # Verify by_language totals match files_indexed
+    assert sum(result["by_language"].values()) == 100
+    assert result["by_language"]["python"] == 85
+
+    # Verify timestamp
+    assert result["indexed_at"] == "2025-10-23T14:30:00"

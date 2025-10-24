@@ -9,6 +9,210 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### v0.11.0 - Repository Map (In Development)
+**Status**: 🚧 Week 5 Complete (12 Languages: Python, JavaScript, TypeScript, Go, Rust, C++, Java, C#, PHP, Ruby, Swift, Kotlin)
+**Test Coverage**: 91% for intelligence (441 intelligence tests + 787 core/other tests = 1228 total)
+**Branch**: `feature/v0.11.0-repository-map`
+
+#### Added (Week 1 - Complete)
+
+**Repository Map - Python Support**:
+- ✅ **File Indexing** (`repository_map.py`): Recursive codebase scanning
+  - Respects `.gitignore` patterns with default exclusions (.git, __pycache__, .venv, etc.)
+  - File categorization: source/test/config/docs/other
+  - Language detection: Python, JavaScript, TypeScript, Go, Rust, Java, C/C++, and more
+  - Statistics collection: by_type, by_language breakdowns
+  - Performance: 1000+ files in <2 seconds
+  - Storage: JSON format in `.clauxton/map/` (~10-50KB per project)
+
+- ✅ **Symbol Extraction** (`symbol_extractor.py`): Python code analysis
+  - tree-sitter parser (v0.25.2) for accurate extraction
+  - ast module fallback when tree-sitter unavailable
+  - Extracts: functions, classes, methods with full metadata
+  - Captures: signatures, docstrings, line numbers (start/end)
+  - Handles: nested functions, complex signatures, Unicode characters
+  - Graceful error handling for syntax errors
+
+- ✅ **Symbol Search** (`repository_map.py`): 3 intelligent search modes
+  - **Exact mode** (default): Fast substring matching with priority scoring
+    - Exact match: 100 points, starts with: 90, contains: 50, docstring: 30
+    - Performance: <0.01s for 1000 symbols
+  - **Fuzzy mode**: Typo-tolerant using Levenshtein distance (difflib)
+    - Similarity threshold: 0.4
+    - Example: "authentcate" finds "authenticate_user"
+  - **Semantic mode**: TF-IDF meaning-based search
+    - Requires scikit-learn (graceful fallback to exact if unavailable)
+    - Searches by concept, not just text
+    - Example: "user login" finds authenticate_user, verify_credentials, etc.
+
+- ✅ **CLI Commands** (`cli/repository.py`): 3 commands with Rich UI
+  - `clauxton repo index [--path PATH]` - Index repository with progress tracking
+  - `clauxton repo search QUERY [--mode MODE] [--limit N]` - Search symbols
+  - `clauxton repo status` - Display statistics (files, symbols, categories)
+  - Rich console UI: colors, tables, progress bars
+  - Formatted output with docstrings and file locations
+
+- ✅ **MCP Tools** (`mcp/server.py`): 2 new tools (20 → 22 total)
+  - `index_repository(root_path)` - Index codebase with statistics
+    - Returns: files_indexed, symbols_found, duration, by_type, by_language, indexed_at
+    - Error handling: nonexistent paths, indexing failures
+  - `search_symbols(query, mode, limit, root_path)` - Search with 3 modes
+    - Returns: count, symbols list with name/type/file/lines/docstring/signature
+    - Validation: mode validation, empty results handling
+    - Supports: special characters (__init__), Unicode (日本語)
+
+#### Tests (Week 1)
+- ✅ **81 intelligence tests** (92%/90% coverage):
+  - 64 repository_map tests: initialization, lazy loading, data models, indexing, search, helpers, errors
+  - 17 symbol_extractor tests: tree-sitter, ast fallback, edge cases
+- ✅ **18 MCP tests** (comprehensive scenarios):
+  - Basic: default path, custom path, statistics
+  - Errors: nonexistent paths, indexing/search failures, invalid modes
+  - Edge cases: empty directory, no index, limit validation, special/Unicode characters
+- ✅ **Total**: 868 tests (+110), all passing
+- ✅ **Quality**: mypy ✓, ruff ✓, 100% test success rate
+
+#### Documentation (Week 1)
+- ✅ **REPOSITORY_MAP_GUIDE.md** (300 lines): Complete usage guide
+  - Quick start, search algorithms, use cases, performance, troubleshooting
+- ✅ **mcp-server.md** (+199 lines): MCP integration documentation
+  - Tool descriptions, integration workflow, performance notes, troubleshooting (12 items)
+- ✅ **SESSION_15_SUMMARY.md** (553 lines): Complete Week 1 implementation record
+- ✅ **README.md**: Updated with v0.11.0 features and roadmap
+
+#### Performance (Week 1)
+- Indexing: FastAPI (1,175 files) in 0.73s - **63.5% faster** than 2s target
+- Search: <0.01s exact, <0.1s semantic for typical projects
+- Storage: ~10-50KB JSON per project
+
+#### Added (Week 2 - Complete)
+
+**Multi-Language Symbol Extraction**:
+- ✅ **JavaScript Support** (`symbol_extractor.py`): ES6+ features
+  - tree-sitter-javascript parser
+  - Extracts: classes, functions (regular + arrow), methods
+  - Supports: async/await, export statements, lexical declarations
+  - 23 comprehensive tests with fixtures
+
+- ✅ **TypeScript Support** (`symbol_extractor.py`): Full type system
+  - tree-sitter-typescript parser
+  - Extracts: interfaces, type aliases, classes, functions, methods
+  - Supports: generics, type annotations, arrow functions
+  - 24 comprehensive tests with fixtures (including namespace and enum)
+
+- ✅ **Go Support** (`symbol_extractor.py`): Complete feature set
+  - tree-sitter-go parser
+  - Extracts: functions, methods, structs, interfaces, type aliases
+  - Supports: pointer/value receivers, generics (Go 1.18+)
+  - 22 comprehensive tests with fixtures
+
+- ✅ **Rust Support** (`symbol_extractor.py`): Full language coverage
+  - tree-sitter-rust parser
+  - Extracts: functions, methods, structs, enums, traits, type aliases
+  - Supports: self receivers (&self, &mut self, self), impl blocks, generics
+  - 29 comprehensive tests with fixtures (including trait impl, multiple impl blocks)
+
+#### Added (Week 3 Day 5-6 - Complete)
+
+**C++ Language Support** (Day 5):
+- ✅ **C++ Support** (`symbol_extractor.py`): Complete feature set
+  - tree-sitter-cpp parser
+  - Extracts: functions, classes, methods, structs, namespaces
+  - Supports: constructors/destructors, const/static/virtual methods, templates, operator overloading, nested namespaces
+  - 28 comprehensive tests with fixtures (includes edge cases)
+
+**Java Language Support** (Day 6):
+- ✅ **Java Support** (`symbol_extractor.py`): Complete feature set
+  - tree-sitter-java parser
+  - Extracts: classes, interfaces, methods, enums, annotations
+  - Supports: constructors, generics, static methods, abstract classes, inheritance, nested classes, multiple interfaces
+  - 28 comprehensive tests with fixtures (quality reviewed)
+
+**C# Language Support** (Day 7):
+- ✅ **C# Support** (`symbol_extractor.py`): Full .NET support
+  - tree-sitter-c-sharp parser
+  - Extracts: classes, interfaces, methods, properties, enums, delegates, namespaces
+  - Supports: constructors, async methods, static methods, generics, nested classes, qualified namespaces, abstract classes, inheritance
+  - 28 extractor tests + 4 parser tests = 32 comprehensive tests (all passing)
+
+**PHP Language Support** (Week 4 Day 8):
+- ✅ **PHP Support** (`symbol_extractor.py`): Complete PHP 7.4+ support
+  - tree-sitter-php parser
+  - Extracts: classes, functions, methods, interfaces, traits, namespaces
+  - Supports: constructors, static methods, visibility modifiers (public/private/protected), magic methods, type hints, nullable types, union types, abstract classes/methods, inheritance, trait usage, promoted constructor properties (PHP 8+), attributes (PHP 8+), enums (PHP 8.1+), match expressions (PHP 8+), final/readonly modifiers
+  - 38 extractor tests + 4 parser tests = 42 comprehensive tests (all passing)
+  - Coverage: 92% for symbol_extractor.py
+
+**Ruby Language Support** (Week 4 Day 9):
+- ✅ **Ruby Support** (`symbol_extractor.py`): Complete Ruby 2.7+ support
+  - tree-sitter-ruby parser
+  - Extracts: classes, modules, methods (instance/singleton/class), attributes (attr_reader/writer/accessor)
+  - Supports: inheritance, module mixins (include/extend/prepend), nested classes/modules, private/protected methods, initialize methods, singleton methods (self.method_name, class << self), multiple method definition styles, method parameters (default/keyword arguments), empty classes
+  - 29 extractor tests + 4 parser tests = 33 comprehensive tests (all passing)
+  - Coverage: 91% for symbol_extractor.py, 79% for parser.py
+
+**Swift Language Support** (Week 4 Day 10):
+- ✅ **Swift Support** (`symbol_extractor.py`): Complete Swift 5.0+ support
+  - py-tree-sitter-swift parser (tree-sitter-swift binding)
+  - Extracts: classes, structs, enums, protocols, extensions, functions, methods, properties
+  - Supports: initializers (init), static methods, computed properties, generic types, optional types (?), closures, nested types, protocol conformance, class inheritance, access modifiers (public/private/internal/fileprivate/open), method parameters (external/internal names), inheritance, empty classes/structs
+  - 32 extractor tests + 4 parser tests = 36 comprehensive tests (all passing)
+  - Coverage: 92% for symbol_extractor.py, 79% for parser.py
+
+**Kotlin Language Support** (Week 5):
+- ✅ **Kotlin Support** (`symbol_extractor.py`): Complete Kotlin 1.x+ support
+  - tree-sitter-kotlin parser (v1.1.0, released Jan 2025)
+  - Extracts: classes, data classes, sealed classes, interfaces, objects, companion objects, enums, functions, suspend functions, methods, properties
+  - Supports: data classes, sealed classes, companion objects, extension functions, suspend functions (coroutines), infix functions, generic types, default parameters, enum classes, object declarations (singletons), interface declarations
+  - 25 extractor tests + 4 parser tests = 29 comprehensive tests (all passing)
+  - Coverage: 91% for symbol_extractor.py, 82% for parser.py
+
+**Parser Infrastructure** (`parser.py`):
+- ✅ Unified BaseParser for all languages
+- ✅ Language-specific parsers: PythonParser, JavaScriptParser, TypeScriptParser, GoParser, RustParser, CppParser, JavaParser, CSharpParser, PhpParser, RubyParser, SwiftParser, KotlinParser
+- ✅ Graceful fallback when tree-sitter unavailable
+- ✅ 46 parser tests (4 per language except Python with 6)
+
+#### Tests (Week 2-5)
+- ✅ **441 intelligence tests** (91% coverage for symbol_extractor.py, 82% for parser.py):
+  - 46 parser tests (Python, JavaScript, TypeScript, Go, Rust, C++, Java, C#, PHP, Ruby, Swift, Kotlin)
+  - 13 Python symbol extraction tests
+  - 23 JavaScript tests + 24 TypeScript tests
+  - 22 Go tests + 29 Rust tests + 28 C++ tests + 28 Java tests + 32 C# tests + 38 PHP tests + 29 Ruby tests + 32 Swift tests + 25 Kotlin tests
+  - 7 integration tests
+  - 81 repository map tests
+- ✅ **Quality**: All tests passing, mypy ✓, ruff ✓
+- ✅ **Error Handling**: Improved logging for C++ and Java extraction failures
+- ✅ **PHP 8+ Features**: Comprehensive tests for enums, match expressions, promoted properties, attributes, readonly, final
+- ✅ **Ruby Features**: Comprehensive tests for module mixins, singleton methods, attr_accessor/reader/writer, nested classes/modules
+- ✅ **Swift Features**: Comprehensive tests for init methods, protocols, extensions, generic types, computed properties, optional types, access modifiers, method parameters, inheritance, empty classes/structs
+- ✅ **Kotlin Features**: Comprehensive tests for data classes, sealed classes, companion objects, extension functions, suspend functions, infix functions, generic types, enum classes, object declarations, interface declarations
+- ✅ **Total project tests**: 1228 tests
+
+#### Documentation (Week 2-4)
+- ✅ **REPOSITORY_MAP_GUIDE.md**: Updated with all 11 supported languages
+- ✅ **symbol_extractor.py**: Updated docstrings
+- ✅ **WEEK2_DAY1-4_COMPLETION.md**: Complete daily implementation records
+- ✅ **WEEK3_DAY5_COMPLETION.md**: C++ implementation complete report
+- ✅ **WEEK3_DAY5_IMPROVEMENTS.md**: C++ quality improvement report
+- ✅ **WEEK3_DAY6_QUALITY_REVIEW.md**: Java quality review report
+- ✅ **WEEK3_DAY7_COMPLETION.md**: C# implementation complete report
+- ✅ **WEEK4_DAY8_COMPLETION.md**: PHP implementation complete report
+- ✅ **WEEK4_DAY9_COMPLETION.md**: Ruby implementation complete report
+- ✅ **WEEK4_DAY10_COMPLETION.md**: Swift implementation complete report
+- ✅ **README.md**: Updated roadmap (Week 4 Day 10 Complete)
+
+#### Roadmap (Weeks 3-6)
+- ✅ **Week 3 Day 5**: C++ symbol extraction (Complete)
+- ✅ **Week 3 Day 6**: Java symbol extraction (Complete)
+- ✅ **Week 3 Day 7**: C# symbol extraction (Complete)
+- ✅ **Week 4 Day 8**: PHP symbol extraction (Complete)
+- ✅ **Week 4 Day 9**: Ruby symbol extraction (Complete)
+- ✅ **Week 4 Day 10**: Swift symbol extraction (Complete)
+- ✅ **Week 5**: Kotlin symbol extraction (Complete)
+- 📋 **Week 5-6**: CLI/MCP integration enhancements
+- 📋 **Week 6**: Incremental indexing & performance optimization
+
 ---
 
 ## [0.10.1] - 2025-10-22

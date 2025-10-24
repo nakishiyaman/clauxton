@@ -15,6 +15,7 @@ from clauxton.core.conflict_detector import ConflictDetector
 from clauxton.core.knowledge_base import KnowledgeBase
 from clauxton.core.models import KnowledgeBaseEntry, Task
 from clauxton.core.task_manager import TaskManager
+from clauxton.intelligence.repository_map import RepositoryMap
 
 # Create MCP server instance
 mcp = FastMCP("Clauxton")
@@ -1044,6 +1045,218 @@ def get_recent_logs(
         "count": len(logs),
         "logs": logs,
     }
+
+
+@mcp.tool()
+def index_repository(
+    root_path: Optional[str] = None,
+) -> dict[str, Any]:
+    """
+    Index a repository to build a symbol map.
+
+    Scans the repository, extracts symbols (functions, classes, methods) from
+    source files, and stores them for fast lookup. Respects .gitignore patterns.
+
+    Args:
+        root_path: Root directory to index (defaults to current working directory)
+
+    Returns:
+        Dictionary with indexing results including:
+        - status: "success" or "error"
+        - files_indexed: Number of files processed
+        - symbols_found: Number of symbols extracted
+        - duration: Indexing duration in seconds
+        - by_type: Breakdown of files by type (source/test/config/docs/other)
+        - by_language: Breakdown of files by language
+
+    Example:
+        >>> index_repository()
+        {
+            "status": "success",
+            "files_indexed": 50,
+            "symbols_found": 200,
+            "duration": 0.73,
+            "by_type": {"source": 30, "test": 15, "config": 5},
+            "by_language": {"python": 45, "yaml": 5}
+        }
+
+    Use Cases:
+        1. **Initial Setup**: Index repository when starting work on a project
+        2. **Refresh Index**: Re-index after major changes (new files, refactoring)
+        3. **Symbol Discovery**: Find all functions/classes in codebase
+        4. **Codebase Understanding**: Get overview of project structure
+
+    Notes:
+        - Indexing is incremental-safe (can be re-run anytime)
+        - Respects .gitignore patterns (won't index ignored files)
+        - Supports Python, JavaScript, TypeScript, Go, Rust, Java, C/C++, etc.
+        - Index stored in .clauxton/map/ directory
+        - Typical performance: 1000+ files in <2 seconds
+    """
+    import time
+
+    try:
+        # Determine root path
+        if root_path is None:
+            repo_root = Path.cwd()
+        else:
+            repo_root = Path(root_path).resolve()
+
+        if not repo_root.exists():
+            return {
+                "status": "error",
+                "message": f"Directory not found: {repo_root}",
+            }
+
+        # Initialize repository map
+        repo_map = RepositoryMap(repo_root)
+
+        # Index repository
+        start_time = time.time()
+        result = repo_map.index()
+        duration = time.time() - start_time
+
+        return {
+            "status": "success",
+            "files_indexed": result.files_indexed,
+            "symbols_found": result.symbols_found,
+            "duration": round(duration, 2),
+            "by_type": result.by_type,
+            "by_language": result.by_language,
+            "indexed_at": result.indexed_at.isoformat(),
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+        }
+
+
+@mcp.tool()
+def search_symbols(
+    query: str,
+    mode: str = "exact",
+    limit: int = 10,
+    root_path: Optional[str] = None,
+) -> dict[str, Any]:
+    """
+    Search for symbols (functions, classes, methods) in the indexed repository.
+
+    Searches through all extracted symbols using various algorithms (exact, fuzzy,
+    semantic) to find relevant matches.
+
+    Args:
+        query: Search query (symbol name or description)
+        mode: Search mode - "exact" (substring), "fuzzy" (typo-tolerant),
+            or "semantic" (meaning-based)
+        limit: Maximum number of results to return (default: 10)
+        root_path: Root directory of indexed repository (defaults to cwd)
+
+    Returns:
+        Dictionary with search results including:
+        - status: "success" or "error"
+        - count: Number of results found
+        - symbols: List of matching symbols with metadata
+
+    Example:
+        >>> search_symbols("authenticate", mode="exact")
+        {
+            "status": "success",
+            "count": 2,
+            "symbols": [
+                {
+                    "name": "authenticate_user",
+                    "type": "function",
+                    "file_path": "/path/to/auth.py",
+                    "line_start": 10,
+                    "line_end": 20,
+                    "docstring": "Authenticate user with credentials.",
+                    "signature": "def authenticate_user(username: str, password: str) -> bool"
+                },
+                ...
+            ]
+        }
+
+    Search Modes:
+        - **exact**: Fast substring matching with priority scoring
+          - Exact match: highest priority
+          - Starts with: high priority
+          - Contains: medium priority
+          - Docstring: low priority
+          Example: "auth" finds "authenticate_user", "get_auth_token"
+
+        - **fuzzy**: Typo-tolerant using Levenshtein distance
+          - Handles typos and misspellings
+          - Similarity threshold: 0.4
+          Example: "authentcate" finds "authenticate_user"
+
+        - **semantic**: Meaning-based search using TF-IDF
+          - Searches by concept, not just text
+          - Requires scikit-learn (falls back to exact if unavailable)
+          Example: "user login" finds "authenticate_user", "verify_credentials"
+
+    Use Cases:
+        1. **Find Function**: Locate specific function by name
+        2. **Explore API**: Discover related functions (semantic search)
+        3. **Code Navigation**: Jump to symbol definition
+        4. **Refactoring**: Find all usages of a symbol
+        5. **Documentation**: Find functions by description
+
+    Notes:
+        - Repository must be indexed first (use index_repository)
+        - Search is case-insensitive
+        - Results are ranked by relevance
+        - Includes docstrings and signatures in results
+    """
+    try:
+        # Determine root path
+        if root_path is None:
+            repo_root = Path.cwd()
+        else:
+            repo_root = Path(root_path).resolve()
+
+        if not repo_root.exists():
+            return {
+                "status": "error",
+                "message": f"Directory not found: {repo_root}",
+            }
+
+        # Initialize repository map
+        repo_map = RepositoryMap(repo_root)
+
+        # Validate mode
+        if mode not in ["exact", "fuzzy", "semantic"]:
+            return {
+                "status": "error",
+                "message": f"Invalid search mode: {mode}. Must be 'exact', 'fuzzy', or 'semantic'",
+            }
+
+        # Search symbols
+        symbols = repo_map.search(query, search_type=mode, limit=limit)  # type: ignore[arg-type]
+
+        return {
+            "status": "success",
+            "count": len(symbols),
+            "symbols": [
+                {
+                    "name": symbol.name,
+                    "type": symbol.type,
+                    "file_path": symbol.file_path,
+                    "line_start": symbol.line_start,
+                    "line_end": symbol.line_end,
+                    "docstring": symbol.docstring,
+                    "signature": symbol.signature,
+                }
+                for symbol in symbols
+            ],
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+        }
 
 
 def main() -> None:
