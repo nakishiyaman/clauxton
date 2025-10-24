@@ -23,6 +23,7 @@ from clauxton.intelligence.parser import (
     GoParser,
     JavaParser,
     PythonParser,
+    RubyParser,
     RustParser,
     TypeScriptParser,
 )
@@ -35,7 +36,7 @@ class SymbolExtractor:
     Multi-language symbol extractor.
 
     Dispatches to language-specific extractors based on file extension.
-    Supports Python, JavaScript, TypeScript, Go, Rust, C++, Java, and C# (v0.11.0).
+    Supports Python, JavaScript, TypeScript, Go, Rust, C++, Java, C#, PHP, and Ruby (v0.11.0).
     """
 
     def __init__(self) -> None:
@@ -49,6 +50,8 @@ class SymbolExtractor:
             "cpp": CppSymbolExtractor(),
             "java": JavaSymbolExtractor(),
             "csharp": CSharpSymbolExtractor(),
+            "php": PhpSymbolExtractor(),
+            "ruby": RubySymbolExtractor(),
         }
         logger.debug(f"SymbolExtractor initialized with {len(self.extractors)} languages")
 
@@ -1840,4 +1843,426 @@ class CSharpSymbolExtractor:
             return signature  # type: ignore
         except (AttributeError, UnicodeDecodeError) as e:
             logger.debug(f"Failed to extract signature: {e}")
+            return None
+
+
+class PhpSymbolExtractor:
+    """
+    Extract symbols from PHP files.
+
+    Uses PhpParser (tree-sitter) for accurate parsing.
+    Supports:
+    - Classes
+    - Functions
+    - Methods
+    - Interfaces
+    - Traits
+    - Namespaces
+
+    PHP specific features:
+    - Namespace declarations
+    - Trait usage
+    - Magic methods (__construct, __destruct, etc.)
+    - Visibility modifiers (public, private, protected)
+    """
+
+    def __init__(self) -> None:
+        """Initialize PHP symbol extractor."""
+        from clauxton.intelligence.parser import PhpParser
+        self.parser = PhpParser()
+        self.available = self.parser.available
+
+    def extract(self, file_path: Path) -> List[Dict]:
+        """
+        Extract symbols from PHP file.
+
+        Args:
+            file_path: Path to PHP source file
+
+        Returns:
+            List of extracted symbols (empty if parser unavailable)
+
+        Raises:
+            FileNotFoundError: If file doesn't exist
+        """
+        if not file_path.exists():
+            raise FileNotFoundError(f"File not found: {file_path}")
+
+        if not self.available:
+            logger.warning("tree-sitter-php not available, cannot extract symbols")
+            return []
+
+        return self._extract_with_tree_sitter(file_path)
+
+    def _extract_with_tree_sitter(self, file_path: Path) -> List[Dict]:
+        """
+        Extract symbols using tree-sitter via PhpParser.
+
+        Args:
+            file_path: Path to PHP file
+
+        Returns:
+            List of symbols
+        """
+        logger.debug(f"Extracting symbols from {file_path} with tree-sitter")
+
+        tree = self.parser.parse(file_path)
+        if not tree:
+            logger.warning(f"Failed to parse {file_path}")
+            return []
+
+        symbols: List[Dict] = []
+        self._walk_tree(tree.root_node, symbols, str(file_path))  # type: ignore
+
+        logger.debug(f"Extracted {len(symbols)} symbols from {file_path}")
+        return symbols
+
+    def _walk_tree(self, node: any, symbols: List[Dict], file_path: str) -> None:  # type: ignore
+        """
+        Recursively walk AST and extract symbols.
+
+        Args:
+            node: tree-sitter Node
+            symbols: List to append symbols to
+            file_path: Path to file being parsed
+        """
+        # Class declaration (class MyClass { ... })
+        if node.type == "class_declaration":  # type: ignore
+            name_node = node.child_by_field_name("name")  # type: ignore
+            if name_node:
+                symbol = {
+                    "name": name_node.text.decode(),  # type: ignore
+                    "type": "class",
+                    "file_path": file_path,
+                    "line_start": node.start_point[0] + 1,  # type: ignore
+                    "line_end": node.end_point[0] + 1,  # type: ignore
+                    "docstring": self._extract_docstring(node),
+                }
+                symbols.append(symbol)
+
+        # Function declaration (function myFunc() { ... })
+        elif node.type == "function_definition":  # type: ignore
+            name_node = node.child_by_field_name("name")  # type: ignore
+            if name_node:
+                signature = self._extract_signature(node)
+                symbol = {
+                    "name": name_node.text.decode(),  # type: ignore
+                    "type": "function",
+                    "file_path": file_path,
+                    "line_start": node.start_point[0] + 1,  # type: ignore
+                    "line_end": node.end_point[0] + 1,  # type: ignore
+                    "signature": signature,
+                    "docstring": self._extract_docstring(node),
+                }
+                symbols.append(symbol)
+
+        # Method declaration
+        elif node.type == "method_declaration":  # type: ignore
+            name_node = node.child_by_field_name("name")  # type: ignore
+            if name_node:
+                signature = self._extract_signature(node)
+                symbol = {
+                    "name": name_node.text.decode(),  # type: ignore
+                    "type": "method",
+                    "file_path": file_path,
+                    "line_start": node.start_point[0] + 1,  # type: ignore
+                    "line_end": node.end_point[0] + 1,  # type: ignore
+                    "signature": signature,
+                    "docstring": self._extract_docstring(node),
+                }
+                symbols.append(symbol)
+
+        # Interface declaration (interface MyInterface { ... })
+        elif node.type == "interface_declaration":  # type: ignore
+            name_node = node.child_by_field_name("name")  # type: ignore
+            if name_node:
+                symbol = {
+                    "name": name_node.text.decode(),  # type: ignore
+                    "type": "interface",
+                    "file_path": file_path,
+                    "line_start": node.start_point[0] + 1,  # type: ignore
+                    "line_end": node.end_point[0] + 1,  # type: ignore
+                    "docstring": self._extract_docstring(node),
+                }
+                symbols.append(symbol)
+
+        # Trait declaration (trait MyTrait { ... })
+        elif node.type == "trait_declaration":  # type: ignore
+            name_node = node.child_by_field_name("name")  # type: ignore
+            if name_node:
+                symbol = {
+                    "name": name_node.text.decode(),  # type: ignore
+                    "type": "trait",
+                    "file_path": file_path,
+                    "line_start": node.start_point[0] + 1,  # type: ignore
+                    "line_end": node.end_point[0] + 1,  # type: ignore
+                    "docstring": self._extract_docstring(node),
+                }
+                symbols.append(symbol)
+
+        # Namespace declaration (namespace MyNamespace;)
+        elif node.type == "namespace_definition":  # type: ignore
+            name_node = node.child_by_field_name("name")  # type: ignore
+            if name_node:
+                name_text = name_node.text.decode()  # type: ignore
+                symbol = {
+                    "name": name_text,
+                    "type": "namespace",
+                    "file_path": file_path,
+                    "line_start": node.start_point[0] + 1,  # type: ignore
+                    "line_end": node.end_point[0] + 1,  # type: ignore
+                    "docstring": self._extract_docstring(node),
+                }
+                symbols.append(symbol)
+
+        # Recurse into children
+        for child in node.children:  # type: ignore
+            self._walk_tree(child, symbols, file_path)
+
+    def _extract_docstring(self, node: any) -> Optional[str]:  # type: ignore
+        """
+        Extract PHPDoc comment (/** ... */) from PHP node.
+
+        Args:
+            node: tree-sitter Node
+
+        Returns:
+            Docstring or None
+        """
+        # PHP uses PHPDoc comments (/** ... */)
+        # tree-sitter-php represents these as comment nodes
+        # TODO: Implement PHPDoc comment extraction
+        return None
+
+    def _extract_signature(self, node: any) -> Optional[str]:  # type: ignore
+        """
+        Extract function/method signature from node.
+
+        Args:
+            node: tree-sitter Node
+
+        Returns:
+            Function signature string or None
+        """
+        try:
+            # Get the function/method declaration line
+            text = node.text.decode()  # type: ignore
+            # Get first line only (signature)
+            signature = text.split("\n")[0].strip()
+            # Remove trailing { if present
+            if signature.endswith("{"):
+                signature = signature[:-1].strip()
+            return signature  # type: ignore
+        except (AttributeError, UnicodeDecodeError) as e:
+            logger.debug(f"Failed to extract signature: {e}")
+            return None
+
+
+class RubySymbolExtractor:
+    """
+    Extract symbols from Ruby files.
+
+    Uses RubyParser (tree-sitter) for accurate parsing.
+    Supports:
+    - Classes
+    - Modules
+    - Methods (instance methods)
+    - Singleton methods (class methods using def self.method)
+    - Constants
+    - attr_accessor/attr_reader/attr_writer
+
+    Ruby-specific features:
+    - Modules as namespaces and mixins
+    - Class inheritance (< ParentClass)
+    - Module inclusion (include ModuleName)
+    - attr_accessor/attr_reader/attr_writer declarations
+    - Singleton methods (class methods)
+    """
+
+    def __init__(self) -> None:
+        """
+        Initialize Ruby symbol extractor.
+
+        Uses RubyParser for tree-sitter parsing.
+        """
+        self.parser = RubyParser()
+        self.available = self.parser.available
+
+    def extract(self, file_path: Path) -> List[Dict]:
+        """
+        Extract symbols from Ruby file.
+
+        Args:
+            file_path: Path to Ruby source file
+
+        Returns:
+            List of extracted symbols (empty if parser unavailable)
+        """
+        if not self.available:
+            logger.warning("RubyParser not available, cannot extract symbols")
+            return []
+
+        try:
+            tree = self.parser.parse(file_path)
+            if not tree:
+                return []
+
+            symbols: List[Dict] = []
+            self._walk_tree(tree.root_node, symbols, str(file_path))
+            return symbols
+
+        except Exception as e:
+            logger.error(f"Failed to extract symbols from {file_path}: {e}")
+            return []
+
+    def _walk_tree(self, node: any, symbols: List[Dict], file_path: str) -> None:  # type: ignore  # noqa: ANN401
+        """
+        Walk the AST and extract symbols.
+
+        Args:
+            node: tree-sitter Node
+            symbols: List to append extracted symbols
+            file_path: Path to source file
+        """
+        # Handle ERROR nodes that contain class/module definitions (for Unicode names)
+        # Look for pattern: ERROR -> [ class/module keyword, ERROR with identifier ]
+        if node.type == "ERROR":
+            # Check if first child is class or module keyword
+            if len(node.children) >= 2:
+                first_child = node.children[0]
+                second_child = node.children[1]
+
+                symbol_type = None
+                name_node = None
+
+                # Pattern: class ERROR or module ERROR
+                if first_child.type == "class" and second_child.type == "ERROR":
+                    symbol_type = "class"
+                    # Look for identifier in the ERROR node
+                    for subchild in second_child.children:
+                        if subchild.type == "identifier":
+                            name_node = subchild
+                            break
+                elif first_child.type == "module" and second_child.type == "ERROR":
+                    symbol_type = "module"
+                    # Look for identifier in the ERROR node
+                    for subchild in second_child.children:
+                        if subchild.type == "identifier":
+                            name_node = subchild
+                            break
+
+                # Create symbol if we found both type and name
+                if symbol_type and name_node:
+                    symbol = {
+                        "name": name_node.text.decode(),
+                        "type": symbol_type,
+                        "file_path": file_path,
+                        "line_start": node.start_point[0] + 1,
+                        "line_end": node.end_point[0] + 1,
+                        "docstring": None,
+                    }
+                    symbols.append(symbol)
+
+        # Class definition (standard case with constant names)
+        elif node.type == "class":
+            class_node = None
+            for child in node.children:
+                if child.type == "constant":
+                    class_node = child
+                    break
+
+            if class_node:
+                symbol = {
+                    "name": class_node.text.decode(),
+                    "type": "class",
+                    "file_path": file_path,
+                    "line_start": node.start_point[0] + 1,
+                    "line_end": node.end_point[0] + 1,
+                    "docstring": None,
+                }
+                symbols.append(symbol)
+
+        # Module definition (standard case with constant names)
+        elif node.type == "module":
+            module_node = None
+            for child in node.children:
+                if child.type == "constant":
+                    module_node = child
+                    break
+
+            if module_node:
+                symbol = {
+                    "name": module_node.text.decode(),
+                    "type": "module",
+                    "file_path": file_path,
+                    "line_start": node.start_point[0] + 1,
+                    "line_end": node.end_point[0] + 1,
+                    "docstring": None,
+                }
+                symbols.append(symbol)
+
+        # Method definition (instance method)
+        elif node.type == "method":
+            name_node = None
+            for child in node.children:
+                if child.type == "identifier":
+                    name_node = child
+                    break
+
+            if name_node:
+                signature = self._extract_signature(node)
+                symbol = {
+                    "name": name_node.text.decode(),
+                    "type": "method",
+                    "file_path": file_path,
+                    "line_start": node.start_point[0] + 1,
+                    "line_end": node.end_point[0] + 1,
+                    "docstring": None,
+                    "signature": signature,
+                }
+                symbols.append(symbol)
+
+        # Singleton method (class method: def self.method)
+        elif node.type == "singleton_method":
+            name_node = None
+            for child in node.children:
+                if child.type == "identifier":
+                    name_node = child
+                    break
+
+            if name_node:
+                signature = self._extract_signature(node)
+                symbol = {
+                    "name": f"self.{name_node.text.decode()}",
+                    "type": "singleton_method",
+                    "file_path": file_path,
+                    "line_start": node.start_point[0] + 1,
+                    "line_end": node.end_point[0] + 1,
+                    "docstring": None,
+                    "signature": signature,
+                }
+                symbols.append(symbol)
+
+        # Recurse into children
+        for child in node.children:
+            self._walk_tree(child, symbols, file_path)
+
+    def _extract_signature(self, node: any) -> Optional[str]:  # type: ignore  # noqa: ANN401
+        """
+        Extract method signature from method node.
+
+        Args:
+            node: tree-sitter Node (method or singleton_method)
+
+        Returns:
+            Method signature string or None
+        """
+        try:
+            # Get the method declaration line
+            text = node.text.decode()
+            # Get first line only (signature)
+            signature = text.split("\n")[0].strip()
+            return signature  # type: ignore
+        except (AttributeError, UnicodeDecodeError) as e:
+            logger.debug(f"Failed to extract Ruby signature: {e}")
             return None

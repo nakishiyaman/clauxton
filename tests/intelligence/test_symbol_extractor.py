@@ -33,11 +33,11 @@ class TestSymbolExtractor:
 
     def test_extract_with_unsupported_language(self, tmp_path):
         """Test extracting from unsupported language."""
-        test_file = tmp_path / "test.rb"
-        test_file.write_text("def hello() end")
+        test_file = tmp_path / "test.unk"
+        test_file.write_text("some unknown language")
 
         extractor = SymbolExtractor()
-        symbols = extractor.extract(test_file, "ruby")
+        symbols = extractor.extract(test_file, "unknown")
 
         # Should return empty list for unsupported language
         assert symbols == []
@@ -48,11 +48,11 @@ class TestSymbolExtractorIntegration:
 
     def test_unsupported_language(self, tmp_path):
         """Test extracting with unsupported language."""
-        test_file = tmp_path / "test.rb"
-        test_file.write_text("def hello\n  puts 'Hello'\nend")
+        test_file = tmp_path / "test.unknown"
+        test_file.write_text("some unknown language")
 
         extractor = SymbolExtractor()
-        symbols = extractor.extract(test_file, "ruby")
+        symbols = extractor.extract(test_file, "unknown_lang")
 
         # Should return empty list for unsupported language
         assert symbols == []
@@ -78,7 +78,7 @@ class TestSymbolExtractorIntegration:
         extractor = SymbolExtractor()
 
         expected_languages = {
-            "python", "javascript", "typescript", "go", "rust", "cpp", "java", "csharp"
+            "python", "javascript", "typescript", "go", "rust", "cpp", "java", "csharp", "php", "ruby"
         }
         actual_languages = set(extractor.extractors.keys())
 

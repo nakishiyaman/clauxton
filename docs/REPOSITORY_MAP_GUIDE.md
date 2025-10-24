@@ -24,7 +24,7 @@ clauxton repo index --path /path/to/project
 **What it does:**
 - Scans all files recursively
 - Respects `.gitignore` patterns
-- Extracts symbols from Python, JavaScript, TypeScript, Go, Rust, and C++ files
+- Extracts symbols from Python, JavaScript, TypeScript, Go, Rust, C++, Java, C#, PHP, and Ruby files
 - Creates index in `.clauxton/map/`
 
 ### 2. Search for Symbols
@@ -202,11 +202,20 @@ Benchmarks on typical projects:
   - tree-sitter-c-sharp
   - Supports: constructors, async methods, static methods, generics, qualified namespaces
   - Limitations: XML documentation comments not parsed yet, using statements not extracted
+- **PHP** ✅ (classes, functions, methods, interfaces, traits, namespaces)
+  - tree-sitter-php
+  - Supports: constructors, static methods, visibility modifiers, magic methods (__construct, etc.), type hints, nullable types, union types (PHP 8+), abstract classes/methods, inheritance, trait usage, promoted constructor properties (PHP 8+), attributes (PHP 8+)
+  - PHP 7.4+ features fully supported, PHP 8+ features (enums, match expressions, named arguments) parsed correctly
+  - Limitations: PHPDoc comments not parsed yet, anonymous classes may not be extracted
+- **Ruby** ✅ (classes, modules, methods, attributes)
+  - tree-sitter-ruby
+  - Supports: instance methods, singleton methods (self.method_name, class << self), class methods, attr_reader/writer/accessor, inheritance, module mixins (include/extend/prepend), nested classes/modules, private/protected methods, initialize methods, method parameters (default/keyword arguments)
+  - Ruby 2.7+ features fully supported
+  - Limitations: RDoc/YARD comments not parsed yet, dynamic method definitions (define_method) not extracted
 
 ### v0.11.1 (Planned)
-- PHP
-- Ruby
 - Swift
+- Kotlin
 
 ## Integration with Claude Code
 

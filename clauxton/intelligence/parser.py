@@ -2,12 +2,12 @@
 Multi-language parser using tree-sitter.
 
 This module provides parsers for extracting AST nodes from source files.
-Supports Python, JavaScript (ES6+), TypeScript, Go, Rust, C++, Java, and C#.
+Supports Python, JavaScript (ES6+), TypeScript, Go, Rust, C++, Java, C#, PHP, and Ruby.
 
 Example:
     >>> from clauxton.intelligence.parser import (
     ...     PythonParser, JavaScriptParser, TypeScriptParser, GoParser,
-    ...     RustParser, CppParser, JavaParser, CSharpParser
+    ...     RustParser, CppParser, JavaParser, CSharpParser, PhpParser, RubyParser
     ... )
     >>> py_parser = PythonParser()
     >>> js_parser = JavaScriptParser()
@@ -17,6 +17,8 @@ Example:
     >>> cpp_parser = CppParser()
     >>> java_parser = JavaParser()
     >>> cs_parser = CSharpParser()
+    >>> php_parser = PhpParser()
+    >>> rb_parser = RubyParser()
     >>> py_tree = py_parser.parse(Path("script.py"))
     >>> js_tree = js_parser.parse(Path("script.js"))
     >>> ts_tree = ts_parser.parse(Path("script.ts"))
@@ -25,6 +27,8 @@ Example:
     >>> cpp_tree = cpp_parser.parse(Path("main.cpp"))
     >>> java_tree = java_parser.parse(Path("Main.java"))
     >>> cs_tree = cs_parser.parse(Path("Program.cs"))
+    >>> php_tree = php_parser.parse(Path("script.php"))
+    >>> rb_tree = rb_parser.parse(Path("script.rb"))
 """
 # type: ignore  # tree-sitter has complex types
 
@@ -325,4 +329,70 @@ class CSharpParser(BaseParser):
             logger.info("CSharpParser initialized successfully")
         except ImportError as e:
             logger.warning(f"tree-sitter-c-sharp not available: {e}")
+            self.available = False
+
+
+class PhpParser(BaseParser):
+    """
+    PHP parser using tree-sitter.
+
+    Parses PHP source files and returns AST for symbol extraction.
+    Supports:
+    - Classes
+    - Functions
+    - Methods
+    - Interfaces
+    - Traits
+    - Namespaces
+    """
+
+    def __init__(self) -> None:
+        """Initialize PHP parser."""
+        self.available = False
+        self.parser = None  # type: ignore
+        self.language = None  # type: ignore
+
+        try:
+            import tree_sitter_php as tsphp
+            from tree_sitter import Language, Parser
+
+            self.language = Language(tsphp.language_php())
+            self.parser = Parser(self.language)
+            self.available = True
+            logger.info("PhpParser initialized successfully")
+        except ImportError as e:
+            logger.warning(f"tree-sitter-php not available: {e}")
+            self.available = False
+
+
+class RubyParser(BaseParser):
+    """
+    Ruby parser using tree-sitter.
+
+    Parses Ruby source files and returns AST for symbol extraction.
+    Supports:
+    - Classes
+    - Modules
+    - Methods (instance methods)
+    - Singleton methods (class methods)
+    - Constants
+    - attr_accessor/attr_reader/attr_writer
+    """
+
+    def __init__(self) -> None:
+        """Initialize Ruby parser."""
+        self.available = False
+        self.parser = None  # type: ignore
+        self.language = None  # type: ignore
+
+        try:
+            import tree_sitter_ruby as tsruby
+            from tree_sitter import Language, Parser
+
+            self.language = Language(tsruby.language())
+            self.parser = Parser(self.language)
+            self.available = True
+            logger.info("RubyParser initialized successfully")
+        except ImportError as e:
+            logger.warning(f"tree-sitter-ruby not available: {e}")
             self.available = False

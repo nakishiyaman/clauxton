@@ -2,7 +2,7 @@
 Tests for language parsers.
 
 Tests BaseParser, PythonParser, JavaScript Parser, TypeScriptParser,
-GoParser, RustParser, CppParser, and JavaParser.
+GoParser, RustParser, CppParser, JavaParser, CSharpParser, PhpParser, and RubyParser.
 """
 
 from pathlib import Path
@@ -15,7 +15,9 @@ from clauxton.intelligence.parser import (
     GoParser,
     JavaParser,
     JavaScriptParser,
+    PhpParser,
     PythonParser,
+    RubyParser,
     RustParser,
     TypeScriptParser,
 )
@@ -449,6 +451,107 @@ class TestCSharpParser:
         test_file.write_text("public class Test { }")
 
         parser = CSharpParser()
+        parser.available = False
+
+        result = parser.parse(test_file)
+        assert result is None
+
+
+class TestPhpParser:
+    """Test PhpParser class."""
+
+    def test_init(self):
+        """Test PhpParser initialization."""
+        parser = PhpParser()
+        assert parser.available in [True, False]
+        assert parser.parser is not None or not parser.available
+
+    def test_parse_simple_file(self, tmp_path):
+        """Test parsing a simple PHP file."""
+        test_file = tmp_path / "test.php"
+        test_file.write_text("""<?php
+class User {
+    public function getName() {
+        return "test";
+    }
+}
+""")
+
+        parser = PhpParser()
+        if not parser.available:
+            pytest.skip("tree-sitter-php not available")
+
+        tree = parser.parse(test_file)
+        assert tree is not None
+        assert hasattr(tree, "root_node")
+
+    def test_parse_nonexistent_file(self):
+        """Test parsing non-existent file raises FileNotFoundError."""
+        parser = PhpParser()
+        if not parser.available:
+            pytest.skip("tree-sitter-php not available")
+
+        with pytest.raises(FileNotFoundError):
+            parser.parse(Path("/nonexistent/file.php"))
+
+    def test_parse_when_unavailable(self, tmp_path, monkeypatch):
+        """Test parse returns None when parser unavailable."""
+        test_file = tmp_path / "test.php"
+        test_file.write_text("<?php class Test { }")
+
+        parser = PhpParser()
+        parser.available = False
+
+        result = parser.parse(test_file)
+        assert result is None
+
+
+class TestRubyParser:
+    """Test RubyParser class."""
+
+    def test_init(self):
+        """Test RubyParser initialization."""
+        parser = RubyParser()
+        assert parser.available in [True, False]
+        assert parser.parser is not None or not parser.available
+
+    def test_parse_simple_file(self, tmp_path):
+        """Test parsing a simple Ruby file."""
+        test_file = tmp_path / "test.rb"
+        test_file.write_text("""class User
+  def initialize(name)
+    @name = name
+  end
+
+  def greet
+    "Hello, #{@name}"
+  end
+end
+""")
+
+        parser = RubyParser()
+        if not parser.available:
+            pytest.skip("tree-sitter-ruby not available")
+
+        tree = parser.parse(test_file)
+        assert tree is not None
+        assert hasattr(tree, "root_node")
+
+    def test_parse_nonexistent_file(self):
+        """Test parsing non-existent file raises FileNotFoundError."""
+        parser = RubyParser()
+        if not parser.available:
+            pytest.skip("tree-sitter-ruby not available")
+
+        with pytest.raises(FileNotFoundError):
+            parser.parse(Path("/nonexistent/file.rb"))
+
+    def test_parse_when_unavailable(self, tmp_path, monkeypatch):
+        """Test parse returns None when parser unavailable."""
+        test_file = tmp_path / "test.rb"
+        test_file.write_text("class User\nend")
+
+        parser = RubyParser()
         parser.available = False
 
         result = parser.parse(test_file)
