@@ -1,7 +1,7 @@
 # Clauxton MCP Integration Guide - Claude Code
 
-**Version**: v0.9.0-beta
-**Updated**: 2025-10-20
+**Version**: v0.11.0
+**Updated**: 2025-10-24
 
 ---
 
@@ -23,19 +23,22 @@
 
 - ✅ Claude Code installed
 - ✅ Python 3.11+ installed
-- ✅ Clauxton v0.9.0-beta installed
+- ✅ Clauxton v0.11.0 installed
 
 ### Verify Clauxton Installation
 
 ```bash
-# If using development version
+# Install from PyPI
+pip install clauxton
+
+# Verify version
+clauxton --version
+# Output: clauxton, version 0.11.0
+
+# Or, if using development version
 cd /home/kishiyama-n/workspace/projects/clauxton
 source .venv/bin/activate
 clauxton --version
-# Output: clauxton, version 0.9.0-beta
-
-# Or, if using PyPI version (future)
-pip install clauxton==0.9.0-beta
 ```
 
 ---
@@ -329,6 +332,17 @@ tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
 
 ## Available Tools Reference
 
+**Total: 22 MCP Tools** across 7 categories:
+- Knowledge Base: 6 tools
+- Task Management: 6 tools
+- Conflict Detection: 3 tools (v0.9.0-beta)
+- Bulk Operations: 2 tools (v0.10.0)
+- Undo/History: 2 tools (v0.10.0)
+- Logging: 1 tool (v0.10.0)
+- Repository Map: 2 tools (v0.11.0)
+
+---
+
 ### Knowledge Base Tools (6)
 
 #### `kb_search`
@@ -450,7 +464,7 @@ tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
 
 ---
 
-### Conflict Detection Tools (3) - 🆕 v0.9.0-beta
+### Conflict Detection Tools (3) - v0.9.0-beta
 
 #### `detect_conflicts`
 ```json
@@ -539,6 +553,217 @@ tail -f ~/.local/state/claude-code/logs/mcp-server-clauxton.log
       "file_path": "src/api/auth.py",
       "in_use": false,
       "tasks": []
+    }
+  ]
+}
+```
+
+---
+
+### Bulk Operations Tools (2) - v0.10.0
+
+#### `task_import_yaml`
+```json
+{
+  "yaml_content": "tasks:\n  - name: Setup FastAPI\n    priority: high\n    files_to_edit: [backend/main.py]\n  - name: Add authentication\n    priority: high\n    files_to_edit: [backend/auth.py]",
+  "skip_confirmation": false,
+  "on_error": "rollback"
+}
+```
+**Description**: Bulk import tasks from YAML (30x faster than individual adds)
+
+**Parameters**:
+- `yaml_content`: YAML string with task definitions
+- `skip_confirmation`: Skip confirmation prompt (default: false)
+- `on_error`: Error handling strategy ("rollback", "skip", "abort")
+
+**Output Example**:
+```json
+{
+  "status": "success",
+  "imported_count": 2,
+  "failed_count": 0,
+  "task_ids": ["TASK-001", "TASK-002"],
+  "duration_seconds": 0.15
+}
+```
+
+#### `kb_export_docs`
+```json
+{
+  "output_dir": "docs/knowledge",
+  "category": "architecture"
+}
+```
+**Description**: Export Knowledge Base to Markdown documentation
+
+**Parameters**:
+- `output_dir`: Output directory for Markdown files
+- `category`: Filter by category (optional, exports all if omitted)
+
+**Output Example**:
+```json
+{
+  "exported_count": 5,
+  "output_dir": "docs/knowledge",
+  "files": [
+    "docs/knowledge/architecture/KB-20251024-001.md",
+    "docs/knowledge/architecture/KB-20251024-002.md"
+  ]
+}
+```
+
+---
+
+### Undo/History Tools (2) - v0.10.0
+
+#### `undo_last_operation`
+```json
+{}
+```
+**Description**: Reverse the last operation (KB/Task add/update/delete)
+
+**Output Example**:
+```json
+{
+  "undone": true,
+  "operation_type": "kb_add",
+  "operation_timestamp": "2025-10-24T10:30:00Z",
+  "details": "Reversed KB entry addition: KB-20251024-001"
+}
+```
+
+#### `get_recent_operations`
+```json
+{
+  "limit": 10
+}
+```
+**Description**: Get recent operation history for undo/audit
+
+**Output Example**:
+```json
+{
+  "operations": [
+    {
+      "timestamp": "2025-10-24T10:30:00Z",
+      "operation_type": "kb_add",
+      "entry_id": "KB-20251024-001",
+      "details": "Added KB entry: FastAPI Setup"
+    },
+    {
+      "timestamp": "2025-10-24T10:25:00Z",
+      "operation_type": "task_update",
+      "task_id": "TASK-001",
+      "details": "Updated task status: pending -> in_progress"
+    }
+  ]
+}
+```
+
+---
+
+### Logging Tools (1) - v0.10.0
+
+#### `get_recent_logs`
+```json
+{
+  "limit": 20,
+  "level": "ERROR"
+}
+```
+**Description**: Get recent operation logs for debugging
+
+**Parameters**:
+- `limit`: Number of logs to retrieve (default: 50)
+- `level`: Filter by log level (DEBUG/INFO/WARNING/ERROR)
+
+**Output Example**:
+```json
+{
+  "logs": [
+    {
+      "timestamp": "2025-10-24T10:30:00Z",
+      "level": "ERROR",
+      "operation": "task_add",
+      "message": "Task validation failed: missing required field 'name'"
+    }
+  ]
+}
+```
+
+---
+
+### Repository Map Tools (2) - 🆕 v0.11.0
+
+#### `index_repository`
+```json
+{
+  "root_path": "/path/to/project"
+}
+```
+**Description**: Index codebase with symbol extraction (12 languages)
+
+**Supported Languages**: Python, JavaScript, TypeScript, Go, Rust, C++, Java, C#, PHP, Ruby, Swift, Kotlin
+
+**Output Example**:
+```json
+{
+  "files_indexed": 50,
+  "symbols_found": 200,
+  "by_language": {
+    "python": {"files": 15, "symbols": 50},
+    "typescript": {"files": 20, "symbols": 80},
+    "javascript": {"files": 15, "symbols": 70}
+  },
+  "duration_seconds": 0.15,
+  "indexed_at": "2025-10-24T10:30:00Z"
+}
+```
+
+#### `search_symbols`
+```json
+{
+  "query": "authenticate",
+  "mode": "exact",
+  "limit": 10,
+  "root_path": "/path/to/project"
+}
+```
+**Description**: Search symbols with exact/fuzzy/semantic modes
+
+**Parameters**:
+- `query`: Search query string
+- `mode`: Search mode ("exact", "fuzzy", "semantic")
+- `limit`: Max results (default: 10)
+- `root_path`: Project root (optional, uses current dir)
+
+**Search Modes**:
+- **exact**: Fast substring matching with priority scoring (<0.01s)
+- **fuzzy**: Typo-tolerant using Levenshtein distance
+- **semantic**: TF-IDF meaning-based search (requires scikit-learn)
+
+**Output Example**:
+```json
+{
+  "count": 3,
+  "symbols": [
+    {
+      "name": "authenticate_user",
+      "type": "function",
+      "file": "auth.py",
+      "line_start": 10,
+      "line_end": 20,
+      "signature": "def authenticate_user(username: str, password: str) -> bool",
+      "docstring": "Authenticate user with username and password"
+    },
+    {
+      "name": "AuthService",
+      "type": "class",
+      "file": "auth_service.ts",
+      "line_start": 15,
+      "line_end": 50,
+      "signature": "class AuthService"
     }
   ]
 }

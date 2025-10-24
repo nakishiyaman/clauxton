@@ -24,7 +24,7 @@ clauxton repo index --path /path/to/project
 **What it does:**
 - Scans all files recursively
 - Respects `.gitignore` patterns
-- Extracts symbols from Python, JavaScript, TypeScript, Go, Rust, C++, Java, C#, PHP, Ruby, and Swift files
+- Extracts symbols from Python, JavaScript, TypeScript, Go, Rust, C++, Java, C#, PHP, Ruby, Swift, and Kotlin files (12 languages)
 - Creates index in `.clauxton/map/`
 
 ### 2. Search for Symbols
