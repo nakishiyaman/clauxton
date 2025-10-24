@@ -24,7 +24,7 @@ clauxton repo index --path /path/to/project
 **What it does:**
 - Scans all files recursively
 - Respects `.gitignore` patterns
-- Extracts symbols from Python, JavaScript, TypeScript, Go, Rust, C++, Java, C#, PHP, and Ruby files
+- Extracts symbols from Python, JavaScript, TypeScript, Go, Rust, C++, Java, C#, PHP, Ruby, and Swift files
 - Creates index in `.clauxton/map/`
 
 ### 2. Search for Symbols
@@ -212,9 +212,13 @@ Benchmarks on typical projects:
   - Supports: instance methods, singleton methods (self.method_name, class << self), class methods, attr_reader/writer/accessor, inheritance, module mixins (include/extend/prepend), nested classes/modules, private/protected methods, initialize methods, method parameters (default/keyword arguments)
   - Ruby 2.7+ features fully supported
   - Limitations: RDoc/YARD comments not parsed yet, dynamic method definitions (define_method) not extracted
+- **Swift** ✅ (classes, structs, enums, protocols, extensions, functions, methods, properties)
+  - py-tree-sitter-swift (tree-sitter-swift binding)
+  - Supports: initializers (init), static methods, computed properties, generic types, optional types (?), closures, protocol conformance, class inheritance, nested types (outer type extraction), access modifiers (public/private/internal/fileprivate/open), method parameters (external/internal names), inheritance
+  - Swift 5.0+ features fully supported
+  - Limitations: Documentation comments (///) not fully parsed yet, complex nested types extracted as outer type only
 
 ### v0.11.1 (Planned)
-- Swift
 - Kotlin
 
 ## Integration with Claude Code

@@ -78,7 +78,7 @@ class TestSymbolExtractorIntegration:
         extractor = SymbolExtractor()
 
         expected_languages = {
-            "python", "javascript", "typescript", "go", "rust", "cpp", "java", "csharp", "php", "ruby"
+            "python", "javascript", "typescript", "go", "rust", "cpp", "java", "csharp", "php", "ruby", "swift"
         }
         actual_languages = set(extractor.extractors.keys())
 

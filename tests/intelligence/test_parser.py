@@ -2,7 +2,7 @@
 Tests for language parsers.
 
 Tests BaseParser, PythonParser, JavaScript Parser, TypeScriptParser,
-GoParser, RustParser, CppParser, JavaParser, CSharpParser, PhpParser, and RubyParser.
+GoParser, RustParser, CppParser, JavaParser, CSharpParser, PhpParser, RubyParser, and SwiftParser.
 """
 
 from pathlib import Path
@@ -19,6 +19,7 @@ from clauxton.intelligence.parser import (
     PythonParser,
     RubyParser,
     RustParser,
+    SwiftParser,
     TypeScriptParser,
 )
 
@@ -552,6 +553,59 @@ end
         test_file.write_text("class User\nend")
 
         parser = RubyParser()
+        parser.available = False
+
+        result = parser.parse(test_file)
+        assert result is None
+
+
+class TestSwiftParser:
+    """Test SwiftParser class."""
+
+    def test_init(self):
+        """Test SwiftParser initialization."""
+        parser = SwiftParser()
+        assert parser.available in [True, False]
+        assert parser.parser is not None or not parser.available
+
+    def test_parse_simple_file(self, tmp_path):
+        """Test parsing a simple Swift file."""
+        test_file = tmp_path / "test.swift"
+        test_file.write_text("""class User {
+    var name: String
+    init(name: String) {
+        self.name = name
+    }
+
+    func greet() -> String {
+        return "Hello, \\(name)"
+    }
+}
+""")
+
+        parser = SwiftParser()
+        if not parser.available:
+            pytest.skip("tree-sitter-swift not available")
+
+        tree = parser.parse(test_file)
+        assert tree is not None
+        assert hasattr(tree, "root_node")
+
+    def test_parse_nonexistent_file(self):
+        """Test parsing non-existent file raises FileNotFoundError."""
+        parser = SwiftParser()
+        if not parser.available:
+            pytest.skip("tree-sitter-swift not available")
+
+        with pytest.raises(FileNotFoundError):
+            parser.parse(Path("/nonexistent/file.swift"))
+
+    def test_parse_when_unavailable(self, tmp_path, monkeypatch):
+        """Test parse returns None when parser unavailable."""
+        test_file = tmp_path / "test.swift"
+        test_file.write_text("class User { }")
+
+        parser = SwiftParser()
         parser.available = False
 
         result = parser.parse(test_file)

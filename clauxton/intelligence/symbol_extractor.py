@@ -36,7 +36,8 @@ class SymbolExtractor:
     Multi-language symbol extractor.
 
     Dispatches to language-specific extractors based on file extension.
-    Supports Python, JavaScript, TypeScript, Go, Rust, C++, Java, C#, PHP, and Ruby (v0.11.0).
+    Supports Python, JavaScript, TypeScript, Go, Rust, C++, Java, C#, PHP, Ruby,
+    and Swift (v0.11.0).
     """
 
     def __init__(self) -> None:
@@ -52,6 +53,7 @@ class SymbolExtractor:
             "csharp": CSharpSymbolExtractor(),
             "php": PhpSymbolExtractor(),
             "ruby": RubySymbolExtractor(),
+            "swift": SwiftSymbolExtractor(),
         }
         logger.debug(f"SymbolExtractor initialized with {len(self.extractors)} languages")
 
@@ -2265,4 +2267,276 @@ class RubySymbolExtractor:
             return signature  # type: ignore
         except (AttributeError, UnicodeDecodeError) as e:
             logger.debug(f"Failed to extract Ruby signature: {e}")
+            return None
+
+
+class SwiftSymbolExtractor:
+    """
+    Extract symbols from Swift source files using tree-sitter.
+
+    Supports:
+    - Classes
+    - Structs
+    - Enums
+    - Protocols
+    - Extensions
+    - Functions
+    - Methods
+    - Properties (computed and stored)
+    """
+
+    def __init__(self) -> None:
+        """Initialize Swift symbol extractor."""
+        from clauxton.intelligence.parser import SwiftParser
+
+        self.parser = SwiftParser()
+
+    def extract(self, file_path: Path) -> list[dict[str, any]]:  # type: ignore  # noqa: ANN401
+        """
+        Extract symbols from Swift file.
+
+        Args:
+            file_path: Path to Swift file
+
+        Returns:
+            List of symbol dictionaries with keys:
+                - name: Symbol name
+                - type: Symbol type (class/struct/enum/protocol/extension/function/method/property)
+                - file_path: Source file path
+                - line_start: Starting line number
+                - line_end: Ending line number
+                - docstring: Documentation comment (if available)
+                - signature: Full symbol signature (if applicable)
+        """
+        if not self.parser.available:
+            logger.warning("SwiftParser not available, cannot extract symbols")
+            return []
+
+        try:
+            tree = self.parser.parse(file_path)
+            if tree is None:
+                return []
+
+            symbols: list[dict[str, any]] = []  # type: ignore  # noqa: ANN401
+            self._walk_tree(tree.root_node, symbols, str(file_path))
+            return symbols
+
+        except Exception as e:
+            logger.error(f"Failed to extract symbols from {file_path}: {e}")
+            return []
+
+    def _walk_tree(
+        self, node: any, symbols: list[dict[str, any]], file_path: str  # type: ignore  # noqa: ANN401
+    ) -> None:
+        """
+        Walk AST tree and extract symbols.
+
+        Args:
+            node: tree-sitter Node
+            symbols: List to append symbols to
+            file_path: Source file path
+        """
+        # Class, struct, enum, or extension declaration
+        if node.type == "class_declaration":
+            self._extract_class_like(node, symbols, file_path)
+            return  # Don't recurse into children - already handled
+
+        # Protocol declaration
+        elif node.type == "protocol_declaration":
+            self._extract_protocol(node, symbols, file_path)
+            return  # Don't recurse into children
+
+        # Function declaration (top-level only)
+        elif node.type == "function_declaration":
+            # Only extract if it's a top-level function (parent is source_file)
+            if node.parent and node.parent.type == "source_file":
+                self._extract_function(node, symbols, file_path)
+                return
+
+        # Recurse into children
+        for child in node.children:
+            self._walk_tree(child, symbols, file_path)
+
+    def _extract_class_like(
+        self, node: any, symbols: list[dict[str, any]], file_path: str  # type: ignore  # noqa: ANN401
+    ) -> None:
+        """
+        Extract class, struct, enum, or extension.
+
+        Swift uses 'class_declaration' for all of: class, struct, enum, extension.
+        We determine the type by looking at the first child keyword.
+        """
+        # Determine the actual type (class/struct/enum/extension)
+        symbol_type = "class"  # default
+        for child in node.children:
+            if child.type in ["class", "struct", "enum", "extension"]:
+                symbol_type = child.type
+                break
+
+        # Get name
+        name_node = node.child_by_field_name("name")
+        if not name_node:
+            # For extension, name is in user_type
+            for child in node.children:
+                if child.type == "user_type":
+                    type_id = child.child_by_field_name("name") or child.children[0]
+                    if type_id:
+                        name_node = type_id
+                        break
+
+        if name_node:
+            symbol = {
+                "name": name_node.text.decode(),
+                "type": symbol_type,
+                "file_path": file_path,
+                "line_start": node.start_point[0] + 1,
+                "line_end": node.end_point[0] + 1,
+                "docstring": self._extract_docstring(node),
+                "signature": self._extract_signature(node),
+            }
+            symbols.append(symbol)
+
+        # Extract methods and properties from body
+        body_node = None
+        for child in node.children:
+            if child.type in ["class_body", "enum_class_body"]:
+                body_node = child
+                break
+
+        if body_node:
+            for child in body_node.children:
+                if child.type == "function_declaration":
+                    self._extract_method(child, symbols, file_path)
+                elif child.type == "init_declaration":
+                    self._extract_method(child, symbols, file_path)
+                elif child.type == "property_declaration":
+                    self._extract_property(child, symbols, file_path)
+
+    def _extract_protocol(
+        self, node: any, symbols: list[dict[str, any]], file_path: str  # type: ignore  # noqa: ANN401
+    ) -> None:
+        """Extract protocol declaration."""
+        name_node = node.child_by_field_name("name")
+        if name_node:
+            symbol = {
+                "name": name_node.text.decode(),
+                "type": "protocol",
+                "file_path": file_path,
+                "line_start": node.start_point[0] + 1,
+                "line_end": node.end_point[0] + 1,
+                "docstring": self._extract_docstring(node),
+                "signature": self._extract_signature(node),
+            }
+            symbols.append(symbol)
+
+    def _extract_function(
+        self, node: any, symbols: list[dict[str, any]], file_path: str  # type: ignore  # noqa: ANN401
+    ) -> None:
+        """Extract top-level function."""
+        name_node = node.child_by_field_name("name")
+        if name_node:
+            symbol = {
+                "name": name_node.text.decode(),
+                "type": "function",
+                "file_path": file_path,
+                "line_start": node.start_point[0] + 1,
+                "line_end": node.end_point[0] + 1,
+                "docstring": self._extract_docstring(node),
+                "signature": self._extract_signature(node),
+            }
+            symbols.append(symbol)
+
+    def _extract_method(
+        self, node: any, symbols: list[dict[str, any]], file_path: str  # type: ignore  # noqa: ANN401
+    ) -> None:
+        """Extract method from class/struct/enum."""
+        name_node = node.child_by_field_name("name")
+
+        # For init_declaration, use "init" as the name
+        if not name_node and node.type == "init_declaration":
+            symbol = {
+                "name": "init",
+                "type": "method",
+                "file_path": file_path,
+                "line_start": node.start_point[0] + 1,
+                "line_end": node.end_point[0] + 1,
+                "docstring": self._extract_docstring(node),
+                "signature": self._extract_signature(node),
+            }
+            symbols.append(symbol)
+        elif name_node:
+            symbol = {
+                "name": name_node.text.decode(),
+                "type": "method",
+                "file_path": file_path,
+                "line_start": node.start_point[0] + 1,
+                "line_end": node.end_point[0] + 1,
+                "docstring": self._extract_docstring(node),
+                "signature": self._extract_signature(node),
+            }
+            symbols.append(symbol)
+
+    def _extract_property(
+        self, node: any, symbols: list[dict[str, any]], file_path: str  # type: ignore  # noqa: ANN401
+    ) -> None:
+        """Extract property declaration."""
+        # Get property name from pattern_binding
+        for child in node.children:
+            if child.type == "pattern":
+                name_node = child.children[0] if child.children else None
+                if name_node and name_node.type == "simple_identifier":
+                    symbol = {
+                        "name": name_node.text.decode(),
+                        "type": "property",
+                        "file_path": file_path,
+                        "line_start": node.start_point[0] + 1,
+                        "line_end": node.end_point[0] + 1,
+                        "docstring": self._extract_docstring(node),
+                        "signature": self._extract_signature(node),
+                    }
+                    symbols.append(symbol)
+                    break
+
+    def _extract_docstring(self, node: any) -> Optional[str]:  # type: ignore  # noqa: ANN401
+        """
+        Extract documentation comment from node.
+
+        Swift uses /// or /** */ for documentation comments.
+        """
+        try:
+            # Look for comment before the node
+            prev_sibling = node.prev_sibling
+            if prev_sibling and prev_sibling.type == "comment":
+                comment_text = prev_sibling.text.decode()
+                # Remove /// or /** */ markers
+                cleaned = (
+                    comment_text.replace("///", "").replace("/**", "").replace("*/", "").strip()
+                )
+                if cleaned:
+                    return cleaned
+            return None
+        except (AttributeError, UnicodeDecodeError) as e:
+            logger.debug(f"Failed to extract Swift docstring: {e}")
+            return None
+
+    def _extract_signature(self, node: any) -> Optional[str]:  # type: ignore  # noqa: ANN401
+        """
+        Extract signature from node.
+
+        Args:
+            node: tree-sitter Node
+
+        Returns:
+            Signature string or None
+        """
+        try:
+            # Get the first line of the declaration
+            text = node.text.decode()
+            signature = text.split("\n")[0].strip()
+            # Remove opening brace if present
+            if "{" in signature:
+                signature = signature.split("{")[0].strip()
+            return signature  # type: ignore
+        except (AttributeError, UnicodeDecodeError) as e:
+            logger.debug(f"Failed to extract Swift signature: {e}")
             return None
