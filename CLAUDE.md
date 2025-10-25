@@ -911,221 +911,278 @@ Claude Code: (starts Implementation)
 
 ---
 
-### 🚀 Upcoming Phases (AI-First Strategy)
+### 🚀 Upcoming Phases (MCP-First Strategy)
 
-#### Phase 4: AI Integration - Foundation (v0.12.0) - 🔥 HIGHEST PRIORITY
+#### Phase 4: Semantic Intelligence via MCP (v0.12.0) - 🔥 HIGHEST PRIORITY
 
-**Goal**: Deep Claude Code integration and intelligent automation
+**Goal**: Enhance Claude Code integration with semantic search and intelligent data provision
 
-**Release Target**: 2025-11-15 (3 weeks)
+**Release Target**: 2025-11-15 (2-3 weeks)
 
 **Priority**: 🔥🔥🔥 Critical (Core Value Enhancement)
 
-**Strategy**: AI統合こそがClaxtonの本質的価値。UIはその後。
+**Strategy**: Clauxton = Smart Data Provider, Claude Code = AI Reasoning Engine
+- ✅ **No Claude API needed** (Claude Code provides AI layer)
+- ✅ **100% Local-First** (all data stays in `.clauxton/`)
+- ✅ **Zero additional cost** (users already have Claude Code)
+- ✅ **Natural UX** (users talk to Claude Code, Clauxton works in background)
 
-**Core Features**:
+**Core Features** (All via MCP - Claude Code Integration):
 
-1. **Smart Task Suggestions** (`clauxton task suggest`)
-   - Analyze recent commits to suggest next tasks
-   - Infer task priority from code changes
-   - Auto-detect dependencies from file patterns
-   - ML-based recommendation scoring
+1. **Semantic Search MCP Tools**
+   - `search_knowledge_semantic(query, limit)` - Embedding-based KB search
+   - `search_tasks_semantic(query, limit)` - Semantic task search
+   - `search_files_semantic(query, limit)` - Code file semantic search
+   - `get_project_context(depth)` - Rich project context for Claude Code
 
-2. **Natural Language Query** (`clauxton ask "<question>"`)
-   - Query KB/Tasks with natural language
-   - Claude API for intelligent answering
-   - Context-aware responses
-   - Multi-turn conversation support
+   **User Experience**:
+   ```
+   User in Claude Code:
+   > "What database decisions have we made?"
 
-   Examples:
-   ```bash
-   clauxton ask "What were our database decisions?"
-   clauxton ask "Why did we choose FastAPI?"
-   clauxton ask "What tasks are blocking the auth feature?"
+   Claude Code (automatically):
+   1. Calls search_knowledge_semantic("database decisions")
+   2. Receives structured data from Clauxton
+   3. Generates natural language answer using its AI
+
+   → No separate CLI command needed!
+   → No Claude API costs!
+   → Natural conversation with Claude Code
    ```
 
-3. **Automatic KB Entry Generation from Commits**
-   - Analyze commit messages and diffs
-   - Extract architecture decisions
-   - Auto-categorize (architecture/decision/pattern)
-   - Suggest KB entries for review
+2. **Commit Analysis & Pattern Recognition**
+   - `analyze_recent_commits(since_days, extract_patterns)` - Git commit analysis
+   - `extract_decisions_from_commits(since_days)` - Decision extraction
+   - `suggest_next_tasks(mode)` - Pattern-based task suggestions
+   - `find_related_entries(entry_id, limit)` - Relationship discovery
 
-   ```bash
-   clauxton kb from-commits --since "1 week ago"
-   # → Suggests 5 KB entries from recent commits
+   **User Experience**:
+   ```
+   User in Claude Code:
+   > "What should I work on next based on my recent commits?"
+
+   Claude Code:
+   1. Calls suggest_next_tasks()
+   2. Receives task suggestions with reasoning from Clauxton
+   3. Explains recommendations naturally
+
+   → Intelligent suggestions without AI costs!
+   → Context-aware recommendations!
    ```
 
-4. **Context-Aware Search Enhancement**
-   - Current task influences search ranking
-   - Recent activity boosts relevance
-   - Semantic similarity (embeddings)
-   - Learning from user behavior
+3. **Knowledge Graph & Context**
+   - `generate_project_summary()` - Project overview
+   - `get_knowledge_graph()` - Relationship mapping
+   - All data stays local in `.clauxton/`
 
-**Technical Stack**:
-- **Claude API**: Primary intelligence layer
-- **Embeddings**: sentence-transformers OR Claude embeddings
-- **Git Integration**: GitPython for commit analysis
-- **Vector Store**: FAISS (lightweight, local-first)
-- **Cache**: Embedding cache for performance
+**Technical Stack** (100% Local):
+- **AI Layer**: Claude Code (user already has this)
+- **Embeddings**: sentence-transformers (local, free)
+- **Vector Store**: FAISS (local, lightweight)
+- **Git Analysis**: GitPython (local)
+- **MCP Integration**: Enhanced tools for Claude Code
+- **Cost**: $0 additional
+- **Privacy**: 100% local data
 
 **Implementation Plan**:
 
-**Week 1 (Oct 28 - Nov 3): Foundation**
-- [ ] Create `clauxton/ai/` module structure
-- [ ] Claude API client wrapper
-- [ ] Embedding generation pipeline
-- [ ] Vector store setup (FAISS)
-- [ ] Basic `ask` command implementation
-- [ ] Unit tests for AI module
+**Week 1 (Oct 28 - Nov 3): Semantic Search Foundation**
+- [ ] Local embedding system (sentence-transformers)
+- [ ] FAISS vector store setup
+- [ ] Index KB/Tasks/Files with embeddings
+- [ ] MCP tool: `search_knowledge_semantic()`
+- [ ] MCP tool: `search_tasks_semantic()`
+- [ ] MCP tool: `search_files_semantic()`
+- [ ] Unit tests for embedding system (20+ tests)
 
-**Week 2 (Nov 4 - 10): Task Suggestions**
-- [ ] Git commit analyzer
-- [ ] Task recommendation algorithm
-- [ ] `task suggest` command
-- [ ] Priority inference logic
-- [ ] Dependency prediction
-- [ ] Integration tests
+**Week 2 (Nov 4 - 10): Commit Analysis & Task Suggestions**
+- [ ] Git commit analyzer (pattern-based, local)
+- [ ] Pattern extraction (keywords, file changes)
+- [ ] MCP tool: `analyze_recent_commits()`
+- [ ] MCP tool: `suggest_next_tasks()`
+- [ ] MCP tool: `extract_decisions_from_commits()`
+- [ ] Integration tests (15+ tests)
 
-**Week 3 (Nov 11 - 15): KB Auto-generation**
-- [ ] Commit diff analysis
-- [ ] Decision extraction from code
-- [ ] `kb from-commits` command
-- [ ] Auto-categorization logic
-- [ ] Review/approval workflow
-- [ ] Documentation + examples
+**Week 3 (Nov 11 - 15): Context & Polish**
+- [ ] MCP tool: `get_project_context()`
+- [ ] MCP tool: `generate_project_summary()`
+- [ ] MCP tool: `get_knowledge_graph()`
+- [ ] MCP tool: `find_related_entries()`
+- [ ] Documentation with Claude Code examples
+- [ ] Demo video showing Claude Code integration
+- [ ] Performance optimization
+- [ ] Release preparation
 
 **File Structure**:
 ```
 clauxton/
-├── ai/
+├── intelligence/                    # Existing (repository map)
+│   ├── symbol_extractor.py
+│   ├── parser.py
+│   └── repository_map.py
+├── semantic/                        # NEW: Semantic intelligence
 │   ├── __init__.py
-│   ├── client.py              # Claude API wrapper
-│   ├── embeddings.py          # Embedding generation
-│   ├── vector_store.py        # FAISS vector store
-│   ├── task_suggester.py      # Task recommendation engine
-│   ├── kb_generator.py        # Auto KB entry generation
-│   ├── query_engine.py        # Natural language query
-│   └── git_analyzer.py        # Git commit analysis
-├── cli/
-│   ├── ai_commands.py         # AI-related CLI commands
-│   └── ...
+│   ├── embeddings.py               # Local embedding generation
+│   ├── vector_store.py             # FAISS vector store
+│   ├── indexer.py                  # Index KB/Tasks/Files
+│   └── search.py                   # Semantic search engine
+├── analysis/                        # NEW: Pattern analysis
+│   ├── __init__.py
+│   ├── git_analyzer.py             # Commit analysis (local)
+│   ├── pattern_extractor.py        # Pattern recognition
+│   ├── task_suggester.py           # Task suggestions
+│   └── decision_extractor.py       # Decision extraction
 └── mcp/
-    └── server.py              # Add AI MCP tools
+    └── server.py                    # Enhanced with 10 new MCP tools
 ```
 
-**New CLI Commands**:
+**Note**: No `ai/client.py` - Claude Code handles AI reasoning!
+
+**Primary Interface**: Claude Code (via MCP)
+- No new CLI commands needed!
+- Users interact naturally with Claude Code
+- Claude Code calls MCP tools automatically
+
+**Optional CLI** (for direct testing):
 ```bash
-# Natural Language Query
-clauxton ask "What database did we choose?"
-clauxton ask "Show me all auth-related tasks"
+# Semantic search (testing only)
+clauxton search "authentication" --semantic
 
-# Task Suggestions
-clauxton task suggest                    # AI suggests next tasks
-clauxton task suggest --from-commits     # From recent commits
-clauxton task suggest --priority high    # Only high priority
-
-# KB Auto-generation
-clauxton kb from-commits                 # Last 7 days
-clauxton kb from-commits --since "2 weeks ago"
-clauxton kb from-commits --approve-all   # Auto-approve
-
-# Enhanced Search
-clauxton search "authentication" --semantic  # Embedding-based
+# Analyze commits (testing only)
+clauxton analyze-commits --since "7 days"
 ```
 
-**New MCP Tools**:
+**New MCP Tools** (10 tools, all local):
 ```python
-# Add to clauxton/mcp/server.py
-- ask_question(question: str) -> str
-- suggest_tasks(count: int, from_commits: bool) -> List[Task]
-- generate_kb_from_commits(since: str, auto_approve: bool) -> List[KBEntry]
-- semantic_search(query: str, limit: int) -> List[SearchResult]
+# Semantic Search (Week 1)
+@server.call_tool()
+async def search_knowledge_semantic(query: str, limit: int = 5) -> dict
+
+@server.call_tool()
+async def search_tasks_semantic(query: str, limit: int = 5) -> dict
+
+@server.call_tool()
+async def search_files_semantic(query: str, limit: int = 10) -> dict
+
+@server.call_tool()
+async def get_project_context(depth: str = "full") -> dict
+
+# Analysis & Suggestions (Week 2)
+@server.call_tool()
+async def analyze_recent_commits(since_days: int = 7) -> dict
+
+@server.call_tool()
+async def suggest_next_tasks(mode: str = "auto") -> dict
+
+@server.call_tool()
+async def extract_decisions_from_commits(since_days: int = 7) -> dict
+
+@server.call_tool()
+async def find_related_entries(entry_id: str, limit: int = 5) -> dict
+
+# Context & Summary (Week 3)
+@server.call_tool()
+async def generate_project_summary() -> dict
+
+@server.call_tool()
+async def get_knowledge_graph() -> dict
 ```
+
+**Total MCP Tools**: 22 (existing) + 10 (new) = **32 tools**
 
 **Dependencies**:
 ```toml
-[project.dependencies]
-# Add AI dependencies to main dependencies
-anthropic = ">=0.8.0"
-sentence-transformers = ">=2.3.0"
-faiss-cpu = ">=1.7.4"  # or faiss-gpu for GPU support
-GitPython = ">=3.1.40"
-
 [project.optional-dependencies]
-ai-full = [
-    "torch>=2.1.0",  # For local embeddings
-    "transformers>=4.36.0",
+# Semantic search (optional but recommended)
+semantic = [
+    "sentence-transformers>=2.3.0",  # Local embeddings
+    "faiss-cpu>=1.7.4",              # Vector store
+    "torch>=2.1.0",                  # For embeddings
 ]
+
+# Note: GitPython already in main dependencies
+# Note: NO anthropic package needed!
+```
+
+**Installation**:
+```bash
+# Install Clauxton with semantic features
+pip install clauxton[semantic]
+
+# Or minimal install (TF-IDF search only)
+pip install clauxton
 ```
 
 **Success Metrics**:
-- 🤖 Task suggestion accuracy: >80%
-- 🔍 Query answer relevance: >90%
-- ⚡ KB auto-generation adoption: >60% of users
-- 📈 User productivity: 2x improvement
+- 🔍 Semantic search accuracy: >85% (vs 70% TF-IDF)
+- 🤖 Task suggestion relevance: >80%
+- ⚡ Search speed: <200ms (p95)
+- 📈 Claude Code integration usage: >90% of users
 - ❤️ User satisfaction: 4.5+/5.0
+- 💰 Additional cost: $0 (100% local)
 
 **Risks & Mitigations**:
-- **Risk**: Claude API costs
-  - **Mitigation**: Local embeddings as fallback, aggressive caching
-- **Risk**: Answer quality variability
-  - **Mitigation**: Extensive prompt engineering, user feedback loop
-- **Risk**: Performance (embedding generation)
-  - **Mitigation**: Incremental indexing, background processing
+- **Risk**: Embedding model size (~500MB download)
+  - **Mitigation**: Optional dependency, lazy loading, user consent
+- **Risk**: Initial indexing time for large projects
+  - **Mitigation**: Background indexing, progress indicator, incremental updates
+- **Risk**: Memory usage with large vector stores
+  - **Mitigation**: Disk-backed FAISS index, pagination, cleanup old embeddings
 
 ---
 
-#### Phase 5: AI Integration - Advanced (v0.13.0) - 🔥 HIGH PRIORITY
+#### Phase 5: Proactive Intelligence (v0.13.0) - 🔥 HIGH PRIORITY
 
-**Goal**: Proactive AI assistance and learning
+**Goal**: Real-time monitoring and proactive suggestions via Claude Code
 
 **Release Target**: 2025-12-06 (3 weeks)
 
-**Priority**: 🔥🔥 High (AI Maturity)
+**Priority**: 🔥🔥 High (Proactive Features)
 
 **Core Features**:
 
-1. **AI-Powered Code Review Integration**
-   - Automatic commit analysis on every commit
-   - Extract patterns and anti-patterns
-   - Link code changes to KB entries
-   - Suggest updates to existing KB entries
+1. **Real-time File Monitoring** (Background Service)
+   - Watch file changes with `watchdog`
+   - Detect new patterns in real-time
+   - Update embeddings incrementally
+   - Notify Claude Code of important changes
 
-   ```bash
-   clauxton review HEAD           # Review latest commit
-   clauxton review --auto-kb      # Auto-create KB entries
-   ```
-
-2. **Proactive Suggestions**
-   - Monitor file changes (watchdog)
-   - Suggest relevant KB entries while coding
-   - Alert about potential conflicts
-   - Recommend tasks based on current work
+2. **Proactive MCP Tools**
+   - `watch_project_changes(enabled: bool)` - Enable/disable monitoring
+   - `get_recent_changes(minutes: int)` - Recent activity summary
+   - `suggest_kb_updates(threshold: float)` - KB entry update suggestions
+   - `detect_anomalies()` - Unusual patterns in code changes
 
 3. **Learning from User Behavior**
-   - Track which suggestions are accepted/rejected
-   - Personalized recommendations
-   - Adaptive priority inference
-   - Improve over time
+   - Track MCP tool usage patterns
+   - Personalized search result ranking
+   - Adaptive confidence scoring
+   - Improve suggestions over time
 
-4. **Multi-turn Conversations**
-   - `clauxton chat` - Interactive AI session
-   - Context retention across questions
-   - Clarifying questions from AI
-   - Session history
+4. **Enhanced Context Awareness**
+   - Current branch analysis
+   - Active file detection
+   - Recent conversation history
+   - Time-based context (morning/afternoon)
+
+**User Experience**:
+```
+User in Claude Code (background monitoring enabled):
+> *edits auth.py*
+
+Claude Code (proactively):
+"I noticed you're working on authentication. Here are
+relevant KB entries and related tasks..."
+
+(Clauxton detected change → called get_recent_changes() →
+Claude Code provided proactive help)
+```
 
 **Implementation Plan**: 3 weeks
 
-**New Commands**:
-```bash
-clauxton review <commit>          # AI code review
-clauxton chat                     # Interactive AI session
-clauxton suggest --proactive      # Enable background suggestions
-```
-
 **Success Metrics**:
-- 🎯 Proactive suggestion usefulness: >70%
-- 💬 Chat session completion rate: >85%
+- 🎯 Proactive suggestion acceptance: >70%
+- ⚡ Real-time update latency: <500ms
 - 📚 KB coverage improvement: +40%
 - 🚀 Development velocity: +50%
 

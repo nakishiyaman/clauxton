@@ -45,20 +45,17 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# AI Integration (v0.12.0+) - Optional but recommended
-ai = [
-    "anthropic>=0.8.0",           # Claude API for intelligent queries
+# Semantic Search (v0.12.0+) - Optional but recommended
+# Enables semantic search via embeddings (100% local, no API costs)
+semantic = [
     "sentence-transformers>=2.3.0",  # Local embeddings
-    "faiss-cpu>=1.7.4",           # Vector store for semantic search
+    "faiss-cpu>=1.7.4",              # Vector store
+    "torch>=2.1.0",                  # For embeddings
 ]
 
-# AI Full (includes larger dependencies for advanced features)
-ai-full = [
-    "anthropic>=0.8.0",
-    "sentence-transformers>=2.3.0",
-    "faiss-cpu>=1.7.4",
-    "torch>=2.1.0",               # For advanced embeddings
-    "transformers>=4.36.0",       # Transformer models
+# Proactive Monitoring (v0.13.0+) - Optional
+proactive = [
+    "watchdog>=3.0.0",               # File system monitoring
 ]
 
 # Language parsers (optional - install only what you need)
