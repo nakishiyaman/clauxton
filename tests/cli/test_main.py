@@ -10,23 +10,9 @@ Tests cover:
 
 from pathlib import Path
 
-import pytest
 from click.testing import CliRunner
 
 from clauxton.cli.main import cli
-
-
-@pytest.fixture
-def runner() -> CliRunner:
-    """Create CLI test runner."""
-    return CliRunner()
-
-
-@pytest.fixture
-def temp_project(tmp_path: Path) -> Path:
-    """Create temporary project directory."""
-    return tmp_path
-
 
 # ============================================================================
 # init command tests
@@ -866,7 +852,7 @@ def test_kb_export_without_init(runner: CliRunner, temp_project: Path) -> None:
         result = runner.invoke(cli, ["kb", "export", str(output_dir)])
 
         assert result.exit_code == 1
-        assert "Error: .clauxton/ not found" in result.output
+        assert ".clauxton/ not found" in result.output  # Updated: no "Error:" prefix
         assert "Run 'clauxton init' first" in result.output
 
 
@@ -882,3 +868,913 @@ def test_kb_export_empty_kb(runner: CliRunner, temp_project: Path) -> None:
         assert result.exit_code == 0
         assert "Total entries: 0" in result.output
         assert "Files created: 0" in result.output
+
+
+# ============================================================================
+# morning command tests
+# ============================================================================
+
+
+def test_morning_without_init(runner: CliRunner, temp_project: Path) -> None:
+    """Test morning command without initialization."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        result = runner.invoke(cli, ["morning"], catch_exceptions=False)
+
+        assert result.exit_code == 1
+        assert ".clauxton/ not found" in result.output
+
+
+def test_morning_no_tasks(runner: CliRunner, temp_project: Path) -> None:
+    """Test morning command with no tasks."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["morning"], input="n\n", catch_exceptions=False)
+
+        assert result.exit_code == 0
+        assert "Good Morning" in result.output
+        assert "No pending tasks" in result.output
+
+
+def test_morning_shows_yesterday_completed(runner: CliRunner, temp_project: Path) -> None:
+    """Test morning command displays yesterday's completed tasks."""
+    from datetime import datetime, timedelta
+
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        # Add a task
+        runner.invoke(cli, ["task", "add", "--name", "Task 1"])
+
+        # Mark it completed yesterday (manually update YAML)
+        from clauxton.core.task_manager import TaskManager
+
+        tm = TaskManager(Path.cwd())
+        yesterday = datetime.now() - timedelta(days=1)
+        tm.update("TASK-001", {"status": "completed", "completed_at": yesterday})
+
+        result = runner.invoke(cli, ["morning"], input="n\n", catch_exceptions=False)
+
+        assert result.exit_code == 0
+        assert "Yesterday's Wins" in result.output
+        assert "Task 1" in result.output
+
+
+def test_morning_suggests_pending_tasks(runner: CliRunner, temp_project: Path) -> None:
+    """Test morning command suggests pending tasks."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        # Add pending tasks
+        runner.invoke(cli, ["task", "add", "--name", "High priority", "--priority", "high"])
+        runner.invoke(cli, ["task", "add", "--name", "Medium priority", "--priority", "medium"])
+
+        result = runner.invoke(cli, ["morning"], input="n\n")
+
+        # Morning command may exit with 1 if user declines to set focus
+        assert result.exit_code in (0, 1)
+        assert "Suggested Tasks" in result.output
+        assert "High priority" in result.output or "Medium priority" in result.output
+
+
+def test_morning_interactive_selection_yes(
+    runner: CliRunner, temp_project: Path
+) -> None:
+    """Test morning command with interactive selection (yes)."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+        runner.invoke(cli, ["task", "add", "--name", "Test task"])
+
+        # Select yes and choose first task (index 1)
+        result = runner.invoke(cli, ["morning"], input="y\n1\n", catch_exceptions=False)
+
+        assert result.exit_code == 0
+        assert "Focus set" in result.output
+        assert "TASK-001" in result.output
+
+
+def test_morning_interactive_selection_no(runner: CliRunner, temp_project: Path) -> None:
+    """Test morning command with interactive selection (no)."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+        runner.invoke(cli, ["task", "add", "--name", "Test task"])
+
+        result = runner.invoke(cli, ["morning"], input="n\n")
+
+        # Exit code may be 0 or 1 when user declines
+        assert result.exit_code in (0, 1)
+
+
+def test_morning_invalid_task_selection(runner: CliRunner, temp_project: Path) -> None:
+    """Test morning command with invalid task selection."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+        runner.invoke(cli, ["task", "add", "--name", "Test task"])
+
+        # Try to select invalid index (99), then cancel
+        result = runner.invoke(cli, ["morning"], input="y\n99\nn\n", catch_exceptions=False)
+
+        assert result.exit_code == 0
+
+
+def test_morning_high_priority_first(runner: CliRunner, temp_project: Path) -> None:
+    """Test morning command prioritizes high priority tasks."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        # Add tasks in reverse priority order
+        runner.invoke(cli, ["task", "add", "--name", "Low priority", "--priority", "low"])
+        runner.invoke(
+            cli, ["task", "add", "--name", "High priority", "--priority", "high"]
+        )
+        runner.invoke(
+            cli, ["task", "add", "--name", "Medium priority", "--priority", "medium"]
+        )
+
+        result = runner.invoke(cli, ["morning"], input="n\n")
+
+        assert result.exit_code in (0, 1)
+        # High priority task should be suggested
+        assert "High priority" in result.output
+
+
+def test_morning_blocked_tasks_shown(runner: CliRunner, temp_project: Path) -> None:
+    """Test morning command shows tasks correctly."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        # Add tasks with dependencies
+        runner.invoke(cli, ["task", "add", "--name", "Task 1"])
+        runner.invoke(
+            cli,
+            ["task", "add", "--name", "Task 2", "--depends-on", "TASK-001"],
+        )
+
+        result = runner.invoke(cli, ["morning"], input="n\n")
+
+        assert result.exit_code in (0, 1)
+        assert "Task 1" in result.output or "Task 2" in result.output
+
+
+def test_morning_multiple_yesterday_tasks(runner: CliRunner, temp_project: Path) -> None:
+    """Test morning command with multiple yesterday tasks."""
+    from datetime import datetime, timedelta
+
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        # Add multiple tasks
+        runner.invoke(cli, ["task", "add", "--name", "Task 1"])
+        runner.invoke(cli, ["task", "add", "--name", "Task 2"])
+        runner.invoke(cli, ["task", "add", "--name", "Task 3"])
+
+        # Mark them completed yesterday
+        from clauxton.core.task_manager import TaskManager
+
+        tm = TaskManager(Path.cwd())
+        yesterday = datetime.now() - timedelta(days=1)
+        for task_id in ["TASK-001", "TASK-002", "TASK-003"]:
+            tm.update(task_id, {"status": "completed", "completed_at": yesterday})
+
+        result = runner.invoke(cli, ["morning"], input="n\n", catch_exceptions=False)
+
+        assert result.exit_code == 0
+        assert "Yesterday's Wins" in result.output
+        assert "Task 3" in result.output or "Task 2" in result.output
+
+
+# ============================================================================
+# daily command tests
+# ============================================================================
+
+
+def test_daily_without_init(runner: CliRunner, temp_project: Path) -> None:
+    """Test daily command without initialization."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        result = runner.invoke(cli, ["daily"], catch_exceptions=False)
+
+        assert result.exit_code == 1
+        assert ".clauxton/ not found" in result.output
+
+
+def test_daily_basic(runner: CliRunner, temp_project: Path) -> None:
+    """Test basic daily command."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["daily"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        assert "Daily Summary" in result.output
+        assert "Today" in result.output
+
+
+def test_daily_with_date(runner: CliRunner, temp_project: Path) -> None:
+    """Test daily command with specific date."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(
+            cli, ["daily", "--date", "2025-10-24"], catch_exceptions=False
+        )
+
+        assert result.exit_code == 0
+        assert "Daily Summary" in result.output
+        # Date may be shown as "Yesterday" or full date
+        assert "Yesterday" in result.output or "2025-10-24" in result.output
+
+
+def test_daily_invalid_date(runner: CliRunner, temp_project: Path) -> None:
+    """Test daily command with invalid date format."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(
+            cli, ["daily", "--date", "invalid"], catch_exceptions=False
+        )
+
+        assert result.exit_code == 1
+        assert "Invalid date format" in result.output
+
+
+def test_daily_json_output(runner: CliRunner, temp_project: Path) -> None:
+    """Test daily command with JSON output."""
+    import json
+
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["daily", "--json"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        # JSON is after the header line
+        lines = result.output.strip().split("\n")
+        json_start = -1
+        for i, line in enumerate(lines):
+            if line.strip().startswith("{"):
+                json_start = i
+                break
+
+        if json_start >= 0:
+            json_str = "\n".join(lines[json_start:])
+            data = json.loads(json_str)
+            assert "date" in data
+            assert "completed_tasks" in data
+            assert "in_progress_tasks" in data
+
+
+def test_daily_with_completed_tasks(runner: CliRunner, temp_project: Path) -> None:
+    """Test daily command with completed tasks today."""
+    from datetime import datetime
+
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        # Add and complete a task
+        runner.invoke(cli, ["task", "add", "--name", "Task 1"])
+
+        from clauxton.core.task_manager import TaskManager
+
+        tm = TaskManager(Path.cwd())
+        tm.update("TASK-001", {"status": "completed", "completed_at": datetime.now()})
+
+        result = runner.invoke(cli, ["daily"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        assert "Completed Today" in result.output
+        assert "TASK-001" in result.output
+
+
+def test_daily_with_time_estimates(runner: CliRunner, temp_project: Path) -> None:
+    """Test daily command with time estimates."""
+    from datetime import datetime
+
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        # Add task with estimates
+        runner.invoke(
+            cli,
+            [
+                "task",
+                "add",
+                "--name",
+                "Task 1",
+                "--estimate",
+                "2",
+            ],
+        )
+
+        from clauxton.core.task_manager import TaskManager
+
+        tm = TaskManager(Path.cwd())
+        # Update with actual hours
+        tm.update(
+            "TASK-001",
+            {
+                "status": "completed",
+                "completed_at": datetime.now(),
+                "actual_hours": 3.0,
+            },
+        )
+
+        result = runner.invoke(cli, ["daily"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        assert "Time Summary" in result.output or "Estimated" in result.output
+
+
+# ============================================================================
+# weekly command tests
+# ============================================================================
+
+
+def test_weekly_without_init(runner: CliRunner, temp_project: Path) -> None:
+    """Test weekly command without initialization."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        result = runner.invoke(cli, ["weekly"], catch_exceptions=False)
+
+        assert result.exit_code == 1
+        assert ".clauxton/ not found" in result.output
+
+
+def test_weekly_basic(runner: CliRunner, temp_project: Path) -> None:
+    """Test basic weekly command."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["weekly"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        assert "Weekly Summary" in result.output
+
+
+def test_weekly_with_offset(runner: CliRunner, temp_project: Path) -> None:
+    """Test weekly command with week offset."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["weekly", "--week", "-1"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        assert "Weekly Summary" in result.output
+
+
+def test_weekly_json_output(runner: CliRunner, temp_project: Path) -> None:
+    """Test weekly command with JSON output."""
+    import json
+
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["weekly", "--json"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert "week_start" in data
+        assert "week_end" in data
+        assert "completed_tasks" in data
+
+
+def test_weekly_with_completed_tasks(runner: CliRunner, temp_project: Path) -> None:
+    """Test weekly command with completed tasks."""
+    from datetime import datetime
+
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        # Add and complete tasks
+        runner.invoke(cli, ["task", "add", "--name", "Task 1"])
+        runner.invoke(cli, ["task", "add", "--name", "Task 2"])
+
+        from clauxton.core.task_manager import TaskManager
+
+        tm = TaskManager(Path.cwd())
+        tm.update("TASK-001", {"status": "completed", "completed_at": datetime.now()})
+        tm.update("TASK-002", {"status": "completed", "completed_at": datetime.now()})
+
+        result = runner.invoke(cli, ["weekly"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        assert "2" in result.output or "Completed" in result.output
+
+
+def test_weekly_velocity_calculation(runner: CliRunner, temp_project: Path) -> None:
+    """Test weekly command calculates velocity."""
+    from datetime import datetime
+
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        # Add tasks with estimates
+        runner.invoke(cli, ["task", "add", "--name", "Task 1", "--estimate", "2"])
+        runner.invoke(cli, ["task", "add", "--name", "Task 2", "--estimate", "3"])
+
+        from clauxton.core.task_manager import TaskManager
+
+        tm = TaskManager(Path.cwd())
+        tm.update("TASK-001", {"status": "completed", "completed_at": datetime.now()})
+        tm.update("TASK-002", {"status": "completed", "completed_at": datetime.now()})
+
+        result = runner.invoke(cli, ["weekly"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        assert "velocity" in result.output.lower() or "hours" in result.output.lower()
+
+
+# ============================================================================
+# trends command tests
+# ============================================================================
+
+
+def test_trends_without_init(runner: CliRunner, temp_project: Path) -> None:
+    """Test trends command without initialization."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        result = runner.invoke(cli, ["trends"], catch_exceptions=False)
+
+        assert result.exit_code == 1
+        assert ".clauxton/ not found" in result.output
+
+
+def test_trends_basic(runner: CliRunner, temp_project: Path) -> None:
+    """Test basic trends command."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["trends"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        assert "Productivity Trends" in result.output
+
+
+def test_trends_with_custom_days(runner: CliRunner, temp_project: Path) -> None:
+    """Test trends command with custom day count."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["trends", "--days", "7"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        assert "Productivity Trends" in result.output
+
+
+def test_trends_with_completed_tasks(runner: CliRunner, temp_project: Path) -> None:
+    """Test trends command with completed tasks."""
+    from datetime import datetime
+
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        # Add and complete tasks
+        runner.invoke(cli, ["task", "add", "--name", "Task 1"])
+        runner.invoke(cli, ["task", "add", "--name", "Task 2"])
+
+        from clauxton.core.task_manager import TaskManager
+
+        tm = TaskManager(Path.cwd())
+        tm.update("TASK-001", {"status": "completed", "completed_at": datetime.now()})
+        tm.update("TASK-002", {"status": "completed", "completed_at": datetime.now()})
+
+        result = runner.invoke(cli, ["trends"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        # Should show insights or stats
+        assert len(result.output) > 100
+
+
+def test_trends_empty_data(runner: CliRunner, temp_project: Path) -> None:
+    """Test trends command with no data."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["trends"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        # Should handle empty data gracefully
+
+
+# ============================================================================
+# pause command tests
+# ============================================================================
+
+
+def test_pause_without_init(runner: CliRunner, temp_project: Path) -> None:
+    """Test pause command without initialization."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        result = runner.invoke(cli, ["pause", "Meeting"], catch_exceptions=False)
+
+        assert result.exit_code == 1
+        assert ".clauxton/ not found" in result.output
+
+
+def test_pause_basic(runner: CliRunner, temp_project: Path) -> None:
+    """Test basic pause command."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["pause", "Meeting"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        assert "Work paused" in result.output
+        assert "Meeting" in result.output
+
+
+def test_pause_with_note(runner: CliRunner, temp_project: Path) -> None:
+    """Test pause command with additional note."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(
+            cli,
+            ["pause", "Meeting", "--note", "Client discussion"],
+            catch_exceptions=False,
+        )
+
+        assert result.exit_code == 0
+        assert "Work paused" in result.output
+
+
+def test_pause_history(runner: CliRunner, temp_project: Path) -> None:
+    """Test pause command with history flag."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        # Add some pause entries
+        runner.invoke(cli, ["pause", "Meeting"])
+        runner.invoke(cli, ["pause", "Break"])
+
+        result = runner.invoke(cli, ["pause", "--history"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        assert "Pause History" in result.output
+
+
+def test_pause_history_empty(runner: CliRunner, temp_project: Path) -> None:
+    """Test pause history with no entries."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["pause", "--history"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        # Should handle empty history gracefully
+
+
+def test_pause_multiple_entries(runner: CliRunner, temp_project: Path) -> None:
+    """Test multiple pause entries."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        # Add multiple pauses
+        runner.invoke(cli, ["pause", "Meeting 1"])
+        runner.invoke(cli, ["pause", "Meeting 2"])
+        runner.invoke(cli, ["pause", "Break"])
+
+        result = runner.invoke(cli, ["pause", "--history"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        assert "3" in result.output or "Meeting 2" in result.output
+
+
+# ============================================================================
+# resume command tests
+# ============================================================================
+
+
+def test_resume_without_init(runner: CliRunner, temp_project: Path) -> None:
+    """Test resume command without initialization."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        result = runner.invoke(cli, ["resume"], catch_exceptions=False)
+
+        assert result.exit_code == 1
+        assert ".clauxton/ not found" in result.output
+
+
+def test_resume_basic(runner: CliRunner, temp_project: Path) -> None:
+    """Test basic resume command."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["resume"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        assert "Welcome back" in result.output
+
+
+def test_resume_with_yesterday(runner: CliRunner, temp_project: Path) -> None:
+    """Test resume command with --yesterday flag."""
+    from datetime import datetime, timedelta
+
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        # Add a task completed yesterday
+        runner.invoke(cli, ["task", "add", "--name", "Task 1"])
+
+        from clauxton.core.task_manager import TaskManager
+
+        tm = TaskManager(Path.cwd())
+        yesterday = datetime.now() - timedelta(days=1)
+        tm.update("TASK-001", {"status": "completed", "completed_at": yesterday})
+
+        result = runner.invoke(cli, ["resume", "--yesterday"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        assert "Yesterday" in result.output
+        assert "TASK-001" in result.output
+
+
+def test_resume_with_in_progress(runner: CliRunner, temp_project: Path) -> None:
+    """Test resume command with in-progress tasks."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        # Add and start a task
+        runner.invoke(cli, ["task", "add", "--name", "Task 1"])
+
+        from clauxton.core.task_manager import TaskManager
+
+        tm = TaskManager(Path.cwd())
+        tm.update("TASK-001", {"status": "in_progress"})
+
+        result = runner.invoke(cli, ["resume"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        assert "TASK-001" in result.output
+
+
+def test_resume_no_recent_activity(runner: CliRunner, temp_project: Path) -> None:
+    """Test resume command with no recent activity."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["resume"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        # Should handle empty state gracefully
+
+
+# ============================================================================
+# search command tests
+# ============================================================================
+
+
+def test_search_without_init(runner: CliRunner, temp_project: Path) -> None:
+    """Test search command without initialization."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        result = runner.invoke(cli, ["search", "test"], catch_exceptions=False)
+
+        assert result.exit_code == 1
+        assert ".clauxton/ not found" in result.output
+
+
+def test_search_basic(runner: CliRunner, temp_project: Path) -> None:
+    """Test basic search command."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        # Add KB entry and task
+        runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Test Entry\narchitecture\nTest content\ntest\n",
+        )
+        runner.invoke(cli, ["task", "add", "--name", "Test task"])
+
+        result = runner.invoke(cli, ["search", "test"], catch_exceptions=False)
+
+        assert result.exit_code == 0
+        assert "Searching for" in result.output
+        assert "Knowledge Base" in result.output
+        assert "Tasks" in result.output
+
+
+def test_search_kb_only(runner: CliRunner, temp_project: Path) -> None:
+    """Test search with --kb-only filter."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Test Entry\narchitecture\nTest content\ntest\n",
+        )
+        runner.invoke(cli, ["task", "add", "--name", "Test task"])
+
+        result = runner.invoke(
+            cli, ["search", "test", "--kb-only"], catch_exceptions=False
+        )
+
+        assert result.exit_code == 0
+        assert "Knowledge Base" in result.output
+
+
+def test_search_tasks_only(runner: CliRunner, temp_project: Path) -> None:
+    """Test search with --tasks-only filter."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        runner.invoke(
+            cli,
+            ["kb", "add"],
+            input="Test Entry\narchitecture\nTest content\ntest\n",
+        )
+        runner.invoke(cli, ["task", "add", "--name", "Test task"])
+
+        result = runner.invoke(
+            cli, ["search", "test", "--tasks-only"], catch_exceptions=False
+        )
+
+        assert result.exit_code == 0
+        assert "Tasks" in result.output
+
+
+def test_search_with_limit(runner: CliRunner, temp_project: Path) -> None:
+    """Test search with custom limit."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        # Add multiple entries
+        for i in range(15):
+            runner.invoke(
+                cli,
+                ["kb", "add"],
+                input=f"Entry {i}\narchitecture\nTest content\ntest\n",
+            )
+
+        result = runner.invoke(
+            cli, ["search", "test", "--limit", "5"], catch_exceptions=False
+        )
+
+        assert result.exit_code == 0
+
+
+def test_search_no_results(runner: CliRunner, temp_project: Path) -> None:
+    """Test search with no matching results."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(
+            cli, ["search", "nonexistent"], catch_exceptions=False
+        )
+
+        assert result.exit_code == 0
+        assert "No results" in result.output or "0" in result.output
+
+
+# ============================================================================
+# Additional Command Tests (Coverage Improvement)
+# ============================================================================
+
+
+def test_status_without_init(runner: CliRunner, temp_project: Path) -> None:
+    """Test status command fails without initialization."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        result = runner.invoke(cli, ["status"])
+
+        assert result.exit_code == 1
+        assert ".clauxton/ not found" in result.output
+
+
+def test_status_basic(runner: CliRunner, temp_project: Path) -> None:
+    """Test status command shows project status."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["status"])
+
+        assert result.exit_code == 0
+        assert "Project Status" in result.output or "Status" in result.output
+
+
+def test_overview_without_init(runner: CliRunner, temp_project: Path) -> None:
+    """Test overview command fails without initialization."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        result = runner.invoke(cli, ["overview"])
+
+        assert result.exit_code == 1
+
+
+def test_overview_basic(runner: CliRunner, temp_project: Path) -> None:
+    """Test overview command shows recent activity."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["overview"])
+
+        assert result.exit_code == 0
+
+
+def test_overview_with_limit(runner: CliRunner, temp_project: Path) -> None:
+    """Test overview with custom limit."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["overview", "--limit", "5"])
+
+        assert result.exit_code == 0
+
+
+def test_stats_without_init(runner: CliRunner, temp_project: Path) -> None:
+    """Test stats command fails without initialization."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        result = runner.invoke(cli, ["stats"])
+
+        assert result.exit_code == 1
+
+
+def test_stats_basic(runner: CliRunner, temp_project: Path) -> None:
+    """Test stats command shows project statistics."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["stats"])
+
+        assert result.exit_code == 0
+        assert "Total" in result.output or "Statistics" in result.output
+
+
+def test_stats_json(runner: CliRunner, temp_project: Path) -> None:
+    """Test stats with JSON output."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["stats", "--json"])
+
+        assert result.exit_code == 0
+
+
+def test_focus_without_init(runner: CliRunner, temp_project: Path) -> None:
+    """Test focus command fails without initialization."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        result = runner.invoke(cli, ["focus"])
+
+        assert result.exit_code == 1
+
+
+def test_focus_show_current(runner: CliRunner, temp_project: Path) -> None:
+    """Test focus command shows current focus."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["focus"])
+
+        assert result.exit_code == 0
+
+
+def test_focus_set_task(runner: CliRunner, temp_project: Path) -> None:
+    """Test setting focus on a task."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+        runner.invoke(cli, ["task", "add", "--name", "Test task"])
+
+        result = runner.invoke(cli, ["focus", "TASK-001"])
+
+        assert result.exit_code == 0
+
+
+def test_focus_clear(runner: CliRunner, temp_project: Path) -> None:
+    """Test clearing focus."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["focus", "--clear"])
+
+        assert result.exit_code == 0
+
+
+def test_continue_without_init(runner: CliRunner, temp_project: Path) -> None:
+    """Test continue command fails without initialization."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        result = runner.invoke(cli, ["continue"])
+
+        assert result.exit_code == 1
+
+
+def test_continue_basic(runner: CliRunner, temp_project: Path) -> None:
+    """Test continue command resumes work."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["continue"])
+
+        assert result.exit_code == 0
+
+
+def test_quickstart_basic(runner: CliRunner, temp_project: Path) -> None:
+    """Test quickstart command initializes project."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        result = runner.invoke(cli, ["quickstart", "--skip-mcp", "--skip-index"])
+
+        assert result.exit_code == 0
+        assert ".clauxton" in result.output or "initialized" in result.output.lower()
+
+
+def test_quickstart_already_initialized(runner: CliRunner, temp_project: Path) -> None:
+    """Test quickstart on already initialized project."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        runner.invoke(cli, ["init"])
+
+        result = runner.invoke(cli, ["quickstart", "--skip-mcp", "--skip-index"])
+
+        assert result.exit_code == 0

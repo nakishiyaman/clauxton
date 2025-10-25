@@ -9,12 +9,13 @@
 [![PyPI Version](https://img.shields.io/pypi/v/clauxton)](https://pypi.org/project/clauxton/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/clauxton)](https://pypi.org/project/clauxton/)
 [![Development Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/nakishiyaman/clauxton)
-[![Test Coverage](https://img.shields.io/badge/coverage-91%25-brightgreen.svg)](https://github.com/nakishiyaman/clauxton)
+[![Test Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen.svg)](https://github.com/nakishiyaman/clauxton)
 [![codecov](https://codecov.io/gh/nakishiyaman/clauxton/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/clauxton)
 
-> ✅ **Production Ready**: Clauxton v0.11.0 is stable and ready for production use. Complete with Repository Map (12-language support), TF-IDF search, task management, conflict detection, and comprehensive testing (1,228 tests, 91% coverage).
-> 🚀 **NEW v0.11.0** (2025-10-24): Repository Map - Multi-language symbol extraction (12 languages), 3 search modes (exact/fuzzy/semantic), 441 intelligence tests!
-> ✨ **v0.10.0** (2025-10-22): Bulk operations, undo functionality, human-in-the-loop confirmations, and 20 MCP tools!
+> ✅ **Production Ready**: Clauxton v0.11.1 is stable and ready for production use. Complete with Repository Map (12-language support), TF-IDF search, task management, conflict detection, and comprehensive testing (1,367 tests, 85% coverage).
+> 🚀 **NEW v0.11.1** (2025-10-25): Daily Workflow Commands - `morning` briefing, `daily`/`weekly` summaries, `trends` analysis, `pause`/`resume` work tracking, unified `search`, and `task add --start` for instant focus!
+> 🎯 **v0.11.0** (2025-10-24): Repository Map - Multi-language symbol extraction (12 languages), 3 search modes (exact/fuzzy/semantic), 441 intelligence tests!
+> ✨ **v0.10.0** (2025-10-22): Bulk operations, undo functionality, human-in-the-loop confirmations, and 22 MCP tools!
 
 Clauxton is a Claude Code plugin that provides **persistent project context** to solve AI-assisted development pain points.
 
@@ -31,19 +32,115 @@ Clauxton is a Claude Code plugin that provides **persistent project context** to
 ### Install from PyPI (Recommended)
 
 ```bash
-# Install Clauxton with all features (TF-IDF search)
+# Basic installation (fast, ~30 seconds)
 pip install clauxton
 
+# Or install with language parsers for Repository Map:
+pip install clauxton[parsers-python]       # Python only
+pip install clauxton[parsers-web]           # JavaScript/TypeScript/PHP
+pip install clauxton[parsers-systems]       # Go/Rust/C++
+pip install clauxton[parsers-enterprise]    # Java/C#/Kotlin
+pip install clauxton[parsers-all]           # All 12 languages (~2 minutes)
+
 # Verify installation
-clauxton --version  # Should show: clauxton, version 0.11.0
+clauxton --version  # Should show: clauxton, version 0.11.1
 ```
+
+**Note**: Language parsers are optional. Install only what you need for your project.
 
 ### Basic Usage
 
+#### ⚡ Quick Start (Recommended)
+
 ```bash
-# Initialize in your project
+# All-in-one setup - initialize, index, and configure MCP
+cd your-project
+clauxton quickstart
+
+# Done! Your project is ready with:
+# ✓ Knowledge Base initialized
+# ✓ Codebase indexed (Repository Map)
+# ✓ MCP server configured for Claude Code
+
+# Optional: Skip certain steps
+clauxton quickstart --skip-mcp     # Skip MCP setup (run later)
+clauxton quickstart --skip-index   # Skip indexing (run later)
+```
+
+#### 📋 Manual Setup (Step-by-Step)
+
+```bash
+# Step 1: Initialize in your project
 cd your-project
 clauxton init
+
+# Step 2: Index your codebase (Repository Map)
+clauxton repo index
+# → Indexed 50 files, found 200 symbols (Python, TypeScript, JavaScript)
+
+# Step 3: Setup MCP server for Claude Code
+clauxton mcp setup              # Auto-configure MCP server
+clauxton mcp status             # Check MCP configuration
+
+# Step 4: Check overall project status
+clauxton status                 # Repository Map, Tasks, KB, MCP - all in one
+```
+
+#### 🔧 Daily Usage
+
+```bash
+# 🌅 Start your day (v0.11.1 NEW!)
+clauxton morning
+# → Shows yesterday's wins, suggests today's tasks, sets focus interactively
+
+# ✅ Add and start a task immediately (v0.11.1 NEW!)
+clauxton task add --name "Implement API" --start
+# → Creates task and sets focus in one command
+
+# ⏸️  Take a break (v0.11.1 NEW!)
+clauxton pause "Meeting"
+# → Records interruption with reason
+
+clauxton pause --history
+# → View all pause history and statistics
+
+# 🔄 Resume work (v0.11.1 NEW!)
+clauxton resume
+# → Shows where you left off and suggests next actions
+
+clauxton resume --yesterday
+# → Also shows yesterday's activity for context
+
+# 🔍 Unified search (v0.11.1 NEW!)
+clauxton search "authentication"
+# → Searches KB, Tasks, and Files all at once
+
+clauxton search "API" --kb-only --limit 10
+# → Search with filters and custom limits
+
+# 📊 Daily summary (v0.11.1 NEW!)
+clauxton daily
+# → End-of-day review: completed tasks, time tracking, next actions
+
+clauxton daily --date 2025-10-24
+# → View specific date
+
+clauxton daily --json
+# → JSON output for integrations
+
+# 📈 Weekly summary (v0.11.1 NEW!)
+clauxton weekly
+# → Week's accomplishments, velocity, trends
+
+clauxton weekly --week -1
+# → Last week's summary
+
+# 📉 Productivity trends (v0.11.1 NEW!)
+clauxton trends
+# → 30-day productivity analysis with insights
+
+clauxton trends --days 7
+# → Last week's trends
 
 # Add knowledge to your Knowledge Base
 clauxton kb add
@@ -56,11 +153,7 @@ clauxton kb search "FastAPI authentication"
 # Get next recommended task (AI-powered)
 clauxton task next
 
-# 🆕 v0.11.0: Index your codebase (Repository Map)
-clauxton repo index
-# → Indexed 50 files, found 200 symbols (Python, TypeScript, JavaScript)
-
-# 🆕 v0.11.0: Search symbols across codebase
+# Search symbols across codebase
 clauxton repo search "authenticate" --mode exact
 # → authenticate_user (function) at auth.py:10-20
 #   AuthService.verify (method) at auth.ts:45-60
@@ -89,10 +182,19 @@ pip install -e .
 
 ### MCP Integration with Claude Code
 
-Set up Clauxton as MCP tools in Claude Code (22 tools available):
+Set up Clauxton as MCP tools in Claude Code (22+ tools available):
 
 ```bash
-# Automatic setup (Linux/macOS)
+# 🆕 v0.11.0: Automatic setup with single command
+clauxton mcp setup
+# → Detects your platform and Python environment
+# → Generates .claude-plugin/mcp-servers.json automatically
+# → Ready in seconds!
+
+# Check configuration status
+clauxton mcp status
+
+# Alternative: Manual setup (Linux/macOS)
 ./setup-mcp.sh
 
 # Or see detailed guide
@@ -405,6 +507,38 @@ pytest
 
 ## 🚀 Usage
 
+### Daily Workflow Commands (NEW v0.11.1)
+
+```bash
+# Quick project overview - See everything at a glance
+clauxton overview
+clauxton overview --limit 5  # Show 5 entries per category
+
+# Resume work - Get back into context after a break
+clauxton resume
+
+# Project statistics - Understand project health
+clauxton stats
+```
+
+### Quick Add Shortcuts (NEW v0.11.1)
+
+Faster than interactive commands - no prompts, just add!
+
+```bash
+# Quick Knowledge Base entries (10x faster)
+clauxton add-architecture "Microservices" "Using Docker containers for each service"
+clauxton add-decision "Use PostgreSQL" "Chosen for JSONB support" --tags database,backend
+clauxton add-constraint "Max 1000 items" "API returns maximum 1000 items per request"
+clauxton add-pattern "Repository Pattern" "All DB access through repositories"
+clauxton add-convention "snake_case" "Use snake_case for Python variables"
+
+# Quick task creation
+clauxton quick-task "Setup backend"
+clauxton quick-task "Fix authentication bug" --high
+clauxton quick-task "Security patch CVE-2024-001" --critical
+```
+
 ### Knowledge Base Commands
 
 ```bash
@@ -434,8 +568,11 @@ clauxton kb update KB-20251019-001 --content "New content" --category decision
 clauxton kb delete KB-20251019-001
 clauxton kb delete KB-20251019-001 --yes  # Skip confirmation
 
-# Export Knowledge Base to Markdown docs (NEW v0.10.0)
+# Export Knowledge Base to Markdown docs (v0.10.0)
 clauxton kb export --output-dir ./docs/kb
+
+# Export as compact summary - Perfect for team onboarding! (NEW v0.11.1)
+clauxton kb export --output-dir ./docs/kb --summary
 ```
 
 ### Task Management Commands
@@ -694,6 +831,57 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 - [Performance Guide](docs/performance-guide.md) - Performance optimization ✨ v0.10.0
 - [Troubleshooting Guide](docs/troubleshooting.md) - Common issues and solutions ✨ v0.10.0
 - [Contributing](CONTRIBUTING.md) - Contribution guidelines
+
+---
+
+## 🧪 Testing
+
+Clauxton has comprehensive test coverage (85%, 1,367 tests) with optimized execution time.
+
+### Quick Tests (Default - Recommended)
+
+```bash
+pytest  # ~2 minutes, 1,348 tests
+```
+
+Automatically excludes performance tests for fast feedback during development.
+
+### Performance Tests
+
+```bash
+pytest -m "performance"  # ~70 minutes, 19 tests
+```
+
+Run before releases or when optimizing performance. Also runs automatically every Sunday via CI.
+
+### All Tests
+
+```bash
+pytest -m ""  # ~80 minutes, 1,367 tests
+```
+
+Complete test suite including all performance tests.
+
+### Coverage Report
+
+```bash
+pytest --cov=clauxton --cov-report=html
+open htmlcov/index.html  # View detailed coverage report
+```
+
+### Test Statistics
+
+- **Total Tests**: 1,367
+- **Default Tests**: 1,348 (excludes 19 performance tests)
+- **Coverage**: 85%
+- **CI Execution Time**: ~5-8 minutes
+- **Performance Tests**: Weekly (Sundays 02:00 UTC) + Manual trigger
+
+### CI/CD
+
+- **Push/PR**: Runs default tests automatically (~8 minutes)
+- **Weekly Schedule**: Performance tests every Sunday at 02:00 UTC
+- **Manual Trigger**: Run performance tests via GitHub Actions "Run workflow" button
 
 ---
 

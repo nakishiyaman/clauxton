@@ -9,6 +9,202 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Internal - Test Infrastructure Optimization
+
+**Focus**: Test execution optimization and coverage improvement
+**Status**: ✅ Complete (Production Ready)
+
+#### Improved
+
+**Test Performance** (97% faster execution):
+- ✅ Optimized test execution time from 52 minutes to 1m46s
+- ✅ Separated 19 performance tests with `@pytest.mark.performance`
+- ✅ Default test run excludes performance tests (1,348 tests in ~2 minutes)
+- ✅ Performance tests run weekly via CI schedule (Sundays 02:00 UTC)
+- ✅ Manual workflow trigger for on-demand performance testing
+
+**Test Coverage** (81% → 85%):
+- ✅ Added 50 new CLI tests:
+  - 17 tests for daily workflow commands (status, overview, stats, focus, continue)
+  - 15 tests for MCP commands (setup, status, configuration)
+  - 18 tests for Repository commands (index, search, status)
+- ✅ Improved module coverage:
+  - `cli/mcp.py`: 15% → 94% (+79%)
+  - `intelligence/repository_map.py`: 69% → 94% (+25%)
+  - `cli/repository.py`: 65% → 70% (+5%)
+
+**Test Infrastructure**:
+- ✅ Created `tests/cli/conftest.py` for shared pytest fixtures
+- ✅ Eliminated fixture code duplication across test files
+- ✅ Enhanced CI/CD with weekly performance test schedule
+- ✅ Added manual CI trigger capability
+
+**Code Quality**:
+- ✅ All lint checks passing (ruff)
+- ✅ All type checks passing (mypy strict mode)
+- ✅ 100% test pass rate (1,367/1,367 tests)
+- ✅ Production-ready quality score: 4.7/5.0 (94%)
+
+**Documentation**:
+- ✅ Updated README.md with comprehensive testing guide
+- ✅ Archived test optimization reports in `docs/archive/test-optimization/`
+- ✅ Updated coverage badge (85%)
+
+#### Technical Details
+
+**Files Created**:
+- `tests/cli/conftest.py` - Shared pytest fixtures
+- `tests/cli/test_mcp_commands.py` - 15 MCP CLI tests
+- `tests/cli/test_repository_commands.py` - 18 Repository CLI tests
+- `docs/archive/test-optimization/` - Complete project documentation (5 files)
+
+**Files Modified**:
+- `.github/workflows/ci.yml` - Weekly schedule and manual trigger
+- `tests/cli/test_main.py` - Added 17 tests, moved fixtures to conftest
+- `tests/integration/test_performance_regression.py` - Performance markers
+- `tests/performance/test_performance.py` - Performance markers
+- `README.md` - Testing guide and updated statistics
+
+**Impact**:
+- Development feedback loop: 52min → 2min (26× faster)
+- CI execution time: ~8 minutes for default tests
+- Coverage exceeds industry standard (85% vs typical 70-80%)
+- Zero regressions, all existing tests passing
+
+## [0.11.1] - 2025-10-25
+
+### v0.11.1 - Usability Enhancements
+**Status**: ✅ Production Ready
+**Focus**: Improved daily workflow and user experience
+
+#### Added
+
+**Productivity Analysis** (New):
+- ✅ **`clauxton morning`** - Interactive morning planning workflow
+  - Shows yesterday's completed tasks
+  - Suggests top 5 tasks by priority
+  - Interactive task selection with automatic focus setting
+  - Guides you into a productive day
+
+- ✅ **`clauxton weekly`** - Weekly productivity summary
+  - Task completion rate and velocity (tasks/week)
+  - Work hours breakdown (estimated vs actual)
+  - Knowledge Base growth by category
+  - Priority distribution of completed tasks
+  - Top 5 completed tasks with `--week` offset support
+  - JSON output with `--json` flag
+
+- ✅ **`clauxton trends`** - Productivity trends and analysis
+  - Analyzes last 30 days (configurable with `--days`)
+  - ASCII chart showing weekly completion trends
+  - Knowledge Base focus by category
+  - Priority distribution over time
+  - Actionable insights based on patterns
+
+- ✅ **`clauxton daily --json`** - JSON output for daily summary
+  - Machine-readable format for integrations
+  - Complete task and KB entry data
+
+- ✅ **`clauxton stats --json`** - JSON output for project statistics
+  - Machine-readable project metrics
+
+**Enhanced Workflow Commands**:
+- ✅ **`clauxton resume --yesterday`** - Enhanced resume with yesterday's work
+  - Shows completed tasks from yesterday
+  - Work hours summary
+  - Next action suggestions with executable commands
+
+- ✅ **`clauxton search --kb-only/--tasks-only/--files-only`** - Filtered search
+  - Search specific data sources
+  - Faster, more focused results
+
+- ✅ **`clauxton task add --start`** - Add task and start immediately
+  - Creates task and sets focus in one command
+  - Updates status to in_progress
+  - Perfect for quick task capture
+
+- ✅ **`clauxton pause --history`** - Pause history and statistics
+  - Shows interruption patterns
+  - Average pause duration
+  - Most common reasons
+  - Recent pause history with resume status
+
+**Daily Workflow Commands** (Existing):
+- ✅ **`clauxton overview`** - Comprehensive project overview
+  - Knowledge Base entries grouped by category (with icons: 🏗️ 🚫 ✅ 🔧 📋)
+  - Task breakdown by status and priority
+  - Shows first N entries per category (configurable with `--limit`)
+  - Content previews for quick context
+  - Completion percentage and next task recommendations
+
+- ✅ **`clauxton resume`** - Project resumption context
+  - Time since last activity (calculates from file modification times)
+  - Last task you were working on (shows in-progress tasks)
+  - Recent KB entries (last 3 with age indicators)
+  - AI-suggested next steps based on current state
+  - Quick command references
+
+- ✅ **`clauxton stats`** - Project statistics and insights
+  - Knowledge Base distribution by category (with bar charts)
+  - Task breakdown by status and priority (visual progress bars)
+  - Repository map statistics (files indexed, symbols count)
+  - Completion rates and time tracking
+  - Project health score (0-100%) with recommendations
+  - Activity metrics and trends
+
+**Quick Add Shortcuts** (eliminates interactive prompts):
+- ✅ **`clauxton add-architecture TITLE CONTENT [--tags]`** - Quick architecture entries
+- ✅ **`clauxton add-decision TITLE CONTENT [--tags]`** - Quick decision logging
+- ✅ **`clauxton add-constraint TITLE CONTENT [--tags]`** - Quick constraint tracking
+- ✅ **`clauxton add-pattern TITLE CONTENT [--tags]`** - Quick pattern documentation
+- ✅ **`clauxton add-convention TITLE CONTENT [--tags]`** - Quick convention notes
+- ✅ **`clauxton quick-task NAME [--high|--critical]`** - Quick task creation
+  - Default priority: medium
+  - Flags: `--high`, `--critical` for priority shortcuts
+  - Examples: `clauxton quick-task "Fix bug" --high`
+
+**Enhanced Export**:
+- ✅ **`clauxton kb export --summary`** - Compact summary format
+  - Single SUMMARY.md file with all entries
+  - Grouped by category with icons
+  - Content previews (200 chars)
+  - Perfect for team onboarding and quick reference
+  - Includes statistics (total entries, categories)
+
+#### Improved
+
+**User Experience**:
+- ✅ All new commands use rich formatting (colors, emojis, progress bars)
+- ✅ Consistent icon usage across commands for better visual scanning
+- ✅ Smart content previews (60-200 chars depending on context)
+- ✅ Time-aware displays (shows "today", "yesterday", "3 days ago")
+- ✅ Actionable recommendations based on project state
+
+**Performance**:
+- ✅ Quick shortcuts avoid interactive prompts (10x faster for frequent operations)
+- ✅ Overview and stats commands use efficient data grouping
+- ✅ Resume command uses file system metadata for fast activity detection
+
+#### Developer Experience
+
+**Usability Metrics**:
+- KB/Task entry creation time: **5 minutes → 10 seconds** (30x faster with quick shortcuts)
+- Project context understanding: **Multiple commands → Single `overview`** (1 command vs 3+)
+- Daily workflow: **Streamlined with `resume` + quick commands**
+- Team onboarding: **Enhanced with `--summary` export**
+
+**Quality**:
+- ✅ All commands pass mypy strict type checking
+- ✅ All commands pass ruff linting
+- ✅ Consistent error handling with user-friendly messages
+- ✅ Rich terminal output for better readability
+
+#### Documentation
+- ✅ Updated README with new commands and examples
+- ✅ Added usage examples for all quick shortcuts
+- ✅ Documented project health scoring algorithm
+- ✅ Added team onboarding workflow with summary export
+
 ## [0.11.0] - 2025-10-24
 
 ### v0.11.0 - Repository Map
@@ -213,6 +409,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ **Week 5**: Kotlin symbol extraction (Complete)
 - 📋 **Week 5-6**: CLI/MCP integration enhancements
 - 📋 **Week 6**: Incremental indexing & performance optimization
+
+#### Fixed
+- **Undo Functionality Integration**: Added operation history recording to CLI commands
+  - `clauxton kb add` now records operations for undo support (`clauxton/cli/main.py:195-204`)
+  - `clauxton task add` now records operations for undo support (`clauxton/cli/tasks.py:97-106`)
+  - Fixes issue where `clauxton undo --history` showed "No operations in history" after CLI operations
+  - Enables full undo/rollback functionality for KB and Task management via CLI
+  - Affected commands: `kb add`, `task add` (MCP tools already had operation recording)
+
+#### Enhanced (UI/UX Improvements)
+- **Optional Dependencies**: Tree-sitter parsers now optional for faster installation
+  - Base install time: ~30 seconds (was 5-10 minutes)
+  - Install only needed parsers: `pip install clauxton[parsers-python]`
+  - Convenience groups: `parsers-web`, `parsers-systems`, `parsers-enterprise`, `parsers-all`
+  - Updated `pyproject.toml` with 12 language-specific optional dependencies
+
+- **Parser Missing Warnings**: User-visible warnings when language parsers unavailable
+  - `clauxton repo index` now shows missing parsers with install commands
+  - Example: "⚠ 5 Go files found but tree-sitter-go not installed. Install with: pip install clauxton[parsers-systems]"
+  - Prevents silent file skipping during indexing
+
+- **Quick Start Command**:
+  - New `clauxton quickstart` command for one-command setup
+  - Automatically runs: init → repo index → mcp setup
+  - Optional flags: `--skip-mcp`, `--skip-index` for flexibility
+  - Shows progress for each step (Step 1/3, Step 2/3, Step 3/3)
+  - Displays final status and suggests next actions
+  - Reduces new user setup time: 5 minutes → 10 seconds (30x faster)
+
+- **Improved Onboarding**:
+  - Welcome message when running `clauxton` without arguments
+  - Context-aware guidance (first-time vs existing users)
+  - Promotes `clauxton quickstart` as recommended setup method
+  - Manual setup workflow clearly documented as alternative
+  - `clauxton init` now suggests next step: `clauxton repo index`
+  - Updated help messages to reflect completed phases (v0.10.0, v0.11.0)
+
+- **Enhanced Discovery**:
+  - `clauxton task import --example` shows complete YAML format example
+  - `clauxton config list` now displays mode descriptions and usage examples
+  - All modes explained: always (maximum safety), auto (balanced), never (maximum speed)
+
+- **Error Message Standardization**:
+  - Unified error format across all CLI commands: `⚠ [problem]. [solution]`
+  - Applied to: `clauxton/cli/main.py`, `tasks.py`, `config.py`
+  - Example: "⚠ .clauxton/ not found. Run 'clauxton init' first"
+  - Improves clarity and consistency of error messages
+
+- **Performance Feedback**:
+  - `clauxton repo index` now shows estimated time remaining during indexing
+  - Dynamic calculation based on current progress: "~2m 30s remaining"
+  - Updates in real-time as files are processed
+  - Helps users understand indexing duration for large codebases
+
+- **MCP Auto-Setup**:
+  - New `clauxton mcp setup` command for automatic MCP server configuration
+  - Detects platform and Python environment automatically
+  - Generates `.claude-plugin/mcp-servers.json` with correct settings
+  - Includes `clauxton mcp status` to show current configuration
+  - Simplifies MCP integration from manual JSON editing to single command
+
+- **Project Status Dashboard**:
+  - New `clauxton status` command for overall project overview
+  - Displays: Repository Map (files/symbols indexed), Tasks (pending/in-progress/completed), Knowledge Base (entry count/recent), MCP Server (configuration)
+  - Shows "time ago" for last updates (e.g., "2 hours ago", "3 days ago")
+  - Suggests next task automatically
+  - Perfect for daily standup or project health check
 
 ---
 

@@ -32,6 +32,8 @@ def initialized_project(tmp_path: Path) -> Path:
 # ============================================================================
 
 
+@pytest.mark.slow
+@pytest.mark.performance
 def test_bulk_import_performance(initialized_project: Path) -> None:
     """
     Test 100 tasks import completes in < 1 second.
@@ -86,6 +88,8 @@ def test_bulk_import_performance(initialized_project: Path) -> None:
     print(f"\n✓ Bulk import of 100 tasks: {elapsed_ms:.2f}ms")
 
 
+@pytest.mark.slow
+@pytest.mark.performance
 def test_bulk_import_with_dependencies_performance(
     initialized_project: Path,
 ) -> None:
@@ -158,6 +162,8 @@ def test_bulk_import_with_dependencies_performance(
 # ============================================================================
 
 
+@pytest.mark.slow
+@pytest.mark.performance
 def test_kb_export_performance(initialized_project: Path) -> None:
     """
     Test 1000 KB entries export completes in < 5 seconds.
@@ -234,6 +240,8 @@ def test_kb_export_performance(initialized_project: Path) -> None:
     print(f"\n✓ KB export of 1000 entries: {elapsed_ms:.2f}ms")
 
 
+@pytest.mark.slow
+@pytest.mark.performance
 def test_kb_search_performance(initialized_project: Path) -> None:
     """
     Test KB search remains fast with large datasets.
@@ -307,6 +315,8 @@ def test_kb_search_performance(initialized_project: Path) -> None:
 # ============================================================================
 
 
+@pytest.mark.slow
+@pytest.mark.performance
 def test_task_list_performance(initialized_project: Path) -> None:
     """Test task list performance with 500 tasks."""
     import os
@@ -326,7 +336,7 @@ def test_task_list_performance(initialized_project: Path) -> None:
 
     yaml_content = "tasks:\n" + "\n".join(tasks)
     result = task_import_yaml(yaml_content, skip_confirmation=True)
-    assert result["imported_count"] == 500
+    assert result["imported"] == 500  # Key is "imported" not "imported_count"
 
     # Test list performance
     from clauxton.mcp.server import task_list
@@ -354,6 +364,8 @@ def test_task_list_performance(initialized_project: Path) -> None:
     print(f"\n✓ Task list of 500 tasks: {elapsed_ms:.2f}ms")
 
 
+@pytest.mark.slow
+@pytest.mark.performance
 def test_conflict_detection_performance(initialized_project: Path) -> None:
     """Test conflict detection performance with 100 tasks."""
     import os
@@ -409,6 +421,8 @@ def test_conflict_detection_performance(initialized_project: Path) -> None:
 # ============================================================================
 
 
+@pytest.mark.slow
+@pytest.mark.performance
 def test_performance_summary(initialized_project: Path) -> None:
     """
     Generate performance summary report.
