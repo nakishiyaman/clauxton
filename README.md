@@ -226,6 +226,7 @@ Claude Code: (Begins implementation)
 - ⚠️ **Conflict Detection** - Predict file conflicts before they occur, get safe execution order
 - 🔍 **TF-IDF Search** - Relevance-based search with intelligent ranking (powered by scikit-learn)
 - 🗺️ **Repository Map** - ⭐ **NEW v0.11.0**: Automatic codebase indexing with symbol search (exact/fuzzy/semantic)
+- 🌅 **Daily Workflow Commands** - ⭐ **NEW v0.11.1**: `morning` briefing, `daily`/`weekly` summaries, `trends` analysis, `pause`/`resume` tracking, unified `search`
 - 🔒 **Privacy First** - Local-only by default, no cloud dependencies
 - 🤖 **MCP Integration** - Seamless integration with Claude Code via Model Context Protocol (22 tools)
 
