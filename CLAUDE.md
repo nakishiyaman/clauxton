@@ -10,8 +10,8 @@ Clauxton is a Claude Code plugin providing **persistent project context** throug
 - **Conflict Detection**: Pre-merge conflict prediction (Phase 2)
 - **Repository Map**: Code intelligence with multi-language symbol extraction (v0.11.0+)
 
-**Status**: v0.10.0 - Production ready (528 tests, Enhanced Validation)
-**v0.11.0 Progress**: Week 3 Day 7 Complete! (301 intelligence tests, 8 languages: Python/JavaScript/TypeScript/Go/Rust/C++/Java/C#)
+**Status**: v0.11.2 - Production ready (1,370 tests, 85% coverage, Optimized test execution)
+**Latest Release**: v0.11.2 - Test optimization (97% faster execution: 52min → 1m46s), CI improvements for all language parsers
 
 ## Build/Test Commands
 

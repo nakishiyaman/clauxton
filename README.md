@@ -12,8 +12,9 @@
 [![Test Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen.svg)](https://github.com/nakishiyaman/clauxton)
 [![codecov](https://codecov.io/gh/nakishiyaman/clauxton/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/clauxton)
 
-> ✅ **Production Ready**: Clauxton v0.11.1 is stable and ready for production use. Complete with Repository Map (12-language support), TF-IDF search, task management, conflict detection, and comprehensive testing (1,367 tests, 85% coverage).
-> 🚀 **NEW v0.11.1** (2025-10-25): Daily Workflow Commands - `morning` briefing, `daily`/`weekly` summaries, `trends` analysis, `pause`/`resume` work tracking, unified `search`, and `task add --start` for instant focus!
+> ✅ **Production Ready**: Clauxton v0.11.2 is stable and ready for production use. Complete with Repository Map (12-language support), TF-IDF search, task management, conflict detection, and comprehensive testing (1,370 tests, 85% coverage).
+> ⚡ **v0.11.2** (2025-10-25): Test Optimization - 97% faster test execution (52min → 1m46s), CI improvements for all language parsers!
+> 🚀 **v0.11.1** (2025-10-25): Daily Workflow Commands - `morning` briefing, `daily`/`weekly` summaries, `trends` analysis, `pause`/`resume` work tracking, unified `search`, and `task add --start` for instant focus!
 > 🎯 **v0.11.0** (2025-10-24): Repository Map - Multi-language symbol extraction (12 languages), 3 search modes (exact/fuzzy/semantic), 441 intelligence tests!
 > ✨ **v0.10.0** (2025-10-22): Bulk operations, undo functionality, human-in-the-loop confirmations, and 22 MCP tools!
 
@@ -43,7 +44,7 @@ pip install clauxton[parsers-enterprise]    # Java/C#/Kotlin
 pip install clauxton[parsers-all]           # All 12 languages (~2 minutes)
 
 # Verify installation
-clauxton --version  # Should show: clauxton, version 0.11.1
+clauxton --version  # Should show: clauxton, version 0.11.2
 ```
 
 **Note**: Language parsers are optional. Install only what you need for your project.
