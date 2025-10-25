@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.2] - 2025-10-25
+
 ### Internal - Test Infrastructure Optimization
 
 **Focus**: Test execution optimization and coverage improvement
