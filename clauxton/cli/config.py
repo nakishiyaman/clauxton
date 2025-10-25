@@ -41,7 +41,7 @@ def set(key: str, value: str) -> None:
     if not clauxton_dir.exists():
         click.echo(
             click.style(
-                "Error: Clauxton not initialized. Run 'clauxton init' first.",
+                "⚠ Clauxton not initialized. Run 'clauxton init' first",
                 fg="red",
             )
         )
@@ -54,8 +54,8 @@ def set(key: str, value: str) -> None:
             if value not in ["always", "auto", "never"]:
                 click.echo(
                     click.style(
-                        f"Error: Invalid confirmation mode '{value}'. "
-                        "Must be 'always', 'auto', or 'never'.",
+                        f"⚠ Invalid confirmation mode '{value}'. "
+                        "Must be 'always', 'auto', or 'never'",
                         fg="red",
                     )
                 )
@@ -77,7 +77,7 @@ def set(key: str, value: str) -> None:
             except ValueError:
                 click.echo(
                     click.style(
-                        f"Error: Invalid threshold value '{value}'. Must be an integer.",
+                        f"⚠ Invalid threshold value '{value}'. Must be an integer",
                         fg="red",
                     )
                 )
@@ -93,8 +93,8 @@ def set(key: str, value: str) -> None:
         else:
             click.echo(
                 click.style(
-                    f"Error: Unknown configuration key '{key}'. "
-                    "Run 'clauxton config list' to see available keys.",
+                    f"⚠ Unknown configuration key '{key}'. "
+                    "Run 'clauxton config list' to see available keys",
                     fg="red",
                 )
             )
@@ -120,7 +120,7 @@ def get(key: str) -> None:
     if not clauxton_dir.exists():
         click.echo(
             click.style(
-                "Error: Clauxton not initialized. Run 'clauxton init' first.",
+                "⚠ Clauxton not initialized. Run 'clauxton init' first",
                 fg="red",
             )
         )
@@ -141,8 +141,8 @@ def get(key: str) -> None:
     else:
         click.echo(
             click.style(
-                f"Error: Unknown configuration key '{key}'. "
-                "Run 'clauxton config list' to see available keys.",
+                f"⚠ Unknown configuration key '{key}'. "
+                "Run 'clauxton config list' to see available keys",
                 fg="red",
             )
         )
@@ -162,7 +162,7 @@ def list() -> None:
     if not clauxton_dir.exists():
         click.echo(
             click.style(
-                "Error: Clauxton not initialized. Run 'clauxton init' first.",
+                "⚠ Clauxton not initialized. Run 'clauxton init' first",
                 fg="red",
             )
         )
@@ -172,22 +172,56 @@ def list() -> None:
     config_dict = cm.get_all_config()
 
     # Display configuration
-    click.echo(click.style("Clauxton Configuration", fg="cyan", bold=True))
-    click.echo(click.style("=" * 40, fg="cyan"))
+    click.echo(click.style("\nClauxton Configuration", fg="cyan", bold=True))
+    click.echo(click.style("=" * 60, fg="cyan"))
 
     # Version
     version = config_dict.get("version", "1.0")
-    click.echo(f"version: {click.style(version, fg='blue')}")
+    version_label = click.style('Version:', fg='white', bold=True)
+    version_value = click.style(version, fg='blue')
+    click.echo(f"\n{version_label} {version_value}")
 
-    # Confirmation mode
+    # Confirmation mode with detailed explanation
     mode = config_dict.get("confirmation_mode", "auto")
     mode_color = "green" if mode == "auto" else "yellow"
-    click.echo(f"confirmation_mode: {click.style(mode, fg=mode_color)}")
+
+    mode_label = click.style('Confirmation Mode:', fg='white', bold=True)
+    mode_value = click.style(mode, fg=mode_color)
+    click.echo(f"\n{mode_label} {mode_value}")
+
+    mode_descriptions = {
+        "always": "  └─ Confirm every operation (maximum safety)",
+        "auto": "  └─ Confirm bulk operations only (balanced, default)",
+        "never": "  └─ No confirmations (maximum speed, undo available)"
+    }
+
+    # Show all modes with indicator
+    click.echo(click.style("\nAvailable Modes:", fg="cyan"))
+    for mode_name, description in mode_descriptions.items():
+        if mode_name == mode:
+            # Current mode
+            mode_indicator = click.style(f"  ▶ {mode_name}", fg="green", bold=True)
+            current_label = click.style(" (current)", fg="green")
+            click.echo(mode_indicator + current_label)
+            click.echo(click.style(description, fg="green"))
+        else:
+            # Other modes
+            click.echo(click.style(f"    {mode_name}", fg="white", dim=True))
+            click.echo(click.style(description, dim=True))
 
     # Thresholds
     thresholds = config_dict.get("confirmation_thresholds", {})
     if thresholds:
-        click.echo("\n" + click.style("Confirmation Thresholds:", fg="cyan"))
+        click.echo("\n" + click.style("Confirmation Thresholds:", fg="cyan", bold=True))
+        threshold_desc = "(Number of items that trigger confirmation in 'auto' mode)"
+        click.echo(click.style(threshold_desc, fg="white", dim=True))
+
         for op_type, threshold_value in sorted(thresholds.items()):
             threshold_key = f"{op_type}_threshold"
-            click.echo(f"  {threshold_key}: {click.style(str(threshold_value), fg='blue')}")
+            click.echo(f"  • {threshold_key}: {click.style(str(threshold_value), fg='blue')}")
+
+    # Usage examples
+    click.echo("\n" + click.style("Usage Examples:", fg="cyan", bold=True))
+    click.echo(click.style("  clauxton config set confirmation_mode always", fg="white"))
+    click.echo(click.style("  clauxton config set task_import_threshold 20", fg="white"))
+    click.echo()

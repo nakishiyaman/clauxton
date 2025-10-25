@@ -28,6 +28,7 @@ def task() -> None:
 @click.option("--files", help="Comma-separated list of files to edit")
 @click.option("--kb-refs", help="Comma-separated list of related KB entry IDs")
 @click.option("--estimate", type=float, help="Estimated hours to complete")
+@click.option("--start", is_flag=True, help="Start working on this task immediately")
 def add_task(
     name: str,
     description: Optional[str],
@@ -36,6 +37,7 @@ def add_task(
     files: Optional[str],
     kb_refs: Optional[str],
     estimate: Optional[float],
+    start: bool,
 ) -> None:
     """
     Add a new task.
@@ -50,8 +52,7 @@ def add_task(
 
     # Check if .clauxton exists
     if not (root_dir / ".clauxton").exists():
-        click.echo(click.style("Error: .clauxton/ not found", fg="red"))
-        click.echo("Run 'clauxton init' first")
+        click.echo(click.style("⚠ .clauxton/ not found. Run 'clauxton init' first", fg="red"))
         raise click.Abort()
 
     tm = TaskManager(root_dir)
@@ -93,21 +94,58 @@ def add_task(
 
     try:
         tm.add(task_obj)
+
+        # Record operation to history for undo support
+        from clauxton.core.operation_history import Operation, OperationHistory, OperationType
+
+        history = OperationHistory(root_dir)
+        operation = Operation(
+            operation_type=OperationType.TASK_ADD,
+            operation_data={"task_id": task_id},
+            description=f"Added task: {name}"
+        )
+        history.record(operation)
+
         click.echo(click.style(f"✓ Added task: {task_id}", fg="green"))
         click.echo(f"  Name: {name}")
         click.echo(f"  Priority: {priority}")
         if dependencies:
             click.echo(f"  Depends on: {', '.join(dependencies)}")
+
+        # If --start flag is set, automatically set focus and update status
+        if start:
+            # Set focus
+            focus_file = root_dir / ".clauxton" / "focus.yml"
+            import yaml
+            focus_data = {
+                "task_id": task_id,
+                "task_name": name,
+                "started_at": datetime.now().isoformat()
+            }
+            focus_file.write_text(yaml.dump(focus_data), encoding="utf-8")
+
+            # Update task status to in_progress
+            tm.update(task_id, {"status": "in_progress", "started_at": datetime.now()})
+
+            click.echo()
+            click.echo(click.style("🎯 Focus set!", fg="green", bold=True))
+            click.echo(f"   Now working on: {task_id}")
+            click.echo()
+            click.echo("   Check focus: clauxton focus")
+            click.echo("   Clear focus: clauxton focus --clear")
     except Exception as e:
         click.echo(click.style(f"Error: {e}", fg="red"))
         raise click.Abort()
 
 
 @task.command("import")
-@click.argument("yaml_file", type=click.Path(exists=True))
+@click.argument("yaml_file", type=click.Path(exists=True), required=False)
 @click.option("--dry-run", is_flag=True, help="Validate without creating tasks")
 @click.option("--skip-validation", is_flag=True, help="Skip dependency validation")
-def import_tasks(yaml_file: str, dry_run: bool, skip_validation: bool) -> None:
+@click.option("--example", is_flag=True, help="Show YAML format example")
+def import_tasks(
+    yaml_file: Optional[str], dry_run: bool, skip_validation: bool, example: bool
+) -> None:
     """
     Import multiple tasks from YAML file.
 
@@ -118,6 +156,7 @@ def import_tasks(yaml_file: str, dry_run: bool, skip_validation: bool) -> None:
         $ clauxton task import tasks.yml
         $ clauxton task import tasks.yml --dry-run
         $ clauxton task import tasks.yml --skip-validation
+        $ clauxton task import --example  # Show YAML format example
 
     YAML Format:
         tasks:
@@ -133,12 +172,75 @@ def import_tasks(yaml_file: str, dry_run: bool, skip_validation: bool) -> None:
             files_to_edit:
               - api/users.py
     """
+    # Show example if requested
+    if example:
+        example_yaml = """# Clauxton Task Import Example
+
+tasks:
+  - name: "Setup FastAPI project"
+    description: "Initialize FastAPI with basic structure"
+    priority: high
+    files_to_edit:
+      - main.py
+      - requirements.txt
+      - config.py
+    estimated_hours: 2.5
+
+  - name: "Create database models"
+    description: "Define User and Post models with SQLAlchemy"
+    priority: high
+    depends_on:
+      - TASK-001
+    files_to_edit:
+      - models/user.py
+      - models/post.py
+      - database.py
+    estimated_hours: 3.0
+
+  - name: "Implement API endpoints"
+    description: "Create CRUD endpoints for users and posts"
+    priority: medium
+    depends_on:
+      - TASK-002
+    files_to_edit:
+      - api/users.py
+      - api/posts.py
+    estimated_hours: 4.0
+
+  - name: "Write API tests"
+    description: "Create pytest tests for all endpoints"
+    priority: medium
+    depends_on:
+      - TASK-003
+    files_to_edit:
+      - tests/test_users.py
+      - tests/test_posts.py
+    estimated_hours: 3.5
+
+# Priority levels: low, medium, high, critical
+# Status (auto-set): pending, in_progress, completed, blocked
+# Dependencies are auto-inferred from file overlap
+"""
+        click.echo(click.style("YAML Task Import Format Example:\n", fg="cyan", bold=True))
+        click.echo(example_yaml)
+        click.echo(click.style("\nSave this to a file (e.g., tasks.yml) and import:", fg="green"))
+        click.echo(click.style("  clauxton task import tasks.yml", fg="cyan"))
+        return
+
+    # Validate yaml_file is provided
+    if not yaml_file:
+        error_msg = (
+            "⚠ Missing YAML file path. Usage: clauxton task import tasks.yml "
+            "(or --example for format)"
+        )
+        click.echo(click.style(error_msg, fg="red"))
+        raise click.Abort()
+
     root_dir = Path.cwd()
 
     # Check if .clauxton exists
     if not (root_dir / ".clauxton").exists():
-        click.echo(click.style("Error: .clauxton/ not found", fg="red"))
-        click.echo("Run 'clauxton init' first")
+        click.echo(click.style("⚠ .clauxton/ not found. Run 'clauxton init' first", fg="red"))
         raise click.Abort()
 
     tm = TaskManager(root_dir)
@@ -215,8 +317,7 @@ def list_tasks(status: Optional[str], priority: Optional[str]) -> None:
 
     # Check if .clauxton exists
     if not (root_dir / ".clauxton").exists():
-        click.echo(click.style("Error: .clauxton/ not found", fg="red"))
-        click.echo("Run 'clauxton init' first")
+        click.echo(click.style("⚠ .clauxton/ not found. Run 'clauxton init' first", fg="red"))
         raise click.Abort()
 
     tm = TaskManager(root_dir)
@@ -257,8 +358,7 @@ def get_task(task_id: str) -> None:
 
     # Check if .clauxton exists
     if not (root_dir / ".clauxton").exists():
-        click.echo(click.style("Error: .clauxton/ not found", fg="red"))
-        click.echo("Run 'clauxton init' first")
+        click.echo(click.style("⚠ .clauxton/ not found. Run 'clauxton init' first", fg="red"))
         raise click.Abort()
 
     tm = TaskManager(root_dir)
@@ -326,8 +426,7 @@ def update_task(
 
     # Check if .clauxton exists
     if not (root_dir / ".clauxton").exists():
-        click.echo(click.style("Error: .clauxton/ not found", fg="red"))
-        click.echo("Run 'clauxton init' first")
+        click.echo(click.style("⚠ .clauxton/ not found. Run 'clauxton init' first", fg="red"))
         raise click.Abort()
 
     tm = TaskManager(root_dir)
@@ -376,8 +475,7 @@ def delete_task(task_id: str, yes: bool) -> None:
 
     # Check if .clauxton exists
     if not (root_dir / ".clauxton").exists():
-        click.echo(click.style("Error: .clauxton/ not found", fg="red"))
-        click.echo("Run 'clauxton init' first")
+        click.echo(click.style("⚠ .clauxton/ not found. Run 'clauxton init' first", fg="red"))
         raise click.Abort()
 
     tm = TaskManager(root_dir)
@@ -413,8 +511,7 @@ def next_task() -> None:
 
     # Check if .clauxton exists
     if not (root_dir / ".clauxton").exists():
-        click.echo(click.style("Error: .clauxton/ not found", fg="red"))
-        click.echo("Run 'clauxton init' first")
+        click.echo(click.style("⚠ .clauxton/ not found. Run 'clauxton init' first", fg="red"))
         raise click.Abort()
 
     tm = TaskManager(root_dir)

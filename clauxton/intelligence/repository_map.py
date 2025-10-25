@@ -42,7 +42,8 @@ class IndexResult:
         by_type: Optional[Dict[str, int]] = None,
         by_language: Optional[Dict[str, int]] = None,
         indexed_at: Optional[datetime] = None,
-        errors: Optional[List[str]] = None
+        errors: Optional[List[str]] = None,
+        missing_parsers: Optional[Dict[str, int]] = None
     ):
         """
         Initialize index result.
@@ -55,6 +56,7 @@ class IndexResult:
             by_language: Breakdown of files by language
             indexed_at: Timestamp of indexing
             errors: List of error messages (if any)
+            missing_parsers: Languages with missing parsers (language: file_count)
         """
         self.files_indexed = files_indexed
         self.symbols_found = symbols_found
@@ -63,6 +65,7 @@ class IndexResult:
         self.by_language = by_language or {}
         self.indexed_at = indexed_at or datetime.now()
         self.errors = errors or []
+        self.missing_parsers = missing_parsers or {}
 
     def __repr__(self) -> str:
         return (
@@ -233,6 +236,7 @@ class RepositoryMap:
         all_files = []
         by_type: Dict[str, int] = {}
         by_language: Dict[str, int] = {}
+        missing_parsers: Dict[str, int] = {}  # Track missing parsers
 
         from clauxton.intelligence.symbol_extractor import SymbolExtractor
         symbol_extractor = SymbolExtractor()
@@ -266,11 +270,17 @@ class RepositoryMap:
                             file_path,
                             file_info["language"]
                         )
-                        symbols_found += len(symbols)
 
-                        # Store symbols
-                        if symbols:
-                            self._store_symbols(file_path, symbols)
+                        # Check if parser is available
+                        if symbols is None:
+                            # Parser not available for this language
+                            lang = file_info["language"]
+                            missing_parsers[lang] = missing_parsers.get(lang, 0) + 1
+                        else:
+                            symbols_found += len(symbols)
+                            # Store symbols
+                            if symbols:
+                                self._store_symbols(file_path, symbols)
 
                     except Exception as e:
                         error_msg = f"Error extracting symbols from {file_path}: {e}"
@@ -303,7 +313,8 @@ class RepositoryMap:
             by_type=by_type,
             by_language=by_language,
             indexed_at=indexed_at,
-            errors=errors
+            errors=errors,
+            missing_parsers=missing_parsers
         )
 
     def search(

@@ -19,7 +19,7 @@ Clauxton provides **persistent project context** for Claude Code through a Knowl
 pip install clauxton
 
 # Verify installation
-clauxton --version  # Should show: clauxton, version 0.9.0-beta
+clauxton --version  # Should show: clauxton, version 0.11.1
 ```
 
 ### From Source (Development)

@@ -88,6 +88,34 @@ clauxton conflict check src/api/users.py    # Check file availability
 clauxton undo                               # Undo last operation (with confirmation)
 clauxton undo --history                     # Show operation history
 clauxton undo --history --limit 20          # Show last 20 operations
+
+# Usability commands (v0.11.1)
+clauxton daily                              # Show daily activity summary
+clauxton daily --date 2025-10-24            # Show summary for specific date
+clauxton daily --json                       # JSON output
+clauxton weekly                             # Weekly summary with velocity
+clauxton weekly --week -1                   # Last week's summary
+clauxton weekly --json                      # JSON output
+clauxton morning                            # Interactive morning planning
+clauxton trends                             # Productivity trends (30 days)
+clauxton trends --days 7                    # Last week's trends
+clauxton focus TASK-001                     # Set focus on a task
+clauxton focus                              # View current focus
+clauxton focus --clear                      # Clear focus
+clauxton search "query"                     # Cross-search KB/Tasks/Files
+clauxton search "API" --limit 10            # Search with custom limit
+clauxton search "auth" --kb-only            # Search KB only
+clauxton search "bug" --tasks-only          # Search tasks only
+clauxton search "function" --files-only     # Search files only
+clauxton pause "Meeting"                    # Pause work with reason
+clauxton pause --note "Working on bug"      # Pause with additional notes
+clauxton pause --history                    # Show pause statistics
+clauxton continue                           # Resume work after pause
+clauxton resume                             # Show where you left off
+clauxton resume --yesterday                 # Show yesterday's work too
+clauxton task add --start                   # Add task and set focus
+clauxton stats --json                       # Project stats as JSON
+clauxton kb templates                       # Show KB entry templates
 ```
 
 ## High-Level Architecture
@@ -170,6 +198,72 @@ Storage: .clauxton/
 2. Build TF-IDF matrix from all entries
 3. Calculate cosine similarity → Rank by relevance
 4. Return top N results
+
+### API Usage Examples
+
+#### Correct Way to Add KB Entry
+```python
+from datetime import datetime
+from clauxton.core.knowledge_base import KnowledgeBase
+from clauxton.core.models import KnowledgeBaseEntry
+
+kb = KnowledgeBase(project_root)
+now = datetime.now()
+
+# Create KnowledgeBaseEntry object
+entry = KnowledgeBaseEntry(
+    id=f"KB-{now.strftime('%Y%m%d')}-001",
+    title="API Design Pattern",
+    category="architecture",
+    content="Use RESTful API design",
+    tags=["api", "rest"],
+    created_at=now,
+    updated_at=now,
+)
+
+# Add to knowledge base
+entry_id = kb.add(entry)
+```
+
+#### Correct Way to Add Task
+```python
+from datetime import datetime
+from clauxton.core.task_manager import TaskManager
+from clauxton.core.models import Task
+
+tm = TaskManager(project_root)
+
+# Create Task object
+task = Task(
+    id=tm.generate_task_id(),  # Generates TASK-NNN format
+    name="Implement authentication",
+    priority="high",
+    status="pending",
+    estimated_hours=5.0,
+    created_at=datetime.now(),
+)
+
+# Add to task manager
+task_id = tm.add(task)
+```
+
+#### ⚠️ Common Mistake (Don't Do This)
+```python
+# ❌ WRONG: Passing keyword arguments directly
+kb.add(
+    title="API Design",  # TypeError!
+    category="architecture",
+    content="...",
+)
+
+# ❌ WRONG: Passing keyword arguments directly
+tm.add(
+    name="Task name",  # TypeError!
+    priority="high",
+)
+
+# ✅ CORRECT: Create model objects first (shown above)
+```
 
 ## Code Style Guidelines
 

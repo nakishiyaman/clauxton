@@ -799,3 +799,109 @@ tasks:
     assert result.exit_code == 0
     assert "Next task to work on:" in result.output
     assert "TASK-002" in result.output  # Should recommend high priority task
+
+
+# ============================================================================
+# task add --start Tests (v0.11.1)
+# ============================================================================
+
+
+def test_task_add_with_start_flag(runner: CliRunner, initialized_project: Path) -> None:
+    """Test task add with --start flag sets focus."""
+    result = runner.invoke(
+        cli,
+        ["task", "add", "--name", "Test task", "--start"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    assert "✓ Added task: TASK-001" in result.output
+    assert "Focus set" in result.output or "in_progress" in result.output
+
+    # Verify focus file exists
+    focus_file = Path.cwd() / ".clauxton" / "focus.yml"
+    assert focus_file.exists()
+
+
+def test_task_add_start_updates_status(runner: CliRunner, initialized_project: Path) -> None:
+    """Test that --start flag updates task status to in_progress."""
+    from clauxton.core.task_manager import TaskManager
+
+    runner.invoke(
+        cli,
+        ["task", "add", "--name", "Test task", "--start"],
+        catch_exceptions=False,
+    )
+
+    # Verify status is in_progress
+    tm = TaskManager(Path.cwd())
+    task = tm.get("TASK-001")
+    # Status might be a string or enum
+    status_str = task.status.value if hasattr(task.status, "value") else str(task.status)
+    assert status_str == "in_progress"
+
+
+def test_task_add_start_with_priority(
+    runner: CliRunner, initialized_project: Path
+) -> None:
+    """Test task add with --start and --priority."""
+    result = runner.invoke(
+        cli,
+        ["task", "add", "--name", "High priority task", "--priority", "high", "--start"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    assert "TASK-001" in result.output
+    assert "Focus set" in result.output or "in_progress" in result.output
+
+
+def test_task_add_start_with_estimate(
+    runner: CliRunner, initialized_project: Path
+) -> None:
+    """Test task add with --start and --estimate."""
+    result = runner.invoke(
+        cli,
+        [
+            "task",
+            "add",
+            "--name",
+            "Task with estimate",
+            "--estimate",
+            "2",
+            "--start",
+        ],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    assert "TASK-001" in result.output
+
+
+def test_task_add_start_overwrites_previous_focus(
+    runner: CliRunner, initialized_project: Path
+) -> None:
+    """Test that --start flag overwrites previous focus."""
+    # Add first task and set focus
+    runner.invoke(
+        cli,
+        ["task", "add", "--name", "Task 1", "--start"],
+        catch_exceptions=False,
+    )
+
+    # Add second task and set focus
+    result = runner.invoke(
+        cli,
+        ["task", "add", "--name", "Task 2", "--start"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    assert "TASK-002" in result.output
+
+    # Verify focus is now on TASK-002
+    focus_file = Path.cwd() / ".clauxton" / "focus.yml"
+    import yaml
+
+    focus_data = yaml.safe_load(focus_file.read_text())
+    assert focus_data["task_id"] == "TASK-002"

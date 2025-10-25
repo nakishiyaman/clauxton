@@ -79,3 +79,4 @@ Thumbs.db
 # Project-specific
 .clauxton/
 *.log
+/test_*.py  # Temporary test files in root (not in tests/ directory)

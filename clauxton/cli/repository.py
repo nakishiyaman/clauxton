@@ -49,6 +49,9 @@ def index_command(path: str, incremental: bool) -> None:
         repo_map = RepositoryMap(project_path)
 
         # Progress tracking
+        import time
+        start_time = time.time()
+
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -57,7 +60,27 @@ def index_command(path: str, incremental: bool) -> None:
             task = progress.add_task("Indexing files...", total=None)
 
             def progress_callback(current: int, total: Optional[int], status: str) -> None:
-                progress.update(task, description=f"Indexing: {status}")
+                description = f"Indexing: {status}"
+
+                # Add estimated time if we have total and have processed some files
+                if total and current > 0:
+                    elapsed = time.time() - start_time
+                    files_per_sec = current / elapsed if elapsed > 0 else 0
+
+                    if files_per_sec > 0:
+                        remaining_files = total - current
+                        estimated_seconds = remaining_files / files_per_sec
+
+                        # Format estimated time
+                        if estimated_seconds < 60:
+                            time_str = f"{int(estimated_seconds)}s"
+                        else:
+                            minutes = int(estimated_seconds / 60)
+                            time_str = f"{minutes}m {int(estimated_seconds % 60)}s"
+
+                        description += f" [dim](~{time_str} remaining)[/dim]"
+
+                progress.update(task, description=description)
 
             result = repo_map.index(
                 incremental=incremental,
@@ -69,6 +92,41 @@ def index_command(path: str, incremental: bool) -> None:
         console.print(f"  • Files indexed: {result.files_indexed}")
         console.print(f"  • Symbols found: {result.symbols_found}")
         console.print(f"  • Duration: {result.duration_seconds:.2f}s")
+
+        # Display missing parser warnings
+        if result.missing_parsers:
+            console.print("\n[yellow]⚠ Missing Parsers:[/yellow]")
+            console.print("[dim]Some files were skipped due to missing language parsers:[/dim]")
+
+            # Language to package mapping
+            parser_packages = {
+                "python": "parsers-python",
+                "javascript": "parsers-web",
+                "typescript": "parsers-web",
+                "go": "parsers-systems",
+                "rust": "parsers-systems",
+                "cpp": "parsers-systems",
+                "java": "parsers-enterprise",
+                "csharp": "parsers-enterprise",
+                "kotlin": "parsers-enterprise",
+                "php": "parsers-web",
+                "ruby": "parsers-ruby",
+                "swift": "parsers-swift",
+            }
+
+            for lang, count in sorted(result.missing_parsers.items()):
+                package = parser_packages.get(lang, f"parsers-{lang}")
+                install_cmd = f"pip install clauxton[{package}]"
+                console.print(
+                    f"  • {count} {lang} file(s) - install with: "
+                    f"[cyan]{install_cmd}[/cyan]"
+                )
+
+            all_parsers_cmd = "pip install clauxton[parsers-all]"
+            console.print(
+                f"\n[dim]Or install all parsers: "
+                f"[cyan]{all_parsers_cmd}[/cyan][/dim]"
+            )
 
         if result.errors:
             console.print("\n[yellow]⚠ Warnings:[/yellow]")

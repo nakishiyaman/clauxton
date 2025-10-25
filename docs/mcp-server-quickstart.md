@@ -73,12 +73,33 @@ clauxton kb add
 
 ## Step 3: Configure Claude Code
 
-Create `.claude-plugin/mcp-servers.json` in your project root:
+**🆕 v0.11.0: Automatic Setup (Recommended)**
+
+```bash
+# One command to configure MCP server!
+clauxton mcp setup
+
+# Output:
+# ✓ MCP configuration created successfully!
+#   Location: .claude-plugin/mcp-servers.json
+#
+# 📋 Next Steps:
+# 1. Restart Claude Code to load the MCP server
+# 2. Verify connection: Claude Code should show MCP tools available
+# 3. Test with: Ask Claude to search your knowledge base
+
+# Verify configuration
+clauxton mcp status
+```
+
+**Alternative: Manual Setup**
+
+If you prefer manual configuration, create `.claude-plugin/mcp-servers.json` in your project root:
 
 ```json
 {
   "mcpServers": {
-    "clauxton-kb": {
+    "clauxton": {
       "command": "python",
       "args": [
         "-m",
