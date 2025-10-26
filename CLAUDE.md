@@ -798,10 +798,22 @@ clauxton config get confirmation_mode
 - `undo_last_operation()` - ⭐ Reverse last operation (24 tests, 81% coverage)
 - `get_recent_operations(limit)` - View operation history
 
-**Configuration** (v0.10.0+ - Week 2):
-- `get_recent_logs()` - View operation logs (planned)
+**Configuration** (v0.10.0+):
+- `get_recent_logs()` - View operation logs
 
-Total: **17 tools** (15 current + 2 implemented in v0.10.0)
+**Repository Intelligence** (v0.11.0+):
+- `index_repository()` - Index repository symbols
+- `search_symbols(query, mode, limit)` - Search code symbols
+
+**Semantic Search** (v0.12.0 Week 1 - ✅ Implemented):
+- `search_knowledge_semantic(query, limit, category)` - ⭐ Semantic KB search (21 tests)
+- `search_tasks_semantic(query, limit, status, priority)` - ⭐ Semantic task search (21 tests)
+- `search_files_semantic(query, limit, pattern)` - ⭐ Semantic file search (21 tests)
+
+**Total MCP Tools**:
+- v0.11.2: 22 tools
+- v0.12.0 Week 1: **25 tools** ✅ (22 + 3 semantic search)
+- v0.12.0 Target: **32 tools** (22 + 10 new)
 
 ---
 
@@ -865,23 +877,738 @@ Claude Code: (starts Implementation)
 
 ## Development Roadmap
 
-### Phase 0: Foundation (Complete)
+### ✅ Completed Phases
+
+#### Phase 0: Foundation (Complete)
 - Knowledge Base CRUD operations
 - YAML storage with atomic writes
 - CLI interface
 
-### Phase 1: Core Engine (Complete - v0.8.0)
+#### Phase 1: Core Engine (Complete - v0.8.0)
 - TF-IDF relevance search
 - Task Management with DAG validation
 - Auto-dependency inference
 - MCP Server (12 tools)
 
-### Phase 2: Conflict Detection (Complete - v0.9.0-beta)
+#### Phase 2: Conflict Detection (Complete - v0.9.0-beta)
 - File overlap detection
 - Risk scoring (LOW/MEDIUM/HIGH)
 - Safe execution order recommendations
 - 3 CLI commands: `clauxton conflict detect/order/check`
 - 3 MCP tools (15 tools total)
+
+#### Phase 3: Advanced Workflows (Complete - v0.10.0)
+- Bulk task operations (YAML import)
+- Undo/History system (24 tests, 81% coverage)
+- Human-in-the-Loop with configurable confirmation modes
+- KB export to Markdown
+- 7 new MCP tools (22 total)
+
+#### Repository Intelligence (Complete - v0.11.0)
+- Multi-language symbol extraction (12 languages)
+- Repository map with 3 search modes
+- Code intelligence integration
+
+#### Daily Workflow Commands (Complete - v0.11.1)
+- `morning`, `daily`, `weekly`, `trends`
+- `focus`, `pause`, `resume`, `search`
+- Productivity analytics
+
+#### Test Optimization (Complete - v0.11.2)
+- 97% faster test execution (52min → 1m46s)
+- CI improvements for all language parsers
+- 1,370 tests, 85% coverage
+
+**Current Status**: v0.11.2 - Production Ready 🎉
+
+---
+
+### 🚀 Upcoming Phases (MCP-First Strategy)
+
+#### Phase 4: Semantic Intelligence via MCP (v0.12.0) - 🔥 HIGHEST PRIORITY
+
+**Goal**: Enhance Claude Code integration with semantic search and intelligent data provision
+
+**Release Target**: 2025-11-15 (2-3 weeks)
+
+**Priority**: 🔥🔥🔥 Critical (Core Value Enhancement)
+
+**Strategy**: Clauxton = Smart Data Provider, Claude Code = AI Reasoning Engine
+- ✅ **No Claude API needed** (Claude Code provides AI layer)
+- ✅ **100% Local-First** (all data stays in `.clauxton/`)
+- ✅ **Zero additional cost** (users already have Claude Code)
+- ✅ **Natural UX** (users talk to Claude Code, Clauxton works in background)
+
+**Core Features** (All via MCP - Claude Code Integration):
+
+1. **Semantic Search MCP Tools**
+   - `search_knowledge_semantic(query, limit)` - Embedding-based KB search
+   - `search_tasks_semantic(query, limit)` - Semantic task search
+   - `search_files_semantic(query, limit)` - Code file semantic search
+   - `get_project_context(depth)` - Rich project context for Claude Code
+
+   **User Experience**:
+   ```
+   User in Claude Code:
+   > "What database decisions have we made?"
+
+   Claude Code (automatically):
+   1. Calls search_knowledge_semantic("database decisions")
+   2. Receives structured data from Clauxton
+   3. Generates natural language answer using its AI
+
+   → No separate CLI command needed!
+   → No Claude API costs!
+   → Natural conversation with Claude Code
+   ```
+
+2. **Commit Analysis & Pattern Recognition**
+   - `analyze_recent_commits(since_days, extract_patterns)` - Git commit analysis
+   - `extract_decisions_from_commits(since_days)` - Decision extraction
+   - `suggest_next_tasks(mode)` - Pattern-based task suggestions
+   - `find_related_entries(entry_id, limit)` - Relationship discovery
+
+   **User Experience**:
+   ```
+   User in Claude Code:
+   > "What should I work on next based on my recent commits?"
+
+   Claude Code:
+   1. Calls suggest_next_tasks()
+   2. Receives task suggestions with reasoning from Clauxton
+   3. Explains recommendations naturally
+
+   → Intelligent suggestions without AI costs!
+   → Context-aware recommendations!
+   ```
+
+3. **Knowledge Graph & Context**
+   - `generate_project_summary()` - Project overview
+   - `get_knowledge_graph()` - Relationship mapping
+   - All data stays local in `.clauxton/`
+
+**Technical Stack** (100% Local):
+- **AI Layer**: Claude Code (user already has this)
+- **Embeddings**: sentence-transformers (local, free)
+- **Vector Store**: FAISS (local, lightweight)
+- **Git Analysis**: GitPython (local)
+- **MCP Integration**: Enhanced tools for Claude Code
+- **Cost**: $0 additional
+- **Privacy**: 100% local data
+
+**Implementation Plan**:
+
+**Week 1 (Oct 28 - Nov 3): Semantic Search Foundation** ✅ COMPLETED
+- [x] Local embedding system (sentence-transformers) - Day 1 ✅
+- [x] FAISS vector store setup - Day 2 ✅
+- [x] Index KB/Tasks/Files with embeddings - Day 3 ✅
+- [x] MCP tool: `search_knowledge_semantic()` - Day 5 ✅
+- [x] MCP tool: `search_tasks_semantic()` - Day 5 ✅
+- [x] MCP tool: `search_files_semantic()` - Day 5 ✅
+- [x] Unit tests for embedding system (126 tests: 105 core + 21 MCP) - Days 1-5 ✅
+
+**Week 2 (Nov 4 - 10): Commit Analysis & Task Suggestions** ✅ COMPLETED
+- [x] Git commit analyzer (pattern-based, local) ✅
+- [x] Pattern extraction (keywords, file changes) ✅
+- [x] MCP tool: `analyze_recent_commits()` ✅
+- [x] MCP tool: `suggest_next_tasks()` ✅
+- [x] MCP tool: `extract_decisions_from_commits()` ✅
+- [x] Integration tests (15+ tests) ✅
+
+**Week 3 (Nov 11 - 15): Context & Polish** ✅ COMPLETED
+- [x] MCP tool: `get_project_context()` ✅
+- [x] MCP tool: `generate_project_summary()` ✅
+- [x] MCP tool: `get_knowledge_graph()` ✅
+- [x] MCP tool: `find_related_entries()` ✅
+- [x] Integration tests (12+ tests) ✅
+- [x] Documentation with Claude Code examples ✅
+- [ ] Demo video showing Claude Code integration (optional)
+- [x] Performance optimization ✅
+- [x] Release preparation ✅
+
+**File Structure**:
+```
+clauxton/
+├── intelligence/                    # Existing (repository map)
+│   ├── symbol_extractor.py
+│   ├── parser.py
+│   └── repository_map.py
+├── semantic/                        # NEW: Semantic intelligence
+│   ├── __init__.py
+│   ├── embeddings.py               # Local embedding generation
+│   ├── vector_store.py             # FAISS vector store
+│   ├── indexer.py                  # Index KB/Tasks/Files
+│   └── search.py                   # Semantic search engine
+├── analysis/                        # NEW: Pattern analysis
+│   ├── __init__.py
+│   ├── git_analyzer.py             # Commit analysis (local)
+│   ├── pattern_extractor.py        # Pattern recognition
+│   ├── task_suggester.py           # Task suggestions
+│   └── decision_extractor.py       # Decision extraction
+└── mcp/
+    └── server.py                    # Enhanced with 10 new MCP tools
+```
+
+**Note**: No `ai/client.py` - Claude Code handles AI reasoning!
+
+**Primary Interface**: Claude Code (via MCP)
+- No new CLI commands needed!
+- Users interact naturally with Claude Code
+- Claude Code calls MCP tools automatically
+
+**Optional CLI** (for direct testing):
+```bash
+# Semantic search (testing only)
+clauxton search "authentication" --semantic
+
+# Analyze commits (testing only)
+clauxton analyze-commits --since "7 days"
+```
+
+**New MCP Tools** (10 tools, all local):
+```python
+# Semantic Search (Week 1)
+@server.call_tool()
+async def search_knowledge_semantic(query: str, limit: int = 5) -> dict
+
+@server.call_tool()
+async def search_tasks_semantic(query: str, limit: int = 5) -> dict
+
+@server.call_tool()
+async def search_files_semantic(query: str, limit: int = 10) -> dict
+
+@server.call_tool()
+async def get_project_context(depth: str = "full") -> dict
+
+# Analysis & Suggestions (Week 2)
+@server.call_tool()
+async def analyze_recent_commits(since_days: int = 7) -> dict
+
+@server.call_tool()
+async def suggest_next_tasks(mode: str = "auto") -> dict
+
+@server.call_tool()
+async def extract_decisions_from_commits(since_days: int = 7) -> dict
+
+@server.call_tool()
+async def find_related_entries(entry_id: str, limit: int = 5) -> dict
+
+# Context & Summary (Week 3)
+@server.call_tool()
+async def generate_project_summary() -> dict
+
+@server.call_tool()
+async def get_knowledge_graph() -> dict
+```
+
+**Total MCP Tools**:
+- Current (Week 1+2+3): 22 (v0.11.2) + 3 (Week 1) + 3 (Week 2) + 4 (Week 3) = **32 tools** ✅
+- Target (after v0.12.0): 22 (v0.11.2) + 10 (v0.12.0) = **32 tools** ✅ COMPLETE!
+
+**Dependencies**:
+```toml
+[project.optional-dependencies]
+# Semantic search (optional but recommended)
+semantic = [
+    "sentence-transformers>=2.3.0",  # Local embeddings
+    "faiss-cpu>=1.7.4",              # Vector store
+    "torch>=2.1.0",                  # For embeddings
+]
+
+# Note: GitPython already in main dependencies
+# Note: NO anthropic package needed!
+```
+
+**Installation**:
+```bash
+# Install Clauxton with semantic features
+pip install clauxton[semantic]
+
+# Or minimal install (TF-IDF search only)
+pip install clauxton
+```
+
+**Success Metrics**:
+- 🔍 Semantic search accuracy: >85% (vs 70% TF-IDF)
+- 🤖 Task suggestion relevance: >80%
+- ⚡ Search speed: <200ms (p95)
+- 📈 Claude Code integration usage: >90% of users
+- ❤️ User satisfaction: 4.5+/5.0
+- 💰 Additional cost: $0 (100% local)
+
+**Risks & Mitigations**:
+- **Risk**: Embedding model size (~500MB download)
+  - **Mitigation**: Optional dependency, lazy loading, user consent
+- **Risk**: Initial indexing time for large projects
+  - **Mitigation**: Background indexing, progress indicator, incremental updates
+- **Risk**: Memory usage with large vector stores
+  - **Mitigation**: Disk-backed FAISS index, pagination, cleanup old embeddings
+
+---
+
+#### Phase 5: Proactive Intelligence (v0.13.0) - 🔥 HIGH PRIORITY
+
+**Goal**: Real-time monitoring and proactive suggestions via Claude Code
+
+**Release Target**: 2025-12-06 (3 weeks)
+
+**Priority**: 🔥🔥 High (Proactive Features)
+
+**Core Features**:
+
+1. **Real-time File Monitoring** (Background Service)
+   - Watch file changes with `watchdog`
+   - Detect new patterns in real-time
+   - Update embeddings incrementally
+   - Notify Claude Code of important changes
+
+2. **Proactive MCP Tools**
+   - `watch_project_changes(enabled: bool)` - Enable/disable monitoring
+   - `get_recent_changes(minutes: int)` - Recent activity summary
+   - `suggest_kb_updates(threshold: float)` - KB entry update suggestions
+   - `detect_anomalies()` - Unusual patterns in code changes
+
+3. **Learning from User Behavior**
+   - Track MCP tool usage patterns
+   - Personalized search result ranking
+   - Adaptive confidence scoring
+   - Improve suggestions over time
+
+4. **Enhanced Context Awareness**
+   - Current branch analysis
+   - Active file detection
+   - Recent conversation history
+   - Time-based context (morning/afternoon)
+
+**User Experience**:
+```
+User in Claude Code (background monitoring enabled):
+> *edits auth.py*
+
+Claude Code (proactively):
+"I noticed you're working on authentication. Here are
+relevant KB entries and related tasks..."
+
+(Clauxton detected change → called get_recent_changes() →
+Claude Code provided proactive help)
+```
+
+**Implementation Plan**: 3 weeks
+
+**Success Metrics**:
+- 🎯 Proactive suggestion acceptance: >70%
+- ⚡ Real-time update latency: <500ms
+- 📚 KB coverage improvement: +40%
+- 🚀 Development velocity: +50%
+
+---
+
+#### Phase 6: Interactive TUI (v0.14.0) - 🟡 MEDIUM PRIORITY
+
+**Goal**: Modern terminal interface with AI integration
+
+**Release Target**: 2025-12-27 (3 weeks)
+
+**Priority**: 🟡 Medium (UX Enhancement)
+
+**Core Features**:
+
+1. **AI-Enhanced Dashboard** (`clauxton tui`)
+   - Real-time AI suggestions panel
+   - Interactive task recommendations
+   - KB search with AI assistance
+   - Smart quick actions
+
+2. **Streamlined Interface**
+   - Focus on AI features (not just data display)
+   - One-key AI actions:
+     - `a`: Ask AI question
+     - `s`: AI task suggestions
+     - `r`: AI code review
+     - `k`: Generate KB from commits
+
+3. **Visual Feedback**
+   - AI confidence indicators
+   - Relevance scoring visualization
+   - Learning progress display
+   - Real-time processing status
+
+**Technical Stack**:
+- Textual 0.47.0+
+- Integration with AI module
+- Async operations for responsiveness
+
+**Implementation Plan**:
+
+**Week 1 (Dec 2-8): Core UI**
+- [ ] Textual app scaffold
+- [ ] AI suggestion panel
+- [ ] Interactive query modal
+- [ ] Basic keyboard navigation
+
+**Week 2 (Dec 9-15): AI Integration**
+- [ ] Live task suggestions
+- [ ] AI search interface
+- [ ] Code review workflow
+- [ ] KB generation UI
+
+**Week 3 (Dec 16-20): Polish**
+- [ ] Animations and transitions
+- [ ] Error handling
+- [ ] Performance optimization
+- [ ] Testing + documentation
+
+**File Structure**:
+```
+clauxton/
+├── tui/
+│   ├── __init__.py
+│   ├── app.py                 # Main TUI app
+│   ├── widgets/
+│   │   ├── ai_panel.py        # AI suggestions panel
+│   │   ├── kb_panel.py        # KB browser
+│   │   ├── task_panel.py      # Task list
+│   │   └── chat_modal.py      # AI chat interface
+│   ├── modals/
+│   │   ├── ask_modal.py       # Quick AI query
+│   │   ├── review_modal.py    # Code review display
+│   │   └── suggest_modal.py   # Task suggestions
+│   └── theme.py               # Color scheme
+```
+
+**Dependencies**:
+```toml
+[project.optional-dependencies]
+tui = [
+    "textual>=0.47.0",
+    "rich>=13.7.0",  # Already included
+]
+```
+
+**Success Metrics**:
+- ⚡ AI feature discovery: 90% of TUI users try AI features
+- 🎯 User engagement: 5x increase vs CLI
+- ❤️ User satisfaction: 4.7+/5.0
+- 🚀 Daily active usage: 3x increase
+
+---
+
+#### Phase 7: Web Dashboard (v0.15.0) - 🟢 LOW-MEDIUM PRIORITY
+
+**Goal**: Browser-based visualization with team features
+
+**Release Target**: 2026-01-24 (4 weeks)
+
+**Priority**: 🟢 Low-Medium (Advanced Visualization + Team)
+
+**Core Features**:
+
+1. **AI Insights Dashboard** (`clauxton serve`)
+   - Knowledge graph visualization
+   - AI suggestion history and trends
+   - Query analytics
+   - Learning progress metrics
+
+2. **Team Collaboration**
+   - Shared KB with AI-powered search
+   - Team-wide AI insights
+   - Collaborative task suggestions
+   - Activity feed
+
+3. **Advanced Analytics**
+   - AI accuracy metrics over time
+   - Popular queries and patterns
+   - KB coverage heatmap
+   - Task completion predictions
+
+**Technical Stack**:
+- Backend: FastAPI + Uvicorn
+- Frontend: Streamlit (fastest) OR React
+- Visualization: Plotly + D3.js
+- WebSockets: Real-time updates
+
+**Implementation Plan**: 4 weeks
+
+**Success Metrics**:
+- 👥 Team adoption: 50+ teams
+- 📊 Insight actionability: >70%
+- 🌐 Browser usage: 30% of user base
+- 💡 AI discovery rate: +40%
+
+---
+
+#### Phase 8: Advanced AI Features (v0.16.0) - 🟢 LOW PRIORITY
+
+**Goal**: Cutting-edge AI capabilities
+
+**Release Target**: 2026-03-01 (4-5 weeks)
+
+**Priority**: 🟢 Low (Advanced Features)
+
+**Core Features**:
+
+1. **Voice Interface** (Optional)
+   - Speech-to-text (Whisper)
+   - Voice commands
+   - Hands-free operation
+
+   ```bash
+   clauxton voice
+   > "Show me all high priority authentication tasks"
+   ```
+
+2. **Autonomous Agent Mode**
+   - AI proposes AND executes tasks (with approval)
+   - Automated KB maintenance
+   - Self-optimizing workflow
+   - Proactive conflict resolution
+
+3. **Multi-Project Intelligence**
+   - Learn from all projects
+   - Cross-project pattern recognition
+   - Best practice recommendations
+   - Template suggestions
+
+4. **Custom AI Models** (Optional)
+   - Fine-tuned models on user data
+   - Private deployment option
+   - Specialized extractors
+
+**Implementation Plan**: 4-5 weeks
+
+**Success Metrics**:
+- 🤖 Autonomous task completion: 30%
+- 🎤 Voice interface adoption: 20%
+- 📚 Cross-project insights: 50% find useful
+
+---
+
+### 🎯 Immediate Action Plan (This Week)
+
+#### Day 1-2 (Oct 26-27): Setup
+
+```bash
+# Create feature branch
+git checkout -b feature/ai-integration-v0.12.0
+
+# Directory structure
+mkdir -p clauxton/ai
+touch clauxton/ai/__init__.py
+touch clauxton/ai/client.py
+touch clauxton/ai/embeddings.py
+touch clauxton/ai/vector_store.py
+touch clauxton/ai/task_suggester.py
+touch clauxton/ai/kb_generator.py
+touch clauxton/ai/query_engine.py
+touch clauxton/ai/git_analyzer.py
+
+mkdir -p clauxton/cli
+touch clauxton/cli/ai_commands.py
+
+mkdir -p tests/ai
+touch tests/ai/__init__.py
+touch tests/ai/test_client.py
+touch tests/ai/test_embeddings.py
+touch tests/ai/test_task_suggester.py
+```
+
+#### Day 3-4 (Oct 28-29): Claude API Integration
+
+**Tasks**:
+1. Implement Claude API client wrapper
+2. Add error handling and retry logic
+3. Implement caching strategy
+4. Write unit tests
+
+**Deliverables**:
+```python
+# clauxton/ai/client.py
+class ClaudeClient:
+    def __init__(self, api_key: str):
+        """Initialize Claude API client."""
+
+    def ask_question(self, question: str, context: List[str]) -> str:
+        """Ask Claude a question with context."""
+
+    def analyze_commit(self, diff: str) -> Dict[str, Any]:
+        """Analyze commit for decisions/patterns."""
+
+    def suggest_tasks(self, context: Dict[str, Any]) -> List[Dict]:
+        """Suggest tasks based on context."""
+```
+
+#### Day 5-7 (Oct 30 - Nov 1): Basic `ask` Command
+
+**Tasks**:
+1. Implement query engine
+2. Context retrieval from KB/Tasks
+3. CLI command implementation
+4. Integration tests
+
+**Deliverables**:
+```bash
+clauxton ask "What database did we choose?"
+# → Searches KB, sends to Claude, returns answer
+```
+
+---
+
+### 📋 Detailed Week-by-Week Plan (v0.12.0)
+
+#### Week 1: Foundation (Oct 28 - Nov 3)
+
+**Monday-Tuesday**: Claude API Client
+- [ ] API wrapper with authentication
+- [ ] Request/response handling
+- [ ] Error handling and retries
+- [ ] Rate limiting
+- [ ] Caching layer (Redis/File-based)
+- [ ] Unit tests (10+ tests)
+
+**Wednesday-Thursday**: Embedding System
+- [ ] sentence-transformers integration
+- [ ] Embedding generation for KB/Tasks
+- [ ] FAISS vector store setup
+- [ ] Similarity search implementation
+- [ ] Incremental indexing
+- [ ] Unit tests (8+ tests)
+
+**Friday**: Basic Query Engine
+- [ ] Context retrieval logic
+- [ ] Prompt engineering for Claude
+- [ ] Response formatting
+- [ ] `ask` command implementation
+- [ ] Integration tests (5+ tests)
+
+**Deliverable**: `clauxton ask` works end-to-end
+
+---
+
+#### Week 2: Task Suggestions (Nov 4 - 10)
+
+**Monday-Tuesday**: Git Commit Analyzer
+- [ ] GitPython integration
+- [ ] Parse commit messages and diffs
+- [ ] Extract modified files
+- [ ] Identify patterns (new features, bugs, refactors)
+- [ ] Unit tests (12+ tests)
+
+**Wednesday-Thursday**: Task Recommendation Engine
+- [ ] Analyze recent commits
+- [ ] Infer next logical tasks
+- [ ] Priority scoring algorithm
+- [ ] Dependency prediction
+- [ ] Confidence scoring
+- [ ] Unit tests (15+ tests)
+
+**Friday**: CLI Integration
+- [ ] `task suggest` command
+- [ ] Output formatting
+- [ ] Interactive approval workflow
+- [ ] MCP tool: `suggest_tasks()`
+- [ ] Integration tests (8+ tests)
+
+**Deliverable**: `clauxton task suggest` generates useful suggestions
+
+---
+
+#### Week 3: KB Auto-generation (Nov 11 - 15)
+
+**Monday-Tuesday**: Decision Extraction
+- [ ] Analyze commit diffs for decisions
+- [ ] Identify architecture changes
+- [ ] Extract patterns from code
+- [ ] Categorization logic
+- [ ] Unit tests (10+ tests)
+
+**Wednesday-Thursday**: KB Generator
+- [ ] Generate KB entry suggestions
+- [ ] Auto-categorize (architecture/decision/pattern)
+- [ ] Deduplication logic
+- [ ] Review/approval workflow
+- [ ] Unit tests (12+ tests)
+
+**Friday**: Polish & Release
+- [ ] `kb from-commits` command
+- [ ] MCP tools: `generate_kb_from_commits()`
+- [ ] Documentation (README, docs/ai.md)
+- [ ] Integration tests (6+ tests)
+- [ ] Performance testing
+- [ ] Release preparation
+
+**Deliverable**: v0.12.0 released 🚀
+
+---
+
+### 📊 Success Metrics & KPIs
+
+#### v0.12.0 Targets:
+- ✅ `ask` command accuracy: >85%
+- ✅ `task suggest` usefulness: >75%
+- ✅ `kb from-commits` adoption: >50%
+- ✅ Test coverage: >90% for AI module
+- ✅ API response time: <3s (95th percentile)
+- ✅ PyPI downloads: 2x increase within 2 weeks
+
+#### Long-term (6 months):
+- 🤖 50% of tasks created by AI suggestions
+- 🔍 70% of KB entries AI-assisted
+- 💬 Daily AI query usage: 5+ per user
+- ⭐ GitHub stars: 500+
+- 📥 PyPI downloads: 50K+/month
+
+---
+
+### 🔧 Technical Decisions
+
+#### Why Claude API?
+- ✅ Best-in-class reasoning
+- ✅ Long context window (200K tokens)
+- ✅ Consistent with Claude Code integration
+- ✅ Anthropic's alignment focus
+
+#### Why sentence-transformers?
+- ✅ Local-first (privacy)
+- ✅ Fast inference (<100ms)
+- ✅ No API costs
+- ✅ Offline capability
+
+#### Why FAISS?
+- ✅ Lightweight (no server required)
+- ✅ Fast similarity search (<10ms for 10K vectors)
+- ✅ Persistent storage
+- ✅ Industry standard
+
+---
+
+### 🎨 Design Philosophy (AI-First)
+
+**Core Principles**:
+
+1. **AI as Copilot, Not Autopilot**
+   - AI suggests, user approves
+   - Transparency in reasoning
+   - Easy override/rejection
+
+2. **Progressive Disclosure**
+   - Simple commands by default
+   - Advanced options available
+   - Learning curve minimized
+
+3. **Privacy-First**
+   - Embeddings local by default
+   - Claude API only when necessary
+   - User data never leaves project
+
+4. **Performance Conscious**
+   - Aggressive caching
+   - Async operations
+   - Background processing
+   - <3s response time target
+
+---
+
+この計画でv0.12.0の実装を開始しましょうか？それとも、さらに詳細を詰めたい部分がありますか？
 
 ## Links
 

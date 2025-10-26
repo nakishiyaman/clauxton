@@ -9,6 +9,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2025-10-26
+
+### Added
+- **Semantic Search**: AI-powered search using embeddings (3 new MCP tools)
+  - `search_knowledge_semantic()`: Semantic KB search with similarity scoring
+  - `search_tasks_semantic()`: Semantic task search with status/priority filters
+  - `search_files_semantic()`: Semantic file search with pattern matching
+- **Git Analysis**: Automatic commit analysis and pattern recognition (3 new MCP tools)
+  - `analyze_recent_commits()`: Analyze commit patterns, file types, and statistics
+  - `extract_decisions_from_commits()`: Extract architectural decisions from commits
+  - `suggest_next_tasks()`: AI-powered task recommendations based on patterns
+- **Enhanced Context**: Rich project context for AI consumption (4 new MCP tools)
+  - `get_project_context()`: Comprehensive project context with 3 depth levels
+  - `generate_project_summary()`: Markdown-formatted project summary
+  - `get_knowledge_graph()`: Knowledge graph with nodes, edges, and clusters
+  - `find_related_entries()`: Find related KB entries and tasks
+- **Local Embedding Model**: sentence-transformers integration
+  - Model: all-MiniLM-L6-v2 (384 dimensions, ~90MB)
+  - Speed: ~500 texts/second on CPU
+  - User consent mechanism (lazy loading)
+  - Persistent FAISS vector indices
+- **Documentation**: 3 comprehensive guides
+  - Semantic Search Guide: Usage, configuration, troubleshooting
+  - Git Analysis Guide: Pattern recognition, decision extraction
+  - Release Notes v0.12.0: Full feature documentation
+
+### Changed
+- **Performance**: Semantic search <200ms (p95), Git analysis ~2s for 100 commits
+- **Type Safety**: Fixed all 12 mypy type errors in mcp/server.py
+- **Code Quality**: Fixed all 5 ruff linting warnings
+- **Test Coverage**: Increased to 86% with +177 new tests (1,637 total)
+
+### Fixed
+- Type annotations for dictionary variables in server.py
+- Unused variables and imports in MCP tools
+- Line length violations in test files
+- Sort lambda type inference issues
+
+### Performance
+- Semantic search: <200ms (p95)
+- Encode 500 texts: ~600ms
+- Vector search (1000 docs): ~50ms
+- Incremental embedding updates (no full rebuild)
+
+### Testing
+- Added 105 semantic search tests
+- Added 72 git analysis tests
+- Coverage: semantic (93-98%), analysis (91-100%)
+- All performance benchmarks passing
+
+### Dependencies
+- Added optional dependencies: sentence-transformers>=2.3.0, faiss-cpu>=1.7.4, torch>=2.1.0
+- Install with: `pip install clauxton[semantic]`
+
+### Documentation
+- [Semantic Search Guide](docs/SEMANTIC_SEARCH_GUIDE.md)
+- [Git Analysis Guide](docs/GIT_ANALYSIS_GUIDE.md)
+- [Release Notes v0.12.0](docs/RELEASE_NOTES_v0.12.0.md)
+- [v0.12.0 Quality Report](docs/v0.12.0-QUALITY_REPORT.md)
+
 ## [0.11.2] - 2025-10-25
 
 ### Internal - Test Infrastructure Optimization
