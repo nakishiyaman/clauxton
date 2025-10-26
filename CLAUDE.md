@@ -798,10 +798,22 @@ clauxton config get confirmation_mode
 - `undo_last_operation()` - ⭐ Reverse last operation (24 tests, 81% coverage)
 - `get_recent_operations(limit)` - View operation history
 
-**Configuration** (v0.10.0+ - Week 2):
-- `get_recent_logs()` - View operation logs (planned)
+**Configuration** (v0.10.0+):
+- `get_recent_logs()` - View operation logs
 
-Total: **17 tools** (15 current + 2 implemented in v0.10.0)
+**Repository Intelligence** (v0.11.0+):
+- `index_repository()` - Index repository symbols
+- `search_symbols(query, mode, limit)` - Search code symbols
+
+**Semantic Search** (v0.12.0 Week 1 - ✅ Implemented):
+- `search_knowledge_semantic(query, limit, category)` - ⭐ Semantic KB search (21 tests)
+- `search_tasks_semantic(query, limit, status, priority)` - ⭐ Semantic task search (21 tests)
+- `search_files_semantic(query, limit, pattern)` - ⭐ Semantic file search (21 tests)
+
+**Total MCP Tools**:
+- v0.11.2: 22 tools
+- v0.12.0 Week 1: **25 tools** ✅ (22 + 3 semantic search)
+- v0.12.0 Target: **32 tools** (22 + 10 new)
 
 ---
 
@@ -986,14 +998,14 @@ Claude Code: (starts Implementation)
 
 **Implementation Plan**:
 
-**Week 1 (Oct 28 - Nov 3): Semantic Search Foundation**
-- [ ] Local embedding system (sentence-transformers)
-- [ ] FAISS vector store setup
-- [ ] Index KB/Tasks/Files with embeddings
-- [ ] MCP tool: `search_knowledge_semantic()`
-- [ ] MCP tool: `search_tasks_semantic()`
-- [ ] MCP tool: `search_files_semantic()`
-- [ ] Unit tests for embedding system (20+ tests)
+**Week 1 (Oct 28 - Nov 3): Semantic Search Foundation** ✅ COMPLETED
+- [x] Local embedding system (sentence-transformers) - Day 1 ✅
+- [x] FAISS vector store setup - Day 2 ✅
+- [x] Index KB/Tasks/Files with embeddings - Day 3 ✅
+- [x] MCP tool: `search_knowledge_semantic()` - Day 5 ✅
+- [x] MCP tool: `search_tasks_semantic()` - Day 5 ✅
+- [x] MCP tool: `search_files_semantic()` - Day 5 ✅
+- [x] Unit tests for embedding system (126 tests: 105 core + 21 MCP) - Days 1-5 ✅
 
 **Week 2 (Nov 4 - 10): Commit Analysis & Task Suggestions**
 - [ ] Git commit analyzer (pattern-based, local)
@@ -1088,7 +1100,9 @@ async def generate_project_summary() -> dict
 async def get_knowledge_graph() -> dict
 ```
 
-**Total MCP Tools**: 22 (existing) + 10 (new) = **32 tools**
+**Total MCP Tools**:
+- Current (after Week 1): 22 (v0.11.2) + 3 (Week 1) = **25 tools** ✅
+- Target (after v0.12.0): 22 (v0.11.2) + 10 (v0.12.0) = **32 tools**
 
 **Dependencies**:
 ```toml

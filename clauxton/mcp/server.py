@@ -1259,6 +1259,303 @@ def search_symbols(
         }
 
 
+# ============================================================================
+# Semantic Search Tools (v0.12.0 Week 1 Day 5)
+# ============================================================================
+
+
+@mcp.tool()
+def search_knowledge_semantic(
+    query: str,
+    limit: int = 5,
+    category: Optional[str] = None,
+) -> dict[str, Any]:
+    """
+    Search Knowledge Base entries using semantic search.
+
+    Uses embedding-based semantic search for more intelligent matching
+    compared to traditional keyword search. Finds entries by meaning,
+    not just exact text matches.
+
+    Args:
+        query: Search query (can be natural language question or keywords)
+        limit: Maximum number of results to return (default: 5)
+        category: Optional category filter (architecture, constraint, decision, pattern, convention)
+
+    Returns:
+        Dictionary with search results including:
+        - status: "success" or "error"
+        - count: Number of results found
+        - results: List of matching KB entries with relevance scores
+        - query: Original query
+        - search_type: "semantic"
+
+    Example:
+        >>> search_knowledge_semantic("How do we handle authentication?", limit=3)
+        {
+            "status": "success",
+            "count": 3,
+            "search_type": "semantic",
+            "query": "How do we handle authentication?",
+            "results": [
+                {
+                    "score": 0.892,
+                    "source_type": "kb",
+                    "source_id": "KB-20251020-001",
+                    "title": "JWT Authentication",
+                    "content": "Use JWT tokens for API authentication...",
+                    "metadata": {
+                        "id": "KB-20251020-001",
+                        "category": "decision",
+                        "tags": ["auth", "jwt", "api"]
+                    }
+                },
+                ...
+            ]
+        }
+
+    Search Examples:
+        - "database design" → Finds "PostgreSQL Schema", "DB Migrations", etc.
+        - "API authentication" → Finds "JWT Auth", "OAuth2 Implementation", etc.
+        - "error handling pattern" → Finds "Exception Handling Strategy", etc.
+
+    Notes:
+        - Requires sentence-transformers and faiss-cpu packages
+        - Falls back to TF-IDF search if semantic search unavailable
+        - Search is case-insensitive and meaning-based
+        - Results ranked by cosine similarity (0.0-1.0)
+        - Scores >0.7 indicate strong relevance
+    """
+    try:
+        from clauxton.semantic.search import SemanticSearchEngine
+
+        engine = SemanticSearchEngine(Path.cwd())
+        results = engine.search_kb(query, limit=limit, category=category)
+
+        return {
+            "status": "success",
+            "count": len(results),
+            "search_type": "semantic",
+            "query": query,
+            "results": results,
+        }
+    except ImportError as e:
+        return {
+            "status": "error",
+            "message": "Semantic search dependencies not installed",
+            "error": str(e),
+            "hint": "Install with: pip install clauxton[semantic]",
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Search failed: {str(e)}",
+            "error": str(e),
+        }
+
+
+@mcp.tool()
+def search_tasks_semantic(
+    query: str,
+    limit: int = 5,
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+) -> dict[str, Any]:
+    """
+    Search tasks using semantic search.
+
+    Uses embedding-based semantic search to find tasks by meaning,
+    not just keyword matching. Ideal for finding related tasks or
+    discovering tasks by description.
+
+    Args:
+        query: Search query (can be natural language question or keywords)
+        limit: Maximum number of results to return (default: 5)
+        status: Optional status filter (pending, in_progress, completed, blocked)
+        priority: Optional priority filter (low, medium, high, critical)
+
+    Returns:
+        Dictionary with search results including:
+        - status: "success" or "error"
+        - count: Number of results found
+        - results: List of matching tasks with relevance scores
+        - query: Original query
+        - search_type: "semantic"
+
+    Example:
+        >>> search_tasks_semantic("authentication bug fix", limit=3, status="pending")
+        {
+            "status": "success",
+            "count": 2,
+            "search_type": "semantic",
+            "query": "authentication bug fix",
+            "results": [
+                {
+                    "score": 0.857,
+                    "source_type": "task",
+                    "source_id": "TASK-001",
+                    "title": "Fix JWT token validation",
+                    "content": "Fix JWT token validation in auth middleware...",
+                    "metadata": {
+                        "id": "TASK-001",
+                        "name": "Fix JWT token validation",
+                        "status": "pending",
+                        "priority": "high",
+                        "estimated_hours": 2.5
+                    }
+                },
+                ...
+            ]
+        }
+
+    Search Examples:
+        - "database migration" → Finds "Add user table migration", "Update schema", etc.
+        - "API endpoint" → Finds "Create POST /users", "Fix GET /auth", etc.
+        - "performance issue" → Finds "Optimize query", "Fix memory leak", etc.
+
+    Use Cases:
+        1. **Find Related Tasks**: Discover tasks related to current work
+        2. **Task Discovery**: Find tasks by natural language description
+        3. **Priority Planning**: Find high-priority tasks in specific area
+        4. **Status Filtering**: Combine semantic search with status filters
+
+    Notes:
+        - Requires sentence-transformers and faiss-cpu packages
+        - Falls back to TF-IDF search if semantic search unavailable
+        - Results ranked by cosine similarity (0.0-1.0)
+        - Can combine semantic search with status/priority filters
+    """
+    try:
+        from clauxton.semantic.search import SemanticSearchEngine
+
+        engine = SemanticSearchEngine(Path.cwd())
+        results = engine.search_tasks(
+            query,
+            limit=limit,
+            status=status,
+            priority=priority,
+        )
+
+        return {
+            "status": "success",
+            "count": len(results),
+            "search_type": "semantic",
+            "query": query,
+            "results": results,
+        }
+    except ImportError as e:
+        return {
+            "status": "error",
+            "message": "Semantic search dependencies not installed",
+            "error": str(e),
+            "hint": "Install with: pip install clauxton[semantic]",
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Search failed: {str(e)}",
+            "error": str(e),
+        }
+
+
+@mcp.tool()
+def search_files_semantic(
+    query: str,
+    limit: int = 10,
+    pattern: Optional[str] = None,
+) -> dict[str, Any]:
+    """
+    Search repository files using semantic search.
+
+    Uses embedding-based semantic search to find files by content meaning.
+    Searches through symbol names, docstrings, and code structure to find
+    relevant files.
+
+    Args:
+        query: Search query (can be natural language or keywords)
+        limit: Maximum number of results to return (default: 10)
+        pattern: Optional glob pattern filter (e.g., "**/*.py", "src/**/*.ts")
+
+    Returns:
+        Dictionary with search results including:
+        - status: "success" or "error"
+        - count: Number of results found
+        - results: List of matching files with relevance scores
+        - query: Original query
+        - search_type: "semantic"
+
+    Example:
+        >>> search_files_semantic("authentication logic", limit=5, pattern="**/*.py")
+        {
+            "status": "success",
+            "count": 3,
+            "search_type": "semantic",
+            "query": "authentication logic",
+            "results": [
+                {
+                    "score": 0.823,
+                    "source_type": "file",
+                    "source_id": "src/api/auth.py",
+                    "title": "src/api/auth.py",
+                    "content": "def authenticate(token):\\n    # JWT authentication logic...",
+                    "metadata": {
+                        "file_path": "src/api/auth.py",
+                        "language": "python",
+                        "symbols": ["authenticate", "verify_token", "TokenValidator"]
+                    }
+                },
+                ...
+            ]
+        }
+
+    Search Examples:
+        - "user authentication" → Finds auth.py, user.py, login.py
+        - "database models" → Finds models.py, schema.py, migrations/*
+        - "API endpoints" → Finds api/*.py, routes.py, controllers/*
+        - "test utilities" → Finds test_utils.py, conftest.py, fixtures.py
+
+    Use Cases:
+        1. **Find Implementation**: Locate files implementing specific functionality
+        2. **Code Discovery**: Find related files when working on feature
+        3. **Refactoring**: Discover all files related to component
+        4. **Documentation**: Find relevant code for documentation
+        5. **Language Filter**: Combine semantic search with file pattern
+
+    Notes:
+        - Requires sentence-transformers and faiss-cpu packages
+        - Repository must be indexed first (use index_repository)
+        - Searches through symbols, docstrings, and code content
+        - Results ranked by cosine similarity (0.0-1.0)
+        - Can filter by glob pattern (e.g., "**/*.py" for Python only)
+    """
+    try:
+        from clauxton.semantic.search import SemanticSearchEngine
+
+        engine = SemanticSearchEngine(Path.cwd())
+        results = engine.search_files(query, limit=limit, pattern=pattern)
+
+        return {
+            "status": "success",
+            "count": len(results),
+            "search_type": "semantic",
+            "query": query,
+            "results": results,
+        }
+    except ImportError as e:
+        return {
+            "status": "error",
+            "message": "Semantic search dependencies not installed",
+            "error": str(e),
+            "hint": "Install with: pip install clauxton[semantic]",
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Search failed: {str(e)}",
+            "error": str(e),
+        }
+
+
 def main() -> None:
     """Run the MCP server."""
     mcp.run()
