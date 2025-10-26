@@ -236,6 +236,51 @@ class TestCategorizeCommit:
         category = extractor.categorize_commit(commit)
         assert category == "test"
 
+    def test_refactor_categorization(self, extractor):
+        """Test refactor categorization by keyword."""
+        commit = CommitInfo(
+            sha="abc",
+            message="refactor database connection logic",
+            author="Author",
+            date=datetime.now(),
+            files=["src/db.py"],
+            diff="",
+            stats={"insertions": 15, "deletions": 10, "files_changed": 1},
+        )
+
+        category = extractor.categorize_commit(commit)
+        assert category == "refactor"
+
+    def test_feature_keyword_categorization(self, extractor):
+        """Test feature categorization by keyword."""
+        commit = CommitInfo(
+            sha="abc",
+            message="add user authentication feature",
+            author="Author",
+            date=datetime.now(),
+            files=["src/auth.py"],
+            diff="",
+            stats={"insertions": 50, "deletions": 0, "files_changed": 1},
+        )
+
+        category = extractor.categorize_commit(commit)
+        assert category == "feature"
+
+    def test_bugfix_keyword_categorization(self, extractor):
+        """Test bugfix categorization by keyword."""
+        commit = CommitInfo(
+            sha="abc",
+            message="resolve memory leak issue",
+            author="Author",
+            date=datetime.now(),
+            files=["src/memory.py"],
+            diff="",
+            stats={"insertions": 5, "deletions": 2, "files_changed": 1},
+        )
+
+        category = extractor.categorize_commit(commit)
+        assert category == "bugfix"
+
     def test_docs_categorization(self, extractor):
         """Test docs categorization."""
         commit = CommitInfo(

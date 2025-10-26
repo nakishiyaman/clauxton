@@ -132,7 +132,9 @@ def test_search_knowledge_semantic_basic(tmp_path: Path, embedding_engine, vecto
     assert "metadata" in first_result
 
 
-def test_search_knowledge_semantic_category_filter(tmp_path: Path, embedding_engine, vector_store) -> None:
+def test_search_knowledge_semantic_category_filter(
+    tmp_path: Path, embedding_engine, vector_store
+) -> None:
     """Test semantic KB search with category filter."""
     from clauxton.core.knowledge_base import KnowledgeBase
     from clauxton.core.models import KnowledgeBaseEntry
@@ -323,7 +325,9 @@ def test_search_tasks_semantic_basic(tmp_path: Path, embedding_engine, vector_st
     assert "metadata" in first_result
 
 
-def test_search_tasks_semantic_status_filter(tmp_path: Path, embedding_engine, vector_store) -> None:
+def test_search_tasks_semantic_status_filter(
+    tmp_path: Path, embedding_engine, vector_store
+) -> None:
     """Test semantic task search with status filter."""
     from clauxton.core.models import Task
     from clauxton.core.task_manager import TaskManager
@@ -379,7 +383,9 @@ def test_search_tasks_semantic_status_filter(tmp_path: Path, embedding_engine, v
         assert res["metadata"]["status"] == "pending"
 
 
-def test_search_tasks_semantic_priority_filter(tmp_path: Path, embedding_engine, vector_store) -> None:
+def test_search_tasks_semantic_priority_filter(
+    tmp_path: Path, embedding_engine, vector_store
+) -> None:
     """Test semantic task search with priority filter."""
     from clauxton.core.models import Task
     from clauxton.core.task_manager import TaskManager
@@ -435,7 +441,9 @@ def test_search_tasks_semantic_priority_filter(tmp_path: Path, embedding_engine,
         assert res["metadata"]["priority"] == "high"
 
 
-def test_search_tasks_semantic_combined_filters(tmp_path: Path, embedding_engine, vector_store) -> None:
+def test_search_tasks_semantic_combined_filters(
+    tmp_path: Path, embedding_engine, vector_store
+) -> None:
     """Test semantic task search with multiple filters."""
     from clauxton.core.models import Task
     from clauxton.core.task_manager import TaskManager
@@ -573,7 +581,9 @@ def verify_token(token):
     assert "metadata" in first_result
 
 
-def test_search_files_semantic_pattern_filter(tmp_path: Path, embedding_engine, vector_store) -> None:
+def test_search_files_semantic_pattern_filter(
+    tmp_path: Path, embedding_engine, vector_store
+) -> None:
     """Test semantic file search with pattern filter."""
     from clauxton.intelligence.repository_map import RepositoryMap
     from clauxton.semantic.indexer import Indexer
@@ -660,7 +670,9 @@ def test_search_files_semantic_general_error(tmp_path: Path) -> None:
 # ============================================================================
 
 
-def test_search_knowledge_semantic_empty_index(tmp_path: Path, embedding_engine, vector_store) -> None:
+def test_search_knowledge_semantic_empty_index(
+    tmp_path: Path, embedding_engine, vector_store
+) -> None:
     """Test semantic KB search with empty index."""
     # Initialize but don't add entries
     from clauxton.core.knowledge_base import KnowledgeBase

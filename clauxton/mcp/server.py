@@ -1846,6 +1846,780 @@ def extract_decisions_from_commits(
         }
 
 
+@mcp.tool()
+def get_project_context(
+    depth: str = "full",
+    include_recent_activity: bool = True,
+) -> dict[str, Any]:
+    """
+    Get comprehensive project context for Claude Code.
+
+    Provides rich context about the project including Knowledge Base entries,
+    tasks, recent activity, and project structure. This helps Claude Code
+    understand the project state and make better recommendations.
+
+    Args:
+        depth: Context depth level
+            - "minimal": Basic KB and task counts
+            - "standard": Add recent entries and active tasks
+            - "full": Complete context with recent activity (default)
+        include_recent_activity: Include recent commit analysis (default: True)
+
+    Returns:
+        Dictionary with project context including:
+        - kb_summary: Knowledge Base statistics and recent entries
+        - task_summary: Task statistics and active tasks
+        - recent_activity: Recent commits and patterns (if enabled)
+        - project_state: Current project state indicators
+
+    Use Cases:
+        1. **Context Loading**: Help Claude Code understand project quickly
+        2. **Onboarding**: Provide new team members with project overview
+        3. **Decision Making**: Give Claude Code context for recommendations
+        4. **Status Check**: Quick project health check
+
+    Example:
+        # Get full project context
+        context = get_project_context()
+
+        # Get minimal context for quick checks
+        context = get_project_context(depth="minimal", include_recent_activity=False)
+
+    Notes:
+        - "full" depth may take longer but provides best context
+        - Recent activity analysis requires Git repository
+        - Useful at start of Claude Code sessions
+    """
+    try:
+        project_root = Path.cwd()
+        kb = KnowledgeBase(project_root)
+        tm = TaskManager(project_root)
+
+        context: dict[str, Any] = {
+            "status": "success",
+            "depth": depth,
+            "timestamp": datetime.now().isoformat(),
+        }
+
+        # Knowledge Base summary
+        all_entries = kb.list_all()
+        kb_by_category: dict[str, list[KnowledgeBaseEntry]] = {}
+        for entry in all_entries:
+            category = entry.category
+            if category not in kb_by_category:
+                kb_by_category[category] = []
+            kb_by_category[category].append(entry)
+
+        context["kb_summary"] = {
+            "total_entries": len(all_entries),
+            "by_category": {
+                cat: len(entries) for cat, entries in kb_by_category.items()
+            },
+        }
+
+        if depth in ["standard", "full"]:
+            # Add recent KB entries (last 5)
+            recent_entries = sorted(
+                all_entries,
+                key=lambda e: e.updated_at,
+                reverse=True,
+            )[:5]
+            context["kb_summary"]["recent_entries"] = [
+                {
+                    "id": e.id,
+                    "title": e.title,
+                    "category": e.category,
+                    "tags": e.tags,
+                    "updated_at": e.updated_at.isoformat(),
+                }
+                for e in recent_entries
+            ]
+
+        # Task summary
+        all_tasks = tm.list_all()
+        tasks_by_status: dict[str, list[Task]] = {}
+        tasks_by_priority: dict[str, list[Task]] = {}
+        for task in all_tasks:
+            # By status
+            status = task.status
+            if status not in tasks_by_status:
+                tasks_by_status[status] = []
+            tasks_by_status[status].append(task)
+
+            # By priority
+            priority = task.priority
+            if priority not in tasks_by_priority:
+                tasks_by_priority[priority] = []
+            tasks_by_priority[priority].append(task)
+
+        context["task_summary"] = {
+            "total_tasks": len(all_tasks),
+            "by_status": {
+                status: len(tasks) for status, tasks in tasks_by_status.items()
+            },
+            "by_priority": {
+                priority: len(tasks) for priority, tasks in tasks_by_priority.items()
+            },
+        }
+
+        if depth in ["standard", "full"]:
+            # Add active tasks (in_progress and high priority pending)
+            active_tasks = [t for t in all_tasks if t.status == "in_progress"]
+            high_priority_pending = [
+                t
+                for t in all_tasks
+                if t.status == "pending" and t.priority in ["critical", "high"]
+            ]
+            active_tasks.extend(high_priority_pending[:3])  # Add top 3
+
+            context["task_summary"]["active_tasks"] = [
+                {
+                    "id": t.id,
+                    "name": t.name,
+                    "status": t.status,
+                    "priority": t.priority,
+                    "estimated_hours": t.estimated_hours,
+                }
+                for t in active_tasks[:5]  # Limit to 5
+            ]
+
+        # Recent activity (only for "full" depth)
+        if depth == "full" and include_recent_activity:
+            try:
+                from clauxton.analysis.git_analyzer import GitAnalyzer
+
+                git_analyzer = GitAnalyzer(project_root)
+                recent_commits = git_analyzer.get_recent_commits(since_days=7)
+
+                context["recent_activity"] = {
+                    "commit_count_7days": len(recent_commits),
+                    "recent_commits": [
+                        {
+                            "sha": commit.sha[:7],
+                            "message": commit.message.split("\n")[0][:100],
+                            "author": commit.author,
+                            "date": commit.date.isoformat(),
+                            "files_changed": len(commit.files),
+                        }
+                        for commit in recent_commits[:5]  # Last 5 commits
+                    ],
+                }
+            except Exception as e:
+                context["recent_activity"] = {
+                    "error": f"Could not fetch recent activity: {str(e)}"
+                }
+
+        # Project state indicators
+        in_progress_count = len(tasks_by_status.get("in_progress", []))
+        blocked_count = len(tasks_by_status.get("blocked", []))
+        critical_pending = len(
+            [
+                t
+                for t in all_tasks
+                if t.status == "pending" and t.priority == "critical"
+            ]
+        )
+
+        context["project_state"] = {
+            "has_active_work": in_progress_count > 0,
+            "has_blockers": blocked_count > 0,
+            "has_critical_tasks": critical_pending > 0,
+            "kb_populated": len(all_entries) > 0,
+            "tasks_managed": len(all_tasks) > 0,
+        }
+
+        return context
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to get project context: {str(e)}",
+            "error": str(e),
+        }
+
+
+@mcp.tool()
+def generate_project_summary() -> dict[str, Any]:
+    """
+    Generate a human-readable project summary.
+
+    Creates a comprehensive summary of the project suitable for documentation,
+    reports, or quick overview. Includes Knowledge Base highlights, task status,
+    recent activity, and key metrics.
+
+    Returns:
+        Dictionary with formatted project summary including:
+        - summary_text: Markdown-formatted summary text
+        - statistics: Key project metrics
+        - highlights: Important items to note
+        - recommendations: AI-generated recommendations
+
+    Use Cases:
+        1. **Documentation**: Generate project status reports
+        2. **Onboarding**: Create overview for new team members
+        3. **Standups**: Quick status summary for meetings
+        4. **Reviews**: Monthly/weekly project reviews
+
+    Example:
+        summary = generate_project_summary()
+        print(summary["summary_text"])
+
+    Notes:
+        - Output is Markdown-formatted for easy documentation
+        - Includes actionable recommendations
+        - Useful for generating README sections
+    """
+    try:
+        # Get project context
+        context_data: dict[str, Any] = get_project_context(
+            depth="full", include_recent_activity=True
+        )
+        if context_data.get("status") != "success":
+            return context_data  # Return error
+
+        # Build summary text
+        summary_lines = []
+        summary_lines.append("# Project Summary\n")
+        summary_lines.append(
+            f"**Generated**: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+        )
+
+        # Knowledge Base section
+        kb_summary = context_data["kb_summary"]
+        summary_lines.append("## Knowledge Base")
+        summary_lines.append(
+            f"- **Total Entries**: {kb_summary['total_entries']}"
+        )
+        if kb_summary.get("by_category"):
+            summary_lines.append("- **By Category**:")
+            for category, count in sorted(kb_summary["by_category"].items()):
+                summary_lines.append(f"  - {category}: {count}")
+
+        if kb_summary.get("recent_entries"):
+            summary_lines.append("\n### Recent KB Entries")
+            for entry in kb_summary["recent_entries"]:
+                summary_lines.append(
+                    f"- [{entry['category']}] **{entry['title']}** (`{entry['id']}`)"
+                )
+
+        # Task section
+        summary_lines.append("\n## Tasks")
+        task_summary = context_data["task_summary"]
+        summary_lines.append(f"- **Total Tasks**: {task_summary['total_tasks']}")
+        if task_summary.get("by_status"):
+            summary_lines.append("- **By Status**:")
+            for status, count in sorted(task_summary["by_status"].items()):
+                summary_lines.append(f"  - {status}: {count}")
+
+        if task_summary.get("active_tasks"):
+            summary_lines.append("\n### Active Tasks")
+            for task in task_summary["active_tasks"]:
+                summary_lines.append(
+                    f"- [{task['priority']}] **{task['name']}** "
+                    f"(`{task['id']}`, {task['status']})"
+                )
+
+        # Recent activity section
+        if context_data.get("recent_activity"):
+            recent = context_data["recent_activity"]
+            if "error" not in recent:
+                summary_lines.append("\n## Recent Activity (Last 7 Days)")
+                summary_lines.append(
+                    f"- **Commits**: {recent['commit_count_7days']}"
+                )
+                if recent.get("recent_commits"):
+                    summary_lines.append("\n### Recent Commits")
+                    for commit in recent["recent_commits"]:
+                        summary_lines.append(
+                            f"- `{commit['sha']}` {commit['message']} "
+                            f"({commit['author']}, {commit['files_changed']} files)"
+                        )
+
+        # Project state section
+        summary_lines.append("\n## Project State")
+        state = context_data["project_state"]
+        status_indicators = []
+        if state["has_active_work"]:
+            status_indicators.append("✅ Active work in progress")
+        if state["has_blockers"]:
+            status_indicators.append("⚠️ Has blocked tasks")
+        if state["has_critical_tasks"]:
+            status_indicators.append("🔴 Has critical pending tasks")
+        if state["kb_populated"]:
+            status_indicators.append("📚 Knowledge Base populated")
+        if state["tasks_managed"]:
+            status_indicators.append("✓ Tasks being tracked")
+
+        for indicator in status_indicators:
+            summary_lines.append(f"- {indicator}")
+
+        # Recommendations section
+        summary_lines.append("\n## Recommendations")
+        recommendations = []
+
+        if not state["kb_populated"]:
+            recommendations.append(
+                "📝 Start documenting decisions in Knowledge Base"
+            )
+        if not state["tasks_managed"]:
+            recommendations.append("📋 Add tasks to track work items")
+        if state["has_blockers"]:
+            recommendations.append("⚠️ Address blocked tasks to unblock workflow")
+        if state["has_critical_tasks"]:
+            recommendations.append(
+                "🔴 Prioritize critical tasks in backlog"
+            )
+        if kb_summary["total_entries"] > 0 and task_summary["total_tasks"] == 0:
+            recommendations.append(
+                "💡 Consider creating tasks from KB entries"
+            )
+        if not recommendations:
+            recommendations.append("✅ Project is in good shape!")
+
+        for rec in recommendations:
+            summary_lines.append(f"- {rec}")
+
+        summary_text = "\n".join(summary_lines)
+
+        # Statistics
+        statistics = {
+            "kb_entries": kb_summary["total_entries"],
+            "total_tasks": task_summary["total_tasks"],
+            "active_tasks": len(task_summary.get("active_tasks", [])),
+            "recent_commits": context_data.get("recent_activity", {}).get(
+                "commit_count_7days", 0
+            ),
+        }
+
+        # Highlights (important items)
+        highlights = []
+        if state["has_blockers"]:
+            highlights.append("Has blocked tasks requiring attention")
+        if state["has_critical_tasks"]:
+            highlights.append("Has critical pending tasks")
+        if context_data.get("recent_activity", {}).get("commit_count_7days", 0) > 10:
+            highlights.append("High development activity (10+ commits/week)")
+
+        return {
+            "status": "success",
+            "summary_text": summary_text,
+            "statistics": statistics,
+            "highlights": highlights,
+            "recommendations": recommendations,
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to generate project summary: {str(e)}",
+            "error": str(e),
+        }
+
+
+@mcp.tool()
+def get_knowledge_graph() -> dict[str, Any]:
+    """
+    Get knowledge graph showing relationships between KB entries and tasks.
+
+    Generates a graph representation of relationships between Knowledge Base
+    entries, tasks, and their connections. Useful for visualizing project
+    knowledge structure and dependencies.
+
+    Returns:
+        Dictionary with knowledge graph including:
+        - nodes: List of nodes (KB entries, tasks)
+        - edges: List of edges (relationships)
+        - statistics: Graph statistics
+        - clusters: Related groups of entries/tasks
+
+    Use Cases:
+        1. **Visualization**: Generate visual project maps
+        2. **Discovery**: Find related knowledge and tasks
+        3. **Analysis**: Understand project structure
+        4. **Navigation**: Explore knowledge connections
+
+    Example:
+        graph = get_knowledge_graph()
+        print(f"Nodes: {len(graph['nodes'])}, Edges: {len(graph['edges'])}")
+
+    Notes:
+        - Relationships based on tags, dependencies, and categories
+        - Can be visualized with graph libraries (networkx, D3.js)
+        - Useful for identifying knowledge gaps
+    """
+    try:
+        project_root = Path.cwd()
+        kb = KnowledgeBase(project_root)
+        tm = TaskManager(project_root)
+
+        all_entries = kb.list_all()
+        all_tasks = tm.list_all()
+
+        nodes = []
+        edges = []
+
+        # Add KB entries as nodes
+        for entry in all_entries:
+            nodes.append(
+                {
+                    "id": entry.id,
+                    "type": "kb_entry",
+                    "label": entry.title,
+                    "category": entry.category,
+                    "tags": entry.tags,
+                }
+            )
+
+        # Add tasks as nodes
+        for task in all_tasks:
+            nodes.append(
+                {
+                    "id": task.id,
+                    "type": "task",
+                    "label": task.name,
+                    "status": task.status,
+                    "priority": task.priority,
+                }
+            )
+
+        # Add edges between KB entries (same tags)
+        for i, entry1 in enumerate(all_entries):
+            for entry2 in all_entries[i + 1 :]:
+                # Connect entries with shared tags
+                shared_tags = set(entry1.tags) & set(entry2.tags)
+                if shared_tags:
+                    edges.append(
+                        {
+                            "source": entry1.id,
+                            "target": entry2.id,
+                            "type": "shared_tags",
+                            "weight": len(shared_tags),
+                            "label": f"{len(shared_tags)} shared tags",
+                        }
+                    )
+
+        # Add edges between tasks (dependencies)
+        for task in all_tasks:
+            if task.depends_on:
+                for dep_id in task.depends_on:
+                    edges.append(
+                        {
+                            "source": dep_id,
+                            "target": task.id,
+                            "type": "dependency",
+                            "weight": 3,  # Higher weight for dependencies
+                            "label": "depends on",
+                        }
+                    )
+
+        # Add edges between KB entries and tasks (shared tags)
+        for entry in all_entries:
+            for task in all_tasks:
+                # Check if task description mentions KB entry tags
+                task_text = f"{task.name} {task.description or ''}".lower()
+                matching_tags = [
+                    tag for tag in entry.tags if tag.lower() in task_text
+                ]
+                if matching_tags:
+                    edges.append(
+                        {
+                            "source": entry.id,
+                            "target": task.id,
+                            "type": "related_by_tags",
+                            "weight": len(matching_tags),
+                            "label": f"related ({len(matching_tags)} tags)",
+                        }
+                    )
+
+        # Calculate clusters (groups of related nodes)
+        # Simple clustering by category for KB entries and priority for tasks
+        clusters: dict[str, dict[str, Any]] = {}
+        for entry in all_entries:
+            category = entry.category
+            if category not in clusters:
+                clusters[category] = {"type": "kb_category", "nodes": []}
+            clusters[category]["nodes"].append(entry.id)
+
+        for task in all_tasks:
+            priority = task.priority
+            cluster_key = f"task_{priority}"
+            if cluster_key not in clusters:
+                clusters[cluster_key] = {"type": "task_priority", "nodes": []}
+            clusters[cluster_key]["nodes"].append(task.id)
+
+        # Statistics
+        kb_nodes = len([n for n in nodes if n["type"] == "kb_entry"])
+        task_nodes = len([n for n in nodes if n["type"] == "task"])
+        tag_edges = len([e for e in edges if e["type"] == "shared_tags"])
+        dependency_edges = len([e for e in edges if e["type"] == "dependency"])
+        related_edges = len([e for e in edges if e["type"] == "related_by_tags"])
+
+        statistics = {
+            "total_nodes": len(nodes),
+            "kb_nodes": kb_nodes,
+            "task_nodes": task_nodes,
+            "total_edges": len(edges),
+            "tag_relationships": tag_edges,
+            "dependencies": dependency_edges,
+            "cross_references": related_edges,
+            "cluster_count": len(clusters),
+        }
+
+        return {
+            "status": "success",
+            "nodes": nodes,
+            "edges": edges,
+            "clusters": clusters,
+            "statistics": statistics,
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to generate knowledge graph: {str(e)}",
+            "error": str(e),
+        }
+
+
+@mcp.tool()
+def find_related_entries(
+    entry_id: str,
+    limit: int = 5,
+    include_tasks: bool = True,
+) -> dict[str, Any]:
+    """
+    Find KB entries and tasks related to a given entry.
+
+    Discovers related entries based on tags, categories, and content similarity.
+    Useful for exploring knowledge connections and finding relevant context.
+
+    Args:
+        entry_id: ID of the KB entry or task to find relations for
+        limit: Maximum number of related items to return (default: 5)
+        include_tasks: Include related tasks in results (default: True)
+
+    Returns:
+        Dictionary with related items including:
+        - related_entries: List of related KB entries with similarity scores
+        - related_tasks: List of related tasks (if include_tasks=True)
+        - relationship_reasons: Why items are related
+
+    Use Cases:
+        1. **Context Discovery**: Find relevant context for a decision
+        2. **Knowledge Navigation**: Explore related knowledge
+        3. **Task Planning**: Find tasks related to KB entries
+        4. **Documentation**: Build comprehensive documentation sections
+
+    Example:
+        # Find entries related to KB-20251020-001
+        related = find_related_entries("KB-20251020-001", limit=5)
+
+        # Find only KB entries (no tasks)
+        related = find_related_entries("KB-20251020-001", include_tasks=False)
+
+    Notes:
+        - Similarity based on shared tags, category, and content
+        - Higher scores indicate stronger relationships
+        - Useful for building knowledge graphs
+    """
+    try:
+        project_root = Path.cwd()
+        kb = KnowledgeBase(project_root)
+        tm = TaskManager(project_root)
+
+        # Get the reference entry/task
+        reference_entry = None
+        reference_task = None
+        is_kb_entry = entry_id.startswith("KB-")
+
+        if is_kb_entry:
+            reference_entry = kb.get(entry_id)
+            if not reference_entry:
+                return {
+                    "status": "error",
+                    "message": f"KB entry {entry_id} not found",
+                }
+        else:
+            reference_task = tm.get(entry_id)
+            if not reference_task:
+                return {
+                    "status": "error",
+                    "message": f"Task {entry_id} not found",
+                }
+
+        related_entries = []
+        related_tasks = []
+
+        # Find related KB entries
+        all_entries = kb.list_all()
+        for entry in all_entries:
+            if entry.id == entry_id:
+                continue  # Skip self
+
+            similarity_score = 0.0
+            reasons = []
+
+            if is_kb_entry and reference_entry:
+                # Compare with reference KB entry
+                # Same category
+                if entry.category == reference_entry.category:
+                    similarity_score += 0.3
+                    reasons.append(f"same category ({entry.category})")
+
+                # Shared tags
+                shared_tags = set(entry.tags) & set(reference_entry.tags)
+                if shared_tags:
+                    tag_score = len(shared_tags) * 0.2
+                    similarity_score += tag_score
+                    reasons.append(
+                        f"{len(shared_tags)} shared tags: {', '.join(shared_tags)}"
+                    )
+
+                # Content similarity (simple keyword matching)
+                ref_keywords = set(
+                    reference_entry.content.lower().split()[:50]
+                )  # First 50 words
+                entry_keywords = set(entry.content.lower().split()[:50])
+                common_keywords = ref_keywords & entry_keywords
+                if len(common_keywords) > 5:  # At least 5 common words
+                    content_score = min(len(common_keywords) * 0.05, 0.4)
+                    similarity_score += content_score
+                    reasons.append(f"{len(common_keywords)} common keywords")
+
+            elif reference_task:
+                # Compare with reference task
+                task_text = (
+                    f"{reference_task.name} {reference_task.description or ''}"
+                ).lower()
+
+                # Tags in task text
+                matching_tags = [
+                    tag for tag in entry.tags if tag.lower() in task_text
+                ]
+                if matching_tags:
+                    tag_score = len(matching_tags) * 0.3
+                    similarity_score += tag_score
+                    reasons.append(
+                        f"tags match task: {', '.join(matching_tags)}"
+                    )
+
+                # Category mentioned in task
+                if entry.category.lower() in task_text:
+                    similarity_score += 0.2
+                    reasons.append(f"category '{entry.category}' in task")
+
+            if similarity_score > 0:
+                related_entries.append(
+                    {
+                        "id": entry.id,
+                        "title": entry.title,
+                        "category": entry.category,
+                        "tags": entry.tags,
+                        "similarity_score": round(similarity_score, 2),
+                        "reasons": reasons,
+                    }
+                )
+
+        # Sort by similarity score
+        def _get_score(entry: dict[str, Any]) -> float:
+            score = entry.get("similarity_score", 0.0)
+            return float(score) if score is not None else 0.0
+
+        related_entries.sort(key=_get_score, reverse=True)
+        related_entries = related_entries[:limit]
+
+        # Find related tasks (if requested)
+        if include_tasks:
+            all_tasks = tm.list_all()
+            for task in all_tasks:
+                if task.id == entry_id:
+                    continue  # Skip self
+
+                similarity_score = 0.0
+                reasons = []
+
+                if is_kb_entry and reference_entry:
+                    # Compare task with KB entry
+                    task_text = f"{task.name} {task.description or ''}".lower()
+
+                    # Tags in task
+                    matching_tags = [
+                        tag
+                        for tag in reference_entry.tags
+                        if tag.lower() in task_text
+                    ]
+                    if matching_tags:
+                        tag_score = len(matching_tags) * 0.3
+                        similarity_score += tag_score
+                        reasons.append(
+                            f"tags in task: {', '.join(matching_tags)}"
+                        )
+
+                    # Category in task
+                    if reference_entry.category.lower() in task_text:
+                        similarity_score += 0.2
+                        reasons.append(f"category '{reference_entry.category}' in task")
+
+                elif reference_task:
+                    # Compare tasks
+                    # Check dependencies
+                    if task.id in reference_task.depends_on:
+                        similarity_score += 0.5
+                        reasons.append("is a dependency")
+                    if reference_task.id in task.depends_on:
+                        similarity_score += 0.5
+                        reasons.append("depends on this task")
+
+                    # Same priority
+                    if task.priority == reference_task.priority:
+                        similarity_score += 0.1
+                        reasons.append(f"same priority ({task.priority})")
+
+                    # Same status
+                    if task.status == reference_task.status:
+                        similarity_score += 0.1
+                        reasons.append(f"same status ({task.status})")
+
+                if similarity_score > 0:
+                    related_tasks.append(
+                        {
+                            "id": task.id,
+                            "name": task.name,
+                            "status": task.status,
+                            "priority": task.priority,
+                            "similarity_score": round(similarity_score, 2),
+                            "reasons": reasons,
+                        }
+                    )
+
+            # Sort by similarity score
+            def _get_task_score(task: dict[str, Any]) -> float:
+                score = task.get("similarity_score", 0.0)
+                return float(score) if score is not None else 0.0
+
+            related_tasks.sort(key=_get_task_score, reverse=True)
+            related_tasks = related_tasks[:limit]
+
+        result = {
+            "status": "success",
+            "reference_id": entry_id,
+            "reference_type": "kb_entry" if is_kb_entry else "task",
+            "related_entries": related_entries,
+        }
+
+        if include_tasks:
+            result["related_tasks"] = related_tasks
+
+        return result
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to find related entries: {str(e)}",
+            "error": str(e),
+        }
+
+
 def main() -> None:
     """Run the MCP server."""
     mcp.run()

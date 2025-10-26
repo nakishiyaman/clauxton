@@ -1,5 +1,6 @@
 """Tests for DecisionExtractor."""
 
+import subprocess
 from datetime import datetime
 
 import pytest
@@ -14,8 +15,12 @@ def tmp_project(tmp_path):
     clauxton_dir = tmp_path / ".clauxton"
     clauxton_dir.mkdir()
 
-    # Create empty YAML files
-    (clauxton_dir / "knowledge-base.yml").write_text("entries: []\n")
+    # Create properly formatted YAML files
+    kb_content = """version: '1.0'
+project_name: test_project
+entries: []
+"""
+    (clauxton_dir / "knowledge-base.yml").write_text(kb_content)
     (clauxton_dir / "tasks.yml").write_text("tasks: []\n")
 
     # Initialize git repo
@@ -269,6 +274,47 @@ class TestCategorizeDecision:
         category = extractor.categorize_decision(commit, patterns)
 
         assert category in ["decision", "architecture"]
+
+    def test_categorize_pattern(self, extractor):
+        """Test pattern-related keywords categorization.
+
+        Pattern keywords ("pattern", "approach") are checked before
+        architecture keywords to ensure they get the more specific
+        "pattern" category instead of the generic "architecture" category.
+        """
+        commit = CommitInfo(
+            sha="abc123",
+            message="use new approach for user creation",
+            author="Author",
+            date=datetime.now(),
+            files=["src/factory.py"],
+            diff="",
+            stats={"insertions": 20, "deletions": 0, "files_changed": 1},
+        )
+        patterns = extractor.pattern_extractor.detect_patterns(commit)
+
+        category = extractor.categorize_decision(commit, patterns)
+
+        # Should return "pattern" for pattern-specific keywords
+        assert category == "pattern"
+
+    def test_categorize_pattern_with_pattern_keyword(self, extractor):
+        """Test pattern categorization with 'pattern' keyword."""
+        commit = CommitInfo(
+            sha="abc123",
+            message="implement factory pattern for object creation",
+            author="Author",
+            date=datetime.now(),
+            files=["src/factory.py"],
+            diff="",
+            stats={"insertions": 30, "deletions": 0, "files_changed": 1},
+        )
+        patterns = extractor.pattern_extractor.detect_patterns(commit)
+
+        category = extractor.categorize_decision(commit, patterns)
+
+        # Should return "pattern" instead of "architecture"
+        assert category == "pattern"
 
 
 class TestGenerateTitle:
@@ -561,3 +607,161 @@ class TestExtractDecisions:
         if len(candidates) > 1:
             confidences = [c.confidence for c in candidates]
             assert confidences == sorted(confidences, reverse=True)
+
+
+class TestAutoAddDecisions:
+    """Tests for auto_add_decisions method."""
+
+    def test_auto_add_decisions_basic(self, tmp_project):
+        """Test adding decisions to KB automatically."""
+        # Initialize git repository first
+        subprocess.run(
+            ["git", "init"],
+            cwd=tmp_project,
+            check=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test User"],
+            cwd=tmp_project,
+            check=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.email", "test@example.com"],
+            cwd=tmp_project,
+            check=True,
+            capture_output=True,
+        )
+
+        test_file = tmp_project / "requirements.txt"
+        test_file.write_text("fastapi==0.68.0\n")
+
+        subprocess.run(
+            ["git", "add", "requirements.txt"],
+            cwd=tmp_project,
+            check=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            ["git", "commit", "-m", "decision: adopt FastAPI as web framework"],
+            cwd=tmp_project,
+            check=True,
+            capture_output=True,
+        )
+
+        # Initialize extractor (which initializes KB)
+        extractor = DecisionExtractor(tmp_project)
+
+        # Add decisions to KB
+        added_ids = extractor.auto_add_decisions(since_days=1, min_confidence=0.5)
+
+        # Verify
+        assert len(added_ids) > 0
+        assert all(entry_id.startswith("KB-") for entry_id in added_ids)
+
+        # Check KB contains the entry
+        entries = extractor.kb.list_all()
+        assert len(entries) > 0
+        entry = extractor.kb.get(added_ids[0])
+        assert entry is not None
+        assert "fastapi" in entry.title.lower() or "fastapi" in entry.content.lower()
+
+    def test_auto_add_with_min_confidence(self, tmp_project):
+        """Test filtering by minimum confidence."""
+        # Create commits
+        subprocess.run(
+            ["git", "init"],
+            cwd=tmp_project,
+            check=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test User"],
+            cwd=tmp_project,
+            check=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.email", "test@example.com"],
+            cwd=tmp_project,
+            check=True,
+            capture_output=True,
+        )
+
+        test_file = tmp_project / "test.txt"
+        test_file.write_text("test\n")
+
+        subprocess.run(
+            ["git", "add", "test.txt"],
+            cwd=tmp_project,
+            check=True,
+            capture_output=True,
+        )
+        # Low confidence commit (no decision keywords)
+        subprocess.run(
+            ["git", "commit", "-m", "chore: update test file"],
+            cwd=tmp_project,
+            check=True,
+            capture_output=True,
+        )
+
+        # Initialize extractor after creating commit
+        extractor = DecisionExtractor(tmp_project)
+
+        # High min_confidence should filter this out
+        added_ids = extractor.auto_add_decisions(since_days=1, min_confidence=0.9)
+
+        # Should not add low-confidence commits
+        assert len(added_ids) == 0
+
+    def test_auto_add_category_mapping(self, tmp_project):
+        """Test correct category mapping when adding to KB."""
+        # Create a constraint-type commit
+        subprocess.run(
+            ["git", "init"],
+            cwd=tmp_project,
+            check=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test User"],
+            cwd=tmp_project,
+            check=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.email", "test@example.com"],
+            cwd=tmp_project,
+            check=True,
+            capture_output=True,
+        )
+
+        test_file = tmp_project / "config.yml"
+        test_file.write_text("max_items: 1000\n")
+
+        subprocess.run(
+            ["git", "add", "config.yml"],
+            cwd=tmp_project,
+            check=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            ["git", "commit", "-m", "constraint: limit items to 1000"],
+            cwd=tmp_project,
+            check=True,
+            capture_output=True,
+        )
+
+        # Initialize extractor after creating commit
+        extractor = DecisionExtractor(tmp_project)
+
+        # Add to KB
+        added_ids = extractor.auto_add_decisions(since_days=1, min_confidence=0.5)
+
+        # Verify category
+        if len(added_ids) > 0:
+            entry = extractor.kb.get(added_ids[0])
+            assert entry is not None
+            # Should be categorized as constraint or decision
+            assert entry.category in ["constraint", "decision"]

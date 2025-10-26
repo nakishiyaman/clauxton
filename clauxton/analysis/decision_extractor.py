@@ -250,13 +250,13 @@ class DecisionExtractor:
         if any(keyword in message for keyword in self.CONVENTION_KEYWORDS):
             return "convention"
 
+        # Check for pattern keywords (before architecture to avoid being masked)
+        if "pattern" in message or "approach" in message:
+            return "pattern"
+
         # Check for architecture keywords
         if any(keyword in message for keyword in self.ARCHITECTURE_KEYWORDS):
             return "architecture"
-
-        # Check for pattern keywords
-        if "pattern" in message or "approach" in message:
-            return "pattern"
 
         # Default to decision
         return "decision"
