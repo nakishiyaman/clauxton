@@ -314,4 +314,4 @@ class GitAnalyzer:
         Returns:
             Branch name
         """
-        return self.repo.active_branch.name
+        return str(self.repo.active_branch.name)
