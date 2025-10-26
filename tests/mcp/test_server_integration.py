@@ -393,7 +393,11 @@ def test_analyze_recent_commits_with_real_repo(initialized_project: Path) -> Non
     # Initialize Git repo if not already initialized
     subprocess.run(["git", "init"], check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        check=True,
+        capture_output=True,
+    )
 
     # Create and commit a file
     test_file = Path(initialized_project) / "test.txt"
@@ -426,13 +430,21 @@ def test_analyze_recent_commits_no_commits(initialized_project: Path) -> None:
     # Initialize empty Git repo
     subprocess.run(["git", "init"], check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        check=True,
+        capture_output=True,
+    )
 
     # Create at least one commit (empty repo may cause errors)
     test_file = Path(initialized_project) / "README.md"
     test_file.write_text("# Test")
     subprocess.run(["git", "add", "."], check=True, capture_output=True)
-    subprocess.run(["git", "commit", "-m", "chore: initial commit"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "chore: initial commit"],
+        check=True,
+        capture_output=True,
+    )
 
     # Analyze commits from far future (should return 0 for last 0 days)
     result = analyze_recent_commits(since_days=0)
@@ -454,7 +466,11 @@ def test_analyze_recent_commits_with_max_count(initialized_project: Path) -> Non
     # Initialize Git and make multiple commits
     subprocess.run(["git", "init"], check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        check=True,
+        capture_output=True,
+    )
 
     for i in range(5):
         test_file = Path(initialized_project) / f"test{i}.txt"
@@ -484,7 +500,11 @@ def test_analyze_recent_commits_pattern_detection(initialized_project: Path) -> 
     # Initialize Git repo
     subprocess.run(["git", "init"], check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        check=True,
+        capture_output=True,
+    )
 
     # Create commits with different categories
     commits = [
@@ -537,7 +557,11 @@ def test_suggest_next_tasks_with_bugfixes(initialized_project: Path) -> None:
     # Initialize Git repo
     subprocess.run(["git", "init"], check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        check=True,
+        capture_output=True,
+    )
 
     # Create multiple bugfix commits
     for i in range(3):
@@ -572,7 +596,11 @@ def test_suggest_next_tasks_with_features(initialized_project: Path) -> None:
     # Initialize Git repo
     subprocess.run(["git", "init"], check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        check=True,
+        capture_output=True,
+    )
 
     # Create feature commits
     for i in range(2):
@@ -603,13 +631,21 @@ def test_suggest_next_tasks_empty_history(initialized_project: Path) -> None:
     # Initialize empty Git repo
     subprocess.run(["git", "init"], check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        check=True,
+        capture_output=True,
+    )
 
     # Create at least one commit (empty repo may cause errors)
     test_file = Path(initialized_project) / "README.md"
     test_file.write_text("# Test")
     subprocess.run(["git", "add", "."], check=True, capture_output=True)
-    subprocess.run(["git", "commit", "-m", "chore: initial commit"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "chore: initial commit"],
+        check=True,
+        capture_output=True,
+    )
 
     # Get suggestions with limited days (should return 0 suggestions)
     result = suggest_next_tasks(since_days=0)
@@ -630,7 +666,11 @@ def test_suggest_next_tasks_max_suggestions(initialized_project: Path) -> None:
     # Initialize Git and create many commits
     subprocess.run(["git", "init"], check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        check=True,
+        capture_output=True,
+    )
 
     for i in range(10):
         test_file = Path(initialized_project) / f"file{i}.txt"
@@ -660,7 +700,11 @@ def test_suggest_next_tasks_filters_duplicates(initialized_project: Path) -> Non
     # Initialize Git repo
     subprocess.run(["git", "init"], check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        check=True,
+        capture_output=True,
+    )
 
     # Create bugfix commits
     for i in range(3):
@@ -690,7 +734,11 @@ def test_extract_decisions_from_commits_basic(initialized_project: Path) -> None
     # Initialize Git repo
     subprocess.run(["git", "init"], check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        check=True,
+        capture_output=True,
+    )
 
     # Create commit with decision keyword
     test_file = Path(initialized_project) / "framework.txt"
@@ -722,7 +770,11 @@ def test_extract_decisions_dependency_changes(initialized_project: Path) -> None
     # Initialize Git repo
     subprocess.run(["git", "init"], check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        check=True,
+        capture_output=True,
+    )
 
     # Create requirements.txt change (dependency file)
     req_file = Path(initialized_project) / "requirements.txt"
@@ -752,7 +804,11 @@ def test_extract_decisions_confidence_filter(initialized_project: Path) -> None:
     # Initialize Git repo
     subprocess.run(["git", "init"], check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        check=True,
+        capture_output=True,
+    )
 
     # Create commit
     test_file = Path(initialized_project) / "test.txt"
@@ -787,7 +843,11 @@ def test_extract_decisions_no_decisions(initialized_project: Path) -> None:
     # Initialize Git repo
     subprocess.run(["git", "init"], check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        check=True,
+        capture_output=True,
+    )
 
     # Create regular commit (not a decision)
     test_file = Path(initialized_project) / "test.txt"
@@ -818,7 +878,11 @@ def test_extract_decisions_max_candidates(initialized_project: Path) -> None:
     # Initialize Git repo
     subprocess.run(["git", "init"], check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        check=True,
+        capture_output=True,
+    )
 
     # Create many commits with decision keywords
     for i in range(10):
@@ -855,13 +919,21 @@ def test_get_project_context_minimal(initialized_project: Path) -> None:
     # Initialize Git
     subprocess.run(["git", "init"], check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        check=True,
+        capture_output=True,
+    )
 
     # Create initial commit
     test_file = Path(initialized_project) / "README.md"
     test_file.write_text("# Test")
     subprocess.run(["git", "add", "."], check=True, capture_output=True)
-    subprocess.run(["git", "commit", "-m", "chore: initial commit"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "chore: initial commit"],
+        check=True,
+        capture_output=True,
+    )
 
     # Add KB entry and task
     from datetime import datetime
@@ -918,13 +990,21 @@ def test_get_project_context_standard(initialized_project: Path) -> None:
     # Initialize Git
     subprocess.run(["git", "init"], check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        check=True,
+        capture_output=True,
+    )
 
     # Create initial commit
     test_file = Path(initialized_project) / "README.md"
     test_file.write_text("# Test")
     subprocess.run(["git", "add", "."], check=True, capture_output=True)
-    subprocess.run(["git", "commit", "-m", "chore: initial commit"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "chore: initial commit"],
+        check=True,
+        capture_output=True,
+    )
 
     kb = KnowledgeBase(initialized_project)
     tm = TaskManager(initialized_project)
@@ -970,7 +1050,11 @@ def test_get_project_context_full(initialized_project: Path) -> None:
     # Initialize Git
     subprocess.run(["git", "init"], check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        check=True,
+        capture_output=True,
+    )
 
     # Create commits
     for i in range(3):
@@ -1006,13 +1090,21 @@ def test_generate_project_summary(initialized_project: Path) -> None:
     # Initialize Git
     subprocess.run(["git", "init"], check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        check=True,
+        capture_output=True,
+    )
 
     # Create initial commit
     test_file = Path(initialized_project) / "README.md"
     test_file.write_text("# Test")
     subprocess.run(["git", "add", "."], check=True, capture_output=True)
-    subprocess.run(["git", "commit", "-m", "chore: initial commit"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "chore: initial commit"],
+        check=True,
+        capture_output=True,
+    )
 
     kb = KnowledgeBase(initialized_project)
     tm = TaskManager(initialized_project)
@@ -1064,13 +1156,21 @@ def test_generate_project_summary_with_blockers(initialized_project: Path) -> No
     # Initialize Git
     subprocess.run(["git", "init"], check=True, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], check=True, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        check=True,
+        capture_output=True,
+    )
 
     # Create initial commit
     test_file = Path(initialized_project) / "README.md"
     test_file.write_text("# Test")
     subprocess.run(["git", "add", "."], check=True, capture_output=True)
-    subprocess.run(["git", "commit", "-m", "chore: initial commit"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "chore: initial commit"],
+        check=True,
+        capture_output=True,
+    )
 
     tm = TaskManager(initialized_project)
 
