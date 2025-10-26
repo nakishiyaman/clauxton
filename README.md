@@ -9,14 +9,14 @@
 [![PyPI Version](https://img.shields.io/pypi/v/clauxton)](https://pypi.org/project/clauxton/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/clauxton)](https://pypi.org/project/clauxton/)
 [![Development Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/nakishiyaman/clauxton)
-[![Test Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen.svg)](https://github.com/nakishiyaman/clauxton)
+[![Test Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen.svg)](https://github.com/nakishiyaman/clauxton)
 [![codecov](https://codecov.io/gh/nakishiyaman/clauxton/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/clauxton)
 
-> ✅ **Production Ready**: Clauxton v0.11.2 is stable and ready for production use. Complete with Repository Map (12-language support), TF-IDF search, task management, conflict detection, and comprehensive testing (1,370 tests, 85% coverage).
+> ✅ **Production Ready**: Clauxton v0.12.0 is stable and ready for production use. Complete with Semantic Intelligence (embeddings, vector search), Git Analysis (pattern extraction, task suggestions), Repository Map (12-language support), and comprehensive testing (1,637 tests, 86% coverage).
+> 🤖 **v0.12.0** (2025-10-26): **Semantic Intelligence & Git Analysis** - Local semantic search (embeddings + FAISS), AI-powered task suggestions from commits, decision extraction, 10 new MCP tools (32 total)!
 > ⚡ **v0.11.2** (2025-10-25): Test Optimization - 97% faster test execution (52min → 1m46s), CI improvements for all language parsers!
-> 🚀 **v0.11.1** (2025-10-25): Daily Workflow Commands - `morning` briefing, `daily`/`weekly` summaries, `trends` analysis, `pause`/`resume` work tracking, unified `search`, and `task add --start` for instant focus!
-> 🎯 **v0.11.0** (2025-10-24): Repository Map - Multi-language symbol extraction (12 languages), 3 search modes (exact/fuzzy/semantic), 441 intelligence tests!
-> ✨ **v0.10.0** (2025-10-22): Bulk operations, undo functionality, human-in-the-loop confirmations, and 22 MCP tools!
+> 🚀 **v0.11.1** (2025-10-25): Daily Workflow Commands - `morning` briefing, `daily`/`weekly` summaries, `trends` analysis, `pause`/`resume` work tracking!
+> 🎯 **v0.11.0** (2025-10-24): Repository Map - Multi-language symbol extraction (12 languages), 3 search modes (exact/fuzzy/semantic)!
 
 Clauxton is a Claude Code plugin that provides **persistent project context** to solve AI-assisted development pain points.
 
@@ -36,6 +36,9 @@ Clauxton is a Claude Code plugin that provides **persistent project context** to
 # Basic installation (fast, ~30 seconds)
 pip install clauxton
 
+# Install with semantic features (recommended for v0.12.0+)
+pip install clauxton[semantic]              # Semantic search + embeddings (~2 minutes)
+
 # Or install with language parsers for Repository Map:
 pip install clauxton[parsers-python]       # Python only
 pip install clauxton[parsers-web]           # JavaScript/TypeScript/PHP
@@ -44,7 +47,7 @@ pip install clauxton[parsers-enterprise]    # Java/C#/Kotlin
 pip install clauxton[parsers-all]           # All 12 languages (~2 minutes)
 
 # Verify installation
-clauxton --version  # Should show: clauxton, version 0.11.2
+clauxton --version  # Should show: clauxton, version 0.12.0
 ```
 
 **Note**: Language parsers are optional. Install only what you need for your project.
@@ -183,7 +186,7 @@ pip install -e .
 
 ### MCP Integration with Claude Code
 
-Set up Clauxton as MCP tools in Claude Code (22+ tools available):
+Set up Clauxton as MCP tools in Claude Code (32 tools available):
 
 ```bash
 # 🆕 v0.11.0: Automatic setup with single command
@@ -225,10 +228,13 @@ Claude Code: (Begins implementation)
 - 📋 **Task Management** - AI-powered task tracking with automatic dependency inference
 - ⚠️ **Conflict Detection** - Predict file conflicts before they occur, get safe execution order
 - 🔍 **TF-IDF Search** - Relevance-based search with intelligent ranking (powered by scikit-learn)
-- 🗺️ **Repository Map** - ⭐ **NEW v0.11.0**: Automatic codebase indexing with symbol search (exact/fuzzy/semantic)
-- 🌅 **Daily Workflow Commands** - ⭐ **NEW v0.11.1**: `morning` briefing, `daily`/`weekly` summaries, `trends` analysis, `pause`/`resume` tracking, unified `search`
-- 🔒 **Privacy First** - Local-only by default, no cloud dependencies
-- 🤖 **MCP Integration** - Seamless integration with Claude Code via Model Context Protocol (22 tools)
+- 🤖 **Semantic Search** - ⭐ **NEW v0.12.0**: Local embeddings + FAISS vector search (100% private, no API costs)
+- 📊 **Git Analysis** - ⭐ **NEW v0.12.0**: Pattern extraction, decision detection, AI task suggestions from commits
+- 🧠 **Enhanced Context** - ⭐ **NEW v0.12.0**: Project summaries, knowledge graphs, related entry discovery
+- 🗺️ **Repository Map** - Automatic codebase indexing with symbol search (12 languages, 3 modes)
+- 🌅 **Daily Workflow Commands** - `morning` briefing, `daily`/`weekly` summaries, `trends` analysis, `pause`/`resume` tracking
+- 🔒 **Privacy First** - 100% local by default, no cloud dependencies
+- 🤖 **MCP Integration** - Seamless integration with Claude Code via Model Context Protocol (32 tools)
 
 ### ✅ Core Features (v0.10.0)
 
@@ -401,21 +407,44 @@ for symbol in go_symbols:
 **Logging Tools** (1) - **NEW v0.10.0**:
 - ✅ `get_recent_logs` - View recent operation logs
 
-**Repository Map Tools** (2) - ⭐ **NEW v0.11.0**:
+**Repository Map Tools** (2) - **NEW v0.11.0**:
 - ✅ `index_repository` - Index codebase with symbol extraction
 - ✅ `search_symbols` - Search symbols with exact/fuzzy/semantic modes
 
+**Semantic Search Tools** (3) - ⭐ **NEW v0.12.0**:
+- ✅ `search_knowledge_semantic` - Semantic KB search with embeddings
+- ✅ `search_tasks_semantic` - Semantic task search with filtering
+- ✅ `search_files_semantic` - Semantic code search by meaning
+
+**Git Analysis Tools** (3) - ⭐ **NEW v0.12.0**:
+- ✅ `analyze_recent_commits` - Analyze commit patterns and statistics
+- ✅ `suggest_next_tasks` - AI-powered task suggestions from commits
+- ✅ `extract_decisions_from_commits` - Extract architecture decisions
+
+**Context & Intelligence Tools** (4) - ⭐ **NEW v0.12.0**:
+- ✅ `get_project_context` - Rich project context for Claude Code
+- ✅ `generate_project_summary` - Auto-generated project summaries
+- ✅ `get_knowledge_graph` - Knowledge graph visualization
+- ✅ `find_related_entries` - Discover related KB/tasks
+
+**Total**: 32 tools (22 base + 10 new in v0.12.0)
+
 #### 📊 Quality Metrics
-- ✅ **1228 Tests** - Comprehensive test coverage (758 → 1228, +470 tests in v0.11.0):
+- ✅ **1,637 Tests** - Comprehensive test coverage (1,228 → 1,637, +409 tests in v0.12.0):
   - Core modules: 87-96% coverage (knowledge_base, task_manager, conflict_detector, etc.)
-  - Intelligence modules: 91-92% coverage (repository_map, symbol_extractor, parser) - **NEW v0.11.0**
+  - Intelligence modules: 91-92% coverage (repository_map, symbol_extractor, parser)
     - 441 intelligence tests covering 12 languages (Python, JS, TS, Go, Rust, C++, Java, C#, PHP, Ruby, Swift, Kotlin)
-  - MCP server: 35% coverage (22 tools, all tested individually)
-  - CLI modules: 84-100% coverage (main, tasks, conflicts, config, repository)
-  - Utils modules: 15-29% coverage (targeted for future improvement)
-- ✅ **91% Coverage** - High code quality maintained across all modules
-- ✅ **Type Safe** - Full Pydantic validation with strict mode
-- ✅ **Production Ready** - Stable v0.11.0 release with 12-language Repository Map
+  - **Semantic modules**: 91-98% coverage (embeddings, indexer, search, vector_store) - ⭐ **NEW v0.12.0**
+    - 126 semantic tests (embeddings, vector store, indexer, search engine)
+  - **Analysis modules**: 95-99% coverage (git_analyzer, pattern_extractor, decision_extractor, task_suggester) - ⭐ **NEW v0.12.0**
+    - 82 analysis tests (commit analysis, pattern extraction, task suggestions)
+  - MCP server: 92% coverage (32 tools, all tested individually) - ⭐ **Updated v0.12.0**
+    - 21 new MCP integration tests (semantic + analysis + context tools)
+  - CLI modules: 69-94% coverage (main, tasks, conflicts, config, repository, mcp)
+  - Utils modules: 89-97% coverage (yaml, file, backup, logger)
+- ✅ **86% Coverage** - High code quality maintained across all modules (including new v0.12.0 features)
+- ✅ **Type Safe** - Full Pydantic validation with strict mypy mode
+- ✅ **Production Ready** - Stable v0.12.0 release with Semantic Intelligence & Git Analysis
 
 ### ⚠️ Conflict Detection
 
@@ -429,19 +458,27 @@ for symbol in go_symbols:
 
 ### 🔮 Future Enhancements
 
-**v0.11.0 Complete** (Released 2025-10-24) ✅:
-- ✅ **Repository Map**: 12-language symbol extraction
-- ✅ **3 Search Modes**: Exact, Fuzzy, Semantic
-- ✅ **441 intelligence tests** across all languages
-- ✅ **Performance**: 1000+ files in 1-2s
-- ✅ **MCP Integration**: 2 new tools (22 total)
+**v0.12.0 Complete** (Released 2025-10-26) ✅:
+- ✅ **Semantic Intelligence**: Local embeddings + FAISS vector search (100% private, no API costs)
+- ✅ **Git Analysis**: Pattern extraction, decision detection from commits
+- ✅ **Task Suggestions**: AI-powered recommendations from commit history
+- ✅ **Enhanced Context**: Project summaries, knowledge graphs, related entries
+- ✅ **10 New MCP Tools**: Semantic search (3), Git analysis (3), Context (4)
+- ✅ **208 New Tests**: 126 semantic + 82 analysis tests
+- ✅ **Production Ready**: A grade (94.7/100) quality
 
-**v0.12.0 Roadmap** (Planned):
+**v0.13.0 Roadmap** (Planned):
+- 📋 **Proactive Intelligence**: Real-time monitoring with watchdog
+- 📋 **Background Monitoring**: Detect patterns as you code
+- 📋 **Learning from Behavior**: Personalized suggestions
+- 📋 **Adaptive Context**: Time-based and activity-based context
+
+**v0.14.0+ Future Vision**:
+- 📋 **Interactive TUI**: Modern terminal interface with AI panels
+- 📋 **Web Dashboard**: Browser-based UI for team collaboration
 - 📋 **Line-Level Conflict Detection**: Detect conflicts at code line level
-- 📋 **Drift Detection**: Track scope expansion in tasks
 - 📋 **Enhanced Event Logging**: Complete audit trail with events.jsonl
 - 📋 **Lifecycle Hooks**: Pre-commit and post-edit hooks
-- 📋 **Web Dashboard**: Browser-based UI for task/KB management
 
 ---
 
@@ -453,23 +490,34 @@ for symbol in go_symbols:
 # Install latest stable version (includes all features)
 pip install clauxton
 
+# Install with semantic features (recommended for v0.12.0+)
+pip install clauxton[semantic]
+
 # Verify installation
-clauxton --version  # Should show: clauxton, version 0.11.0
+clauxton --version  # Should show: clauxton, version 0.12.0
 
 # Install specific version (example)
-pip install clauxton==0.10.1
+pip install clauxton==0.12.0
 ```
 
 **What's Included**:
 - ✅ Knowledge Base management (CRUD + TF-IDF search + Markdown export)
 - ✅ Task Management system with auto-dependencies + YAML bulk import
 - ✅ Conflict Detection (pre-merge conflict prediction)
+- ✅ Repository Map (12-language symbol extraction)
 - ✅ Undo/Rollback functionality with operation history
 - ✅ Configurable confirmation modes (always/auto/never)
 - ✅ Operation logging with 30-day retention
 - ✅ Automatic backups (last 10 retained)
-- ✅ MCP Server (22 tools for Claude Code)
-- ✅ All dependencies (scikit-learn, numpy, pydantic, click, pyyaml, gitpython, mcp)
+- ✅ MCP Server (32 tools for Claude Code)
+- ✅ All dependencies (scikit-learn, numpy, pydantic, click, pyyaml, gitpython, mcp, rich)
+
+**Optional Semantic Features** (install with `pip install clauxton[semantic]`):
+- ✅ Semantic Search (local embeddings with sentence-transformers)
+- ✅ FAISS Vector Store (fast similarity search)
+- ✅ Git Analysis (pattern extraction, task suggestions)
+- ✅ Enhanced Context (project summaries, knowledge graphs)
+- ✅ 10 Additional MCP Tools (semantic search, git analysis, context)
 
 ### Development Installation
 
@@ -768,7 +816,7 @@ See [YAML Format Reference](docs/yaml-format.md) for complete schema documentati
 
 ## 🏗️ Architecture
 
-### Current Architecture (v0.10.0)
+### Current Architecture (v0.12.0)
 
 ```
 clauxton/
@@ -780,6 +828,20 @@ clauxton/
 │   ├── conflict_detector.py   # Conflict detection ✅
 │   ├── operation_history.py   # Undo/history tracking ✅
 │   └── confirmation_manager.py # HITL confirmations ✅
+├── semantic/                  # Semantic Intelligence (v0.12.0) 🆕
+│   ├── embeddings.py          # Local embedding generation ✅
+│   ├── vector_store.py        # FAISS vector store ✅
+│   ├── indexer.py             # Index KB/Tasks/Files ✅
+│   └── search_engine.py       # Semantic search engine ✅
+├── analysis/                  # Git Analysis (v0.12.0) 🆕
+│   ├── git_analyzer.py        # Commit analysis ✅
+│   ├── pattern_extractor.py   # Pattern recognition ✅
+│   ├── task_suggester.py      # Task suggestions ✅
+│   └── decision_extractor.py  # Decision extraction ✅
+├── intelligence/              # Code Intelligence (v0.11.0)
+│   ├── symbol_extractor.py    # Multi-language symbol extraction ✅
+│   ├── parser.py              # Tree-sitter parsers ✅
+│   └── repository_map.py      # Repository indexing ✅
 ├── utils/                     # Utility modules
 │   ├── yaml_utils.py          # Safe YAML I/O ✅
 │   ├── file_utils.py          # Secure file operations ✅
@@ -791,7 +853,7 @@ clauxton/
 │   ├── conflicts.py           # Conflict detection commands ✅
 │   └── config.py              # Configuration commands ✅
 └── mcp/                       # MCP Server integration
-    └── server.py              # 17 MCP tools ✅
+    └── server.py              # 32 MCP tools ✅
 ```
 
 **Storage**:
@@ -800,6 +862,10 @@ clauxton/
 - `.clauxton/operation-history.jsonl` - Operation history (undo)
 - `.clauxton/logs/` - Daily operation logs
 - `.clauxton/backups/` - Automatic backups (last 10)
+- `.clauxton/semantic/` - Vector indexes for semantic search (v0.12.0) 🆕
+  - `kb_index.faiss` - Knowledge Base embeddings
+  - `tasks_index.faiss` - Task embeddings
+  - `files_index.faiss` - File embeddings
 
 See [docs/architecture.md](docs/architecture.md) for complete design.
 
@@ -811,7 +877,11 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 - [Quick Start Guide](docs/quick-start.md) - Get started in 5 minutes (CLI)
 - **[Developer Workflow Guide](docs/DEVELOPER_WORKFLOW_GUIDE.md)** - Complete development workflow with examples and diagrams ✨ v0.10.0
 - **[Installation Guide](docs/INSTALLATION_GUIDE.md)** - Shell alias setup, virtual environment isolation explained
-- **[MCP Integration Guide](docs/MCP_INTEGRATION_GUIDE.md)** - Step-by-step Claude Code integration (22 tools)
+- **[MCP Integration Guide](docs/MCP_INTEGRATION_GUIDE.md)** - Step-by-step Claude Code integration (32 tools)
+- **[Semantic Search Guide](docs/SEMANTIC_SEARCH_GUIDE.md)** - Local semantic search with embeddings and FAISS ✨ v0.12.0 🆕
+- **[Git Analysis Guide](docs/GIT_ANALYSIS_GUIDE.md)** - Pattern extraction and task suggestions from commits ✨ v0.12.0 🆕
+- **[Repository Map Guide](docs/REPOSITORY_MAP_GUIDE.md)** - Multi-language symbol extraction and search ✨ v0.11.0
+- **[Daily Workflow Guide](docs/DAILY_WORKFLOW_GUIDE.md)** - Morning briefing, summaries, and trends ✨ v0.11.1
 - [Tutorial: Your First Knowledge Base](docs/tutorial-first-kb.md) - 30-minute beginner guide
 - [Use Cases & Examples](docs/use-cases.md) - Real-world scenarios and implementations
 - [MCP Server Quick Start](docs/mcp-server-quickstart.md) - Get started with Claude Code
@@ -838,12 +908,12 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 
 ## 🧪 Testing
 
-Clauxton has comprehensive test coverage (85%, 1,367 tests) with optimized execution time.
+Clauxton has comprehensive test coverage (86%, 1,637 tests) with optimized execution time.
 
 ### Quick Tests (Default - Recommended)
 
 ```bash
-pytest  # ~2 minutes, 1,348 tests
+pytest  # ~2-3 minutes, 1,617 tests
 ```
 
 Automatically excludes performance tests for fast feedback during development.
@@ -851,7 +921,7 @@ Automatically excludes performance tests for fast feedback during development.
 ### Performance Tests
 
 ```bash
-pytest -m "performance"  # ~70 minutes, 19 tests
+pytest -m "performance"  # ~70 minutes, 20 tests
 ```
 
 Run before releases or when optimizing performance. Also runs automatically every Sunday via CI.
@@ -859,7 +929,7 @@ Run before releases or when optimizing performance. Also runs automatically ever
 ### All Tests
 
 ```bash
-pytest -m ""  # ~80 minutes, 1,367 tests
+pytest -m ""  # ~80 minutes, 1,637 tests
 ```
 
 Complete test suite including all performance tests.
@@ -873,9 +943,12 @@ open htmlcov/index.html  # View detailed coverage report
 
 ### Test Statistics
 
-- **Total Tests**: 1,367
-- **Default Tests**: 1,348 (excludes 19 performance tests)
-- **Coverage**: 85%
+- **Total Tests**: 1,637 (+270 from v0.11.2)
+- **Default Tests**: 1,617 (excludes 20 performance tests)
+- **Coverage**: 86% overall
+  - v0.12.0 features: 91-100% coverage
+  - Semantic modules: 91-98%
+  - Analysis modules: 95-99%
 - **CI Execution Time**: ~5-8 minutes
 - **Performance Tests**: Weekly (Sundays 02:00 UTC) + Manual trigger
 
@@ -906,9 +979,10 @@ MIT License - see [LICENSE](LICENSE) for details.
 | **Phase 0: Foundation** | ✅ Complete | 100% | v0.1.0 |
 | **Phase 1: Core Engine** | ✅ Complete | 100% | v0.8.0 |
 | **Phase 2: Conflict Detection** | ✅ Complete | 100% | v0.9.0-beta |
-| **Phase 3: Enhanced UX** | ✅ Complete | 100% | **v0.10.0** (Released 2025-10-22) |
-| **Phase 4: Repository Map** | ✅ Complete | 100% | **v0.11.0** (Released 2025-10-24) |
-| Polish & Documentation | 📋 Planned | 0% | v0.12.0 (target) |
+| **Phase 3: Enhanced UX** | ✅ Complete | 100% | v0.10.0 (2025-10-22) |
+| **Phase 4: Repository Map** | ✅ Complete | 100% | v0.11.0 (2025-10-24) |
+| **Phase 5: Semantic Intelligence** | ✅ Complete | 100% | **v0.12.0** (Released 2025-10-26) |
+| **Phase 6: Proactive Intelligence** | 📋 Planned | 0% | v0.13.0 (target) |
 | v1.0 Public Launch | 📋 Planned | 0% | v1.0.0 (target) |
 
 **Phase 1 Complete** (v0.8.0 - Released 2025-10-19) ✅:
@@ -952,6 +1026,24 @@ MIT License - see [LICENSE](LICENSE) for details.
 - 🆕 **441 intelligence tests** (12 languages, 91% coverage)
 - 🆕 **1,228 total tests** (+470 from v0.10.0)
 - 🆕 **Production ready with comprehensive error handling**
+
+**Phase 5 Complete** (v0.12.0 - Released 2025-10-26) ✅:
+- 🤖 **Semantic Intelligence** - 100% local, no API costs
+- 🆕 **Semantic Search**: Local embeddings (sentence-transformers) + FAISS vector store
+  - `search_knowledge_semantic`, `search_tasks_semantic`, `search_files_semantic`
+  - 126 semantic tests (embeddings, vector store, indexer, search engine)
+  - 91-98% coverage, <200ms search speed
+- 🆕 **Git Analysis**: Pattern extraction, decision detection from commits
+  - `analyze_recent_commits`, `suggest_next_tasks`, `extract_decisions_from_commits`
+  - 82 analysis tests (commit analysis, pattern extraction, task suggestions)
+  - 95-99% coverage, <5s analysis for 100 commits
+- 🆕 **Enhanced Context**: Project intelligence for Claude Code
+  - `get_project_context`, `generate_project_summary`, `get_knowledge_graph`, `find_related_entries`
+  - Rich project context, knowledge graph visualization
+- 🆕 **10 new MCP Tools** (32 tools total: +3 semantic, +3 analysis, +4 context)
+- 🆕 **208 new tests** (126 semantic + 82 analysis)
+- 🆕 **1,637 total tests** (+409 from v0.11.0), 86% coverage
+- 🆕 **Quality Grade A** (94.7/100), production ready
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 
