@@ -16,9 +16,45 @@ from clauxton.core.knowledge_base import KnowledgeBase
 from clauxton.core.models import KnowledgeBaseEntry, Task
 from clauxton.core.task_manager import TaskManager
 from clauxton.intelligence.repository_map import RepositoryMap
+from clauxton.proactive.config import MonitorConfig
+from clauxton.proactive.event_processor import EventProcessor
+from clauxton.proactive.file_monitor import FileMonitor
 
 # Create MCP server instance
 mcp = FastMCP("Clauxton")
+
+# Global monitor instances (initialized when needed)
+_file_monitor: Optional[FileMonitor] = None
+_event_processor: Optional[EventProcessor] = None
+
+
+def _get_project_root() -> Path:
+    """Get project root directory."""
+    return Path.cwd()
+
+
+def _get_file_monitor() -> FileMonitor:
+    """Get or create FileMonitor instance."""
+    global _file_monitor
+
+    if _file_monitor is None:
+        project_root = _get_project_root()
+        config_path = project_root / ".clauxton" / "monitoring_config.yml"
+        config = MonitorConfig.load_from_file(config_path)
+        _file_monitor = FileMonitor(project_root, config=config)
+
+    return _file_monitor
+
+
+def _get_event_processor() -> EventProcessor:
+    """Get or create EventProcessor instance."""
+    global _event_processor
+
+    if _event_processor is None:
+        project_root = _get_project_root()
+        _event_processor = EventProcessor(project_root)
+
+    return _event_processor
 
 
 @mcp.tool()
@@ -2616,6 +2652,138 @@ def find_related_entries(
         return {
             "status": "error",
             "message": f"Failed to find related entries: {str(e)}",
+            "error": str(e),
+        }
+
+
+@mcp.tool()
+def watch_project_changes(
+    enabled: bool, config: Optional[dict[str, Any]] = None
+) -> dict[str, Any]:
+    """
+    Enable or disable real-time file monitoring.
+
+    Args:
+        enabled: True to enable monitoring, False to disable
+        config: Optional configuration overrides
+
+    Returns:
+        Status and current configuration
+    """
+    try:
+        monitor = _get_file_monitor()
+
+        if enabled:
+            if not monitor.is_running:
+                # Update config if provided
+                if config:
+                    # Merge with existing config
+                    monitor.config = MonitorConfig(**config)
+
+                monitor.start()
+
+                return {
+                    "status": "enabled",
+                    "message": "File monitoring started",
+                    "config": monitor.config.model_dump(),
+                }
+            else:
+                return {
+                    "status": "already_enabled",
+                    "message": "File monitoring already running",
+                    "config": monitor.config.model_dump(),
+                }
+        else:
+            if monitor.is_running:
+                monitor.stop()
+
+                return {
+                    "status": "disabled",
+                    "message": "File monitoring stopped",
+                }
+            else:
+                return {
+                    "status": "already_disabled",
+                    "message": "File monitoring not running",
+                }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+        }
+
+
+@mcp.tool()
+async def get_recent_changes(
+    minutes: int = 10, include_patterns: bool = True
+) -> dict[str, Any]:
+    """
+    Get recent file changes and detected patterns.
+
+    Args:
+        minutes: Time window in minutes (default: 10)
+        include_patterns: Include detected patterns (default: True)
+
+    Returns:
+        Recent changes and activity summary
+    """
+    try:
+        monitor = _get_file_monitor()
+
+        # Get recent changes
+        changes = monitor.get_recent_changes(minutes=minutes)
+
+        if not changes:
+            return {
+                "status": "no_changes",
+                "message": f"No changes in last {minutes} minutes",
+                "changes": [],
+                "patterns": [],
+            }
+
+        # Create activity summary
+        processor = _get_event_processor()
+        summary = await processor.create_activity_summary(changes, minutes)
+
+        # Save activity
+        await processor.save_activity(summary)
+
+        # Build response
+        response = {
+            "status": "success",
+            "time_window_minutes": minutes,
+            "total_files_changed": summary.total_files_changed,
+            "changes": [
+                {
+                    "path": str(c.path),
+                    "change_type": c.change_type.value,
+                    "timestamp": c.timestamp.isoformat(),
+                    "src_path": str(c.src_path) if c.src_path else None,
+                }
+                for c in changes
+            ],
+        }
+
+        if include_patterns and summary.patterns:
+            response["patterns"] = [
+                {
+                    "pattern_type": p.pattern_type.value,
+                    "files": [str(f) for f in p.files],
+                    "confidence": p.confidence,
+                    "description": p.description,
+                }
+                for p in summary.patterns
+            ]
+
+        if summary.most_active_directory:
+            response["most_active_directory"] = str(summary.most_active_directory)
+
+        return response
+
+    except Exception as e:
+        return {
+            "status": "error",
             "error": str(e),
         }
 
