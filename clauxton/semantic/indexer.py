@@ -77,11 +77,11 @@ class Indexer:
             >>> from pathlib import Path
             >>> indexer = Indexer(Path("."), engine, store)
         """
-        self.project_root = project_root
+        self.project_root = Path(project_root)
         self.embedding_engine = embedding_engine
         self.vector_store = vector_store
-        self.kb = KnowledgeBase(project_root)
-        self.task_manager = TaskManager(project_root)
+        self.kb = KnowledgeBase(self.project_root)
+        self.task_manager = TaskManager(self.project_root)
 
     def index_knowledge_base(self, force: bool = False) -> int:
         """
@@ -98,6 +98,8 @@ class Indexer:
             >>> print(f"Indexed {count} entries")
             Indexed 10 entries
         """
+        # Invalidate cache to ensure we get latest entries from disk
+        self.kb._invalidate_cache()
         entries = self.kb.list_all()
         indexed_count = 0
 
@@ -167,6 +169,8 @@ class Indexer:
             >>> print(f"Indexed {count} tasks")
             Indexed 5 tasks
         """
+        # Invalidate cache to ensure we get latest tasks from disk
+        self.task_manager._invalidate_cache()
         tasks = self.task_manager.list_all()
         indexed_count = 0
 

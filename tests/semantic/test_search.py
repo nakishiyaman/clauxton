@@ -6,7 +6,6 @@ This module tests the SemanticSearchEngine class for KB/Tasks/Files searching.
 
 import os
 from datetime import datetime
-from pathlib import Path
 
 import pytest
 
@@ -316,7 +315,10 @@ class TestSearchTasks:
         # Top result should be about authentication
         top_result = results[0]
         assert top_result["source_type"] == "task"
-        assert "authentication" in top_result["title"].lower() or "auth" in top_result["title"].lower()
+        assert (
+            "authentication" in top_result["title"].lower()
+            or "auth" in top_result["title"].lower()
+        )
 
     def test_search_tasks_with_status_filter(self, search_engine, indexed_tasks):
         """Test task search with status filter."""

@@ -274,16 +274,15 @@ class TestIndexKnowledgeBase:
 
         # Update entry
         later = now + timedelta(seconds=10)
-        entry2 = KnowledgeBaseEntry(
-            id="KB-20251026-001",
-            title="Test Entry Updated",
-            category="architecture",
-            content="Updated content",
-            tags=["test", "updated"],
-            created_at=now,
-            updated_at=later,
+        kb.update(
+            "KB-20251026-001",
+            {
+                "title": "Test Entry Updated",
+                "content": "Updated content",
+                "tags": ["test", "updated"],
+                "updated_at": later,
+            },
         )
-        kb.update(entry2.id, entry2)
 
         # Reindex (should detect change)
         count2 = indexer.index_knowledge_base()

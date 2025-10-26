@@ -261,5 +261,5 @@ class EmbeddingEngine:
             return 384
 
         # For other models, we need to load to get dimension
-        dimension: int = self.model.get_sentence_embedding_dimension()
-        return dimension
+        dimension = self.model.get_sentence_embedding_dimension()
+        return dimension if dimension is not None else 384

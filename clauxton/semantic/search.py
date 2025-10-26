@@ -104,8 +104,14 @@ class SemanticSearchEngine:
         """
         self.project_root = project_root
         self.semantic_dir = project_root / ".clauxton" / "semantic"
-        self.embedding_engine = embedding_engine if embedding_engine is not None else EmbeddingEngine()
-        self.vector_store = vector_store if vector_store is not None else VectorStore(dimension=384)
+        self.embedding_engine = (
+            embedding_engine if embedding_engine is not None
+            else EmbeddingEngine()
+        )
+        self.vector_store = (
+            vector_store if vector_store is not None
+            else VectorStore(dimension=384)
+        )
 
     def search_kb(
         self,

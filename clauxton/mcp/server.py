@@ -1556,6 +1556,296 @@ def search_files_semantic(
         }
 
 
+@mcp.tool()
+def analyze_recent_commits(
+    since_days: int = 7,
+    max_count: Optional[int] = None,
+) -> dict[str, Any]:
+    """
+    Analyze recent Git commits to extract patterns and insights.
+
+    This tool analyzes recent commit history to understand development activity,
+    identify patterns, and provide insights for decision-making.
+
+    Args:
+        since_days: Number of days to look back (default: 7)
+        max_count: Maximum number of commits to analyze
+
+    Returns:
+        Analysis results including commit patterns, categories, and statistics
+
+    Example:
+        >>> analyze_recent_commits(since_days=7)
+        {
+            "status": "success",
+            "commit_count": 15,
+            "analysis": {
+                "category_distribution": {"feature": 5, "bugfix": 3, "refactor": 2},
+                "module_distribution": {"core": 8, "cli": 4, "mcp": 3},
+                "impact_distribution": {"high": 2, "medium": 8, "low": 5},
+                "top_keywords": ["auth", "test", "api", "db"]
+            },
+            "commits": [...]
+        }
+
+    Use Cases:
+        1. **Activity Summary**: Understand recent development activity
+        2. **Pattern Detection**: Identify recurring patterns in commits
+        3. **Team Insights**: Analyze team productivity and focus areas
+        4. **Quality Metrics**: Track bug fixes vs features ratio
+
+    Notes:
+        - Requires GitPython package
+        - Project must be a Git repository
+        - Returns detailed commit metadata and pattern analysis
+    """
+    try:
+        from clauxton.analysis.git_analyzer import GitAnalyzer, NotAGitRepositoryError
+        from clauxton.analysis.pattern_extractor import PatternExtractor
+
+        analyzer = GitAnalyzer(Path.cwd())
+        extractor = PatternExtractor()
+
+        # Get recent commits
+        commits = analyzer.get_recent_commits(since_days=since_days, max_count=max_count)
+
+        if not commits:
+            return {
+                "status": "success",
+                "commit_count": 0,
+                "message": f"No commits found in the last {since_days} days",
+            }
+
+        # Analyze patterns
+        from collections import Counter
+        categories = []
+        modules = []
+        keywords = []
+        impacts = []
+        commit_data = []
+
+        for commit in commits:
+            patterns = extractor.detect_patterns(commit)
+            categories.append(patterns["category"])
+            modules.append(patterns["module"])
+            keywords.extend(patterns["keywords"])
+            impacts.append(patterns["impact"])
+
+            commit_data.append({
+                "sha": commit.sha[:7],
+                "message": commit.message.split("\n")[0][:100],
+                "author": commit.author,
+                "date": commit.date.isoformat(),
+                "files_changed": len(commit.files),
+                "category": patterns["category"],
+                "module": patterns["module"],
+                "impact": patterns["impact"],
+            })
+
+        return {
+            "status": "success",
+            "commit_count": len(commits),
+            "analysis": {
+                "category_distribution": dict(Counter(categories)),
+                "module_distribution": dict(Counter(modules)),
+                "impact_distribution": dict(Counter(impacts)),
+                "top_keywords": dict(Counter(keywords).most_common(10)),
+            },
+            "commits": commit_data[:10],  # Limit to 10 most recent
+        }
+
+    except NotAGitRepositoryError as e:
+        return {
+            "status": "error",
+            "message": "Not a Git repository",
+            "error": str(e),
+            "hint": "Initialize Git with: git init",
+        }
+    except ImportError as e:
+        return {
+            "status": "error",
+            "message": "GitPython not installed",
+            "error": str(e),
+            "hint": "Install with: pip install gitpython",
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Analysis failed: {str(e)}",
+            "error": str(e),
+        }
+
+
+@mcp.tool()
+def suggest_next_tasks(
+    since_days: int = 7,
+    max_suggestions: int = 5,
+) -> dict[str, Any]:
+    """
+    Suggest next tasks based on recent commit patterns.
+
+    This tool analyzes recent development activity and suggests logical next tasks
+    using pattern-based heuristics.
+
+    Args:
+        since_days: Number of days to analyze (default: 7)
+        max_suggestions: Maximum number of suggestions (default: 5)
+
+    Returns:
+        List of task suggestions with priority, reasoning, and confidence scores
+
+    Example:
+        >>> suggest_next_tasks(since_days=7)
+        {
+            "status": "success",
+            "suggestion_count": 3,
+            "suggestions": [
+                {
+                    "name": "Add comprehensive tests to prevent regressions",
+                    "description": "Recent 4 bugfixes suggest missing test coverage...",
+                    "priority": "high",
+                    "reasoning": "4 bugfixes indicates gaps in test coverage",
+                    "confidence": 0.85,
+                    "related_commits": ["abc1234", "def5678"]
+                }
+            ]
+        }
+
+    Suggestion Rules:
+        - Multiple bugfixes → Suggest adding tests
+        - New features → Suggest updating documentation
+        - High-impact changes → Suggest thorough testing
+        - Refactoring → Suggest verifying all tests pass
+        - Test additions → Suggest coverage review
+        - Frequent changes to module → Suggest consistency review
+
+    Use Cases:
+        1. **Daily Planning**: Get AI-suggested next tasks for the day
+        2. **Sprint Planning**: Identify overlooked tasks
+        3. **Quality Improvement**: Proactive suggestions for tests/docs
+        4. **Team Coordination**: Discover tasks based on team activity
+
+    Notes:
+        - Filters out tasks that already exist in task list
+        - Uses pattern-based heuristics (no AI/LLM needed)
+        - Confidence score indicates reliability (0.0-1.0)
+    """
+    try:
+        from clauxton.analysis.task_suggester import TaskSuggester
+
+        suggester = TaskSuggester(Path.cwd())
+        suggestions = suggester.suggest_tasks(
+            since_days=since_days,
+            max_suggestions=max_suggestions,
+        )
+
+        return {
+            "status": "success",
+            "suggestion_count": len(suggestions),
+            "suggestions": [s.to_dict() for s in suggestions],
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Task suggestion failed: {str(e)}",
+            "error": str(e),
+        }
+
+
+@mcp.tool()
+def extract_decisions_from_commits(
+    since_days: int = 30,
+    max_candidates: int = 10,
+    min_confidence: float = 0.5,
+) -> dict[str, Any]:
+    """
+    Extract technical decisions from commit history for Knowledge Base.
+
+    This tool analyzes commits to identify technical decisions, architecture changes,
+    and important design choices that should be documented.
+
+    Args:
+        since_days: Number of days to analyze (default: 30)
+        max_candidates: Maximum number of candidates (default: 10)
+        min_confidence: Minimum confidence threshold (default: 0.5)
+
+    Returns:
+        List of decision candidates with suggested KB entry data
+
+    Example:
+        >>> extract_decisions_from_commits(since_days=30)
+        {
+            "status": "success",
+            "candidate_count": 3,
+            "candidates": [
+                {
+                    "title": "Adopt FastAPI for REST API framework",
+                    "category": "architecture",
+                    "content": "**Commit Message:** feat: adopt FastAPI...",
+                    "tags": ["fastapi", "api", "backend"],
+                    "commit_sha": "abc1234",
+                    "confidence": 0.85,
+                    "reasoning": "Contains decision keywords; Changes dependencies"
+                }
+            ]
+        }
+
+    Detection Criteria:
+        - Decision keywords (adopt, choose, decide, switch to, migrate to)
+        - Dependency changes (package.json, requirements.txt, etc.)
+        - Configuration changes (.env, config files)
+        - Architecture Decision Records (ADR)
+        - High-impact commits
+
+    Categories:
+        - architecture: Framework/tool/technology decisions
+        - decision: General technical decisions
+        - constraint: Limitations and requirements
+        - convention: Code style and standards
+        - pattern: Design patterns and approaches
+
+    Use Cases:
+        1. **Auto-Documentation**: Capture decisions from commits
+        2. **Knowledge Building**: Build KB from existing work
+        3. **Onboarding**: Help new team members understand decisions
+        4. **Architecture Review**: Track architectural evolution
+
+    Notes:
+        - Filters out decisions already in Knowledge Base
+        - Confidence score indicates reliability (0.0-1.0)
+        - Higher confidence = more likely to be a real decision
+        - Can auto-add high-confidence decisions with min_confidence
+    """
+    try:
+        from clauxton.analysis.decision_extractor import DecisionExtractor
+
+        extractor = DecisionExtractor(Path.cwd())
+        candidates = extractor.extract_decisions(
+            since_days=since_days,
+            max_candidates=max_candidates,
+        )
+
+        # Filter by confidence
+        filtered_candidates = [
+            c for c in candidates if c.confidence >= min_confidence
+        ]
+
+        return {
+            "status": "success",
+            "candidate_count": len(filtered_candidates),
+            "total_analyzed": len(candidates),
+            "candidates": [c.to_dict() for c in filtered_candidates],
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Decision extraction failed: {str(e)}",
+            "error": str(e),
+        }
+
+
 def main() -> None:
     """Run the MCP server."""
     mcp.run()
