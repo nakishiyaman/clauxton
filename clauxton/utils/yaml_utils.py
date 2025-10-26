@@ -12,12 +12,14 @@ All operations prioritize data integrity and prevent corruption.
 
 import shutil
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, TYPE_CHECKING
 
 import yaml
 
-from clauxton.core.models import ValidationError
 from clauxton.utils.backup_manager import BackupManager
+
+if TYPE_CHECKING:
+    from clauxton.core.models import ValidationError
 
 
 def read_yaml(file_path: Path) -> Dict[str, Any]:
@@ -49,11 +51,15 @@ def read_yaml(file_path: Path) -> Dict[str, Any]:
             data = yaml.safe_load(f)
             return data if data is not None else {}
     except yaml.YAMLError as e:
+        from clauxton.core.models import ValidationError
+
         raise ValidationError(
             f"Failed to parse YAML file '{file_path}': {e}. "
             "The file may be corrupted. Check backups or fix manually."
         ) from e
     except Exception as e:
+        from clauxton.core.models import ValidationError
+
         raise ValidationError(
             f"Failed to read YAML file '{file_path}': {e}"
         ) from e
@@ -136,6 +142,9 @@ def write_yaml(
         # Clean up temp file on error
         if temp_path.exists():
             temp_path.unlink()
+
+        from clauxton.core.models import ValidationError
+
         raise ValidationError(
             f"Failed to write YAML file '{file_path}': {e}"
         ) from e
@@ -161,6 +170,8 @@ def validate_kb_yaml(data: Dict[str, Any]) -> bool:
         >>> validate_kb_yaml(data)
         True
     """
+    from clauxton.core.models import ValidationError
+
     # Check for required top-level fields
     if "version" not in data:
         raise ValidationError(
@@ -211,6 +222,8 @@ def validate_tasks_yaml(data: Dict[str, Any]) -> bool:
         >>> validate_tasks_yaml(data)
         True
     """
+    from clauxton.core.models import ValidationError
+
     if "version" not in data:
         raise ValidationError("Invalid Tasks YAML: missing 'version' field.")
 
