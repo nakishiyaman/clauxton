@@ -49,6 +49,30 @@ class ProjectContext(BaseModel):
     )
     is_git_repo: bool = Field(True, description="Whether project is a git repository")
 
+    # Week 3: Session analysis
+    session_duration_minutes: Optional[int] = Field(
+        None, description="Current session duration in minutes"
+    )
+    focus_score: Optional[float] = Field(
+        None, description="Focus score (0.0-1.0), based on file switch frequency"
+    )
+    breaks_detected: int = Field(
+        0, description="Number of breaks detected in current session"
+    )
+
+    # Week 3: Prediction
+    predicted_next_action: Optional[Dict[str, Any]] = Field(
+        None, description="Predicted next action based on patterns"
+    )
+
+    # Week 3: Enhanced git stats
+    uncommitted_changes: int = Field(
+        0, description="Number of uncommitted changes"
+    )
+    diff_stats: Optional[Dict[str, int]] = Field(
+        None, description="Git diff statistics (additions, deletions, files_changed)"
+    )
+
 
 class ContextManager:
     """Manage and provide project context."""
