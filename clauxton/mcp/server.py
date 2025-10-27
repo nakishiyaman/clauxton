@@ -2788,6 +2788,626 @@ async def get_recent_changes(
         }
 
 
+@mcp.tool()
+async def suggest_kb_updates(
+    threshold: float = 0.7,
+    minutes: int = 10,
+    max_suggestions: int = 5,
+) -> dict[str, Any]:
+    """
+    Suggest Knowledge Base updates based on recent changes.
+
+    Analyzes recent file changes to identify opportunities for Knowledge Base
+    documentation. Suggests entries for:
+    - Module-wide changes (architecture decisions)
+    - New features (feature documentation)
+    - Configuration changes (setup documentation)
+    - Documentation gaps (missing docs)
+
+    Args:
+        threshold: Minimum confidence threshold (default: 0.7)
+        minutes: Time window to analyze in minutes (default: 10)
+        max_suggestions: Maximum number of suggestions to return (default: 5)
+
+    Returns:
+        Dictionary with KB entry suggestions
+
+    Example:
+        >>> suggest_kb_updates(threshold=0.8, minutes=30)
+        {
+            "status": "success",
+            "suggestion_count": 3,
+            "time_window_minutes": 30,
+            "suggestions": [
+                {
+                    "type": "kb_entry",
+                    "title": "Document changes in src/auth",
+                    "description": "3 files modified in authentication module",
+                    "confidence": 0.85,
+                    "priority": "medium",
+                    "affected_files": ["src/auth/login.py", "src/auth/token.py"],
+                    "reasoning": "Multiple files in same module indicate architectural change"
+                }
+            ]
+        }
+
+    Use Cases:
+        1. **Auto-Documentation**: Capture decisions from recent changes
+        2. **Knowledge Capture**: Don't forget to document important changes
+        3. **Team Communication**: Share context about recent work
+        4. **Onboarding**: Build knowledge base organically
+    """
+    try:
+        from clauxton.proactive.suggestion_engine import (
+            SuggestionEngine,
+            SuggestionType,
+        )
+
+        # Get recent changes
+        monitor = _get_file_monitor()
+        changes = monitor.get_recent_changes(minutes=minutes)
+
+        if not changes:
+            return {
+                "status": "no_changes",
+                "message": f"No changes in last {minutes} minutes",
+                "suggestions": [],
+                "time_window_minutes": minutes,
+                "threshold": threshold,
+            }
+
+        # Get event processor and detect patterns
+        processor = _get_event_processor()
+        patterns = await processor.detect_patterns(changes, confidence_threshold=threshold)
+
+        # Create suggestion engine
+        engine = SuggestionEngine(
+            project_root=_get_project_root(),
+            min_confidence=threshold,
+        )
+
+        # Generate suggestions from patterns
+        all_suggestions = []
+        for pattern in patterns:
+            suggestions = engine.analyze_pattern(pattern)
+            all_suggestions.extend(suggestions)
+
+        # Also analyze changes directly for KB opportunities
+        change_suggestions = engine.analyze_changes(changes)
+        all_suggestions.extend(change_suggestions)
+
+        # Filter for KB and documentation suggestions only
+        kb_suggestions = [
+            s
+            for s in all_suggestions
+            if s.type in [SuggestionType.KB_ENTRY, SuggestionType.DOCUMENTATION]
+        ]
+
+        # Rank and limit
+        ranked = engine.rank_suggestions(kb_suggestions)
+        top_suggestions = ranked[:max_suggestions]
+
+        if not top_suggestions:
+            return {
+                "status": "no_suggestions",
+                "message": "No KB update suggestions found",
+                "suggestions": [],
+                "time_window_minutes": minutes,
+                "threshold": threshold,
+            }
+
+        # Format suggestions
+        formatted = [
+            {
+                "type": s.type.value,
+                "title": s.title,
+                "description": s.description,
+                "confidence": s.confidence,
+                "priority": s.priority.value,
+                "affected_files": s.affected_files,
+                "reasoning": s.reasoning,
+                "metadata": s.metadata,
+                "created_at": s.created_at.isoformat(),
+            }
+            for s in top_suggestions
+        ]
+
+        return {
+            "status": "success",
+            "suggestion_count": len(formatted),
+            "time_window_minutes": minutes,
+            "threshold": threshold,
+            "suggestions": formatted,
+        }
+
+    except ImportError as e:
+        return {
+            "status": "error",
+            "message": "Suggestion engine not available",
+            "error": str(e),
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to generate suggestions: {str(e)}",
+            "error": str(e),
+        }
+
+
+@mcp.tool()
+async def detect_anomalies(
+    minutes: int = 60,
+    severity_threshold: str = "low",
+) -> dict[str, Any]:
+    """
+    Detect anomalies in recent development activity.
+
+    Analyzes recent file changes to identify unusual patterns that may
+    indicate issues or require attention. Detects:
+    - Rapid changes (many files in short time)
+    - Mass deletions (many files deleted)
+    - Weekend activity (unusual work hours)
+    - Late-night activity (work-life balance concerns)
+
+    Args:
+        minutes: Time window to analyze in minutes (default: 60)
+        severity_threshold: Minimum severity level to return (default: "low")
+            Values: "low", "medium", "high", "critical"
+
+    Returns:
+        Dictionary with detected anomalies
+
+    Example:
+        >>> detect_anomalies(minutes=30, severity_threshold="medium")
+        {
+            "status": "success",
+            "anomaly_count": 2,
+            "time_window_minutes": 30,
+            "severity_threshold": "medium",
+            "anomalies": [
+                {
+                    "type": "anomaly",
+                    "title": "Rapid changes: 15 changes in 10 minutes",
+                    "description": "15 files changed very quickly...",
+                    "confidence": 0.82,
+                    "priority": "high",
+                    "severity": "high",
+                    "affected_files": [...]
+                },
+                {
+                    "type": "anomaly",
+                    "title": "Mass deletion: 8 files deleted",
+                    "description": "8 files have been deleted...",
+                    "confidence": 0.77,
+                    "priority": "high",
+                    "severity": "medium",
+                    "affected_files": [...]
+                }
+            ]
+        }
+
+    Severity Levels:
+        - **critical**: Immediate attention required (e.g., 20+ rapid changes)
+        - **high**: Should be reviewed soon (e.g., mass deletions, 10+ rapid changes)
+        - **medium**: Worth noting (e.g., weekend activity, 5+ rapid changes)
+        - **low**: Informational (e.g., late-night activity, minor patterns)
+
+    Use Cases:
+        1. **Quality Assurance**: Catch unusual patterns early
+        2. **Work-Life Balance**: Monitor late-night/weekend work
+        3. **Risk Detection**: Identify potentially risky changes
+        4. **Team Health**: Track development patterns
+    """
+    try:
+        from clauxton.proactive.suggestion_engine import SuggestionEngine
+
+        # Severity mapping (threshold to allowed severities)
+        severity_map = {
+            "low": ["low", "medium", "high", "critical"],  # Show all
+            "medium": ["medium", "high", "critical"],  # Medium and above
+            "high": ["high", "critical"],  # High and above only
+            "critical": ["critical"],  # Critical only
+        }
+
+        if severity_threshold not in severity_map:
+            return {
+                "status": "error",
+                "message": f"Invalid severity threshold: {severity_threshold}",
+                "valid_values": ["low", "medium", "high", "critical"],
+            }
+
+        # Get recent changes
+        monitor = _get_file_monitor()
+        changes = monitor.get_recent_changes(minutes=minutes)
+
+        if not changes:
+            return {
+                "status": "no_changes",
+                "message": f"No changes in last {minutes} minutes",
+                "anomalies": [],
+            }
+
+        # Create suggestion engine
+        engine = SuggestionEngine(
+            project_root=_get_project_root(),
+            min_confidence=0.5,  # Lower threshold for anomaly detection
+        )
+
+        # Detect anomalies
+        anomalies = []
+
+        # 1. Rapid changes
+        if len(changes) >= 5:
+            rapid_anomaly = engine._create_rapid_change_anomaly(changes)
+            anomalies.append(rapid_anomaly)
+
+        # 2. File deletion pattern
+        deletion_anomaly = engine.detect_file_deletion_pattern(changes)
+        if deletion_anomaly:
+            anomalies.append(deletion_anomaly)
+
+        # 3. Weekend activity
+        weekend_anomaly = engine.detect_weekend_activity(changes)
+        if weekend_anomaly:
+            anomalies.append(weekend_anomaly)
+
+        # 4. Late-night activity
+        late_night_anomaly = engine.detect_late_night_activity(changes)
+        if late_night_anomaly:
+            anomalies.append(late_night_anomaly)
+
+        # Assign severity based on priority and change count
+        for anomaly in anomalies:
+            # Determine severity
+            if anomaly.priority.value == "critical":
+                severity = "critical"
+            elif anomaly.priority.value == "high":
+                severity = "high"
+            elif anomaly.priority.value == "medium":
+                severity = "medium"
+            else:
+                severity = "low"
+
+            # Enhance based on metadata
+            if "change_count" in anomaly.metadata:
+                count = anomaly.metadata["change_count"]
+                if count >= 20:
+                    severity = "critical"
+                elif count >= 10:
+                    severity = "high"
+                elif count >= 5:
+                    severity = "medium"
+
+            anomaly.metadata["severity"] = severity
+
+        # Filter by severity threshold
+        allowed_severities = severity_map[severity_threshold]
+        filtered = [
+            a
+            for a in anomalies
+            if a.metadata.get("severity", "low") in allowed_severities
+        ]
+
+        if not filtered:
+            return {
+                "status": "no_anomalies",
+                "message": f"No anomalies detected above {severity_threshold} severity",
+                "anomalies": [],
+            }
+
+        # Format anomalies
+        formatted = [
+            {
+                "type": a.type.value,
+                "title": a.title,
+                "description": a.description,
+                "confidence": a.confidence,
+                "priority": a.priority.value,
+                "severity": a.metadata.get("severity", "low"),
+                "affected_files": a.affected_files,
+                "reasoning": a.reasoning,
+                "metadata": a.metadata,
+                "created_at": a.created_at.isoformat(),
+            }
+            for a in filtered
+        ]
+
+        # Sort by severity (critical > high > medium > low)
+        severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+        formatted.sort(key=lambda x: severity_order[x["severity"]])
+
+        return {
+            "status": "success",
+            "anomaly_count": len(formatted),
+            "time_window_minutes": minutes,
+            "severity_threshold": severity_threshold,
+            "anomalies": formatted,
+        }
+
+    except ImportError as e:
+        return {
+            "status": "error",
+            "message": "Suggestion engine not available",
+            "error": str(e),
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to detect anomalies: {str(e)}",
+            "error": str(e),
+        }
+
+
+@mcp.tool()
+def analyze_work_session() -> dict[str, Any]:
+    """
+    Analyze current work session.
+
+    Provides comprehensive analysis of the current work session including:
+    - Duration tracking (how long you've been working)
+    - Focus score based on file switching behavior (0.0-1.0)
+    - Break detection (gaps in activity)
+    - Active work periods (time between breaks)
+    - File switch count (unique files modified)
+
+    Returns:
+        Dictionary with session analysis:
+        - status: "success" | "error" | "no_session"
+        - duration_minutes: Session duration in minutes
+        - focus_score: Focus score (0.0-1.0), higher = more focused
+        - breaks: List of detected breaks with timestamps
+        - file_switches: Number of unique files modified
+        - active_periods: List of active work periods
+
+    Use Cases:
+        1. **Productivity Tracking**: Understand work patterns
+        2. **Break Reminders**: Detect long sessions without breaks
+        3. **Focus Analysis**: Identify high/low focus periods
+        4. **Session Planning**: Optimize work sessions
+
+    Example:
+        >>> analyze_work_session()
+        {
+            "status": "success",
+            "duration_minutes": 45,
+            "focus_score": 0.82,
+            "breaks": [
+                {"start": "2025-10-27T10:30:00", "duration_minutes": 10}
+            ],
+            "file_switches": 8,
+            "active_periods": [
+                {"start": "2025-10-27T09:00:00", "end": "2025-10-27T10:30:00"}
+            ]
+        }
+
+    Notes:
+        - Focus score: 0.8+ = high focus, 0.5-0.8 = medium, <0.5 = low
+        - Breaks: Gaps of 15+ minutes in activity
+        - No session: Returns "no_session" status if no recent activity
+    """
+    try:
+        from clauxton.proactive.context_manager import ContextManager
+
+        project_root = _get_project_root()
+        manager = ContextManager(project_root)
+
+        # Get session analysis
+        analysis = manager.analyze_work_session()
+
+        # Check if there's an active session
+        if analysis["duration_minutes"] == 0:
+            return {
+                "status": "no_session",
+                "message": "No active work session detected",
+                "duration_minutes": 0,
+            }
+
+        return {
+            "status": "success",
+            "duration_minutes": analysis["duration_minutes"],
+            "focus_score": analysis["focus_score"],
+            "breaks": analysis["breaks"],
+            "file_switches": analysis["file_switches"],
+            "active_periods": analysis["active_periods"],
+        }
+
+    except ImportError as e:
+        return {
+            "status": "error",
+            "message": "Context manager not available",
+            "error": str(e),
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to analyze work session: {str(e)}",
+            "error": str(e),
+        }
+
+
+@mcp.tool()
+def predict_next_action() -> dict[str, Any]:
+    """
+    Predict likely next action based on project context.
+
+    Uses rule-based prediction analyzing:
+    - File change patterns (test files, implementation files)
+    - Git context (uncommitted changes, branch status)
+    - Time context (morning, afternoon, evening, night)
+    - Work session patterns (focus, breaks, duration)
+
+    Returns:
+        Dictionary with prediction:
+        - status: "success" | "error"
+        - action: Predicted action name
+        - task_id: Related task ID (if available)
+        - confidence: Confidence score (0.0-1.0)
+        - reasoning: Explanation of why this action was predicted
+
+    Possible Actions:
+        - "run_tests": Many files changed without recent test runs
+        - "write_tests": Implementation files changed, no test files
+        - "commit_changes": Changes ready, feature complete
+        - "create_pr": Branch ahead of main, commits ready
+        - "take_break": Long session without breaks detected
+        - "morning_planning": Morning time, no activity yet
+        - "resume_work": Coming back from break
+        - "review_code": Many changes, might need review
+        - "no_clear_action": No strong pattern detected
+
+    Use Cases:
+        1. **Smart Suggestions**: Proactively suggest next steps
+        2. **Workflow Optimization**: Guide through development workflow
+        3. **Context Switching**: Help resume work after breaks
+        4. **Quality Assurance**: Remind to run tests or review code
+
+    Example:
+        >>> predict_next_action()
+        {
+            "status": "success",
+            "action": "run_tests",
+            "task_id": "TASK-005",
+            "confidence": 0.85,
+            "reasoning": "15 files changed in last 30 minutes, no test runs detected"
+        }
+
+    Notes:
+        - Confidence: 0.8+ = high, 0.5-0.8 = medium, <0.5 = low
+        - Low confidence may still provide useful suggestions
+        - Predictions improve as system learns patterns
+    """
+    try:
+        from clauxton.proactive.context_manager import ContextManager
+
+        project_root = _get_project_root()
+        manager = ContextManager(project_root)
+
+        # Get prediction
+        prediction = manager.predict_next_action()
+
+        return {
+            "status": "success",
+            "action": prediction["action"],
+            "task_id": prediction.get("task_id"),
+            "confidence": prediction["confidence"],
+            "reasoning": prediction["reasoning"],
+        }
+
+    except ImportError as e:
+        return {
+            "status": "error",
+            "message": "Context manager not available",
+            "error": str(e),
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to predict next action: {str(e)}",
+            "error": str(e),
+        }
+
+
+@mcp.tool()
+def get_current_context(include_prediction: bool = True) -> dict[str, Any]:
+    """
+    Get comprehensive current project context.
+
+    Provides real-time project context including:
+    - Git branch and status
+    - Active files (recently modified)
+    - Recent commits
+    - Current task (if available)
+    - Time context (morning/afternoon/evening/night)
+    - Work session analysis (duration, focus, breaks)
+    - Predicted next action
+    - Uncommitted changes and diff stats
+
+    Args:
+        include_prediction: Include next action prediction (default: True)
+            Set to False for faster response without prediction
+
+    Returns:
+        Dictionary with comprehensive context:
+        - status: "success" | "error"
+        - current_branch: Git branch name
+        - active_files: List of recently modified files
+        - recent_commits: Recent commit information
+        - current_task: Current task ID (if available)
+        - time_context: "morning" | "afternoon" | "evening" | "night"
+        - session_duration_minutes: Current session duration
+        - focus_score: Focus score (0.0-1.0)
+        - breaks_detected: Number of breaks in session
+        - predicted_next_action: Predicted next action (if enabled)
+        - uncommitted_changes: Number of uncommitted changes
+        - diff_stats: Git diff statistics
+
+    Use Cases:
+        1. **Context Awareness**: Understand current project state
+        2. **Smart Suggestions**: Provide context-aware recommendations
+        3. **Session Tracking**: Monitor work session progress
+        4. **Status Updates**: Quick overview of current work
+
+    Example:
+        >>> get_current_context()
+        {
+            "status": "success",
+            "current_branch": "feature/new-feature",
+            "active_files": ["src/api.py", "tests/test_api.py"],
+            "recent_commits": [...],
+            "current_task": "TASK-005",
+            "time_context": "afternoon",
+            "session_duration_minutes": 45,
+            "focus_score": 0.82,
+            "breaks_detected": 1,
+            "predicted_next_action": {
+                "action": "run_tests",
+                "confidence": 0.85,
+                "reasoning": "..."
+            },
+            "uncommitted_changes": 8,
+            "diff_stats": {
+                "additions": 120,
+                "deletions": 30,
+                "files_changed": 8
+            }
+        }
+
+    Notes:
+        - Fast response (<100ms typical)
+        - Cached for 30 seconds for performance
+        - Includes prediction by default (adds ~20ms)
+    """
+    try:
+        from clauxton.proactive.context_manager import ContextManager
+
+        project_root = _get_project_root()
+        manager = ContextManager(project_root)
+
+        # Get full context
+        context = manager.get_current_context(include_prediction=include_prediction)
+
+        # Convert to dict
+        context_dict = context.model_dump(mode="json")
+
+        # Add status
+        context_dict["status"] = "success"
+
+        return context_dict
+
+    except ImportError as e:
+        return {
+            "status": "error",
+            "message": "Context manager not available",
+            "error": str(e),
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to get current context: {str(e)}",
+            "error": str(e),
+        }
+
+
 def main() -> None:
     """Run the MCP server."""
     mcp.run()

@@ -75,11 +75,16 @@ clauxton init
 
 ## Available Tools
 
-The MCP Server exposes 22 tools across 4 categories:
+The MCP Server exposes **36 tools** across 8 categories:
 - **6 Knowledge Base tools** (kb_*)
 - **7 Task Management tools** (task_*)
 - **3 Conflict Detection tools** (detect_conflicts, recommend_safe_order, check_file_conflicts)
 - **4 Repository Map tools** (index_repository, search_symbols, kb_export_docs, get_recent_logs)
+- **2 Proactive Monitoring tools** (watch_project_changes, get_recent_changes) - 🔥 **NEW v0.13.0 Week 1**
+- **2 Proactive Suggestion tools** (suggest_kb_updates, detect_anomalies) - 🔥 **NEW v0.13.0 Week 2**
+- **3 Semantic Search tools** (search_knowledge_semantic, search_tasks_semantic, search_files_semantic)
+- **3 Git Analysis tools** (analyze_recent_commits, suggest_next_tasks, extract_decisions_from_commits)
+- **4 Context & Intelligence tools** (get_project_context, generate_project_summary, get_knowledge_graph, find_related_entries)
 - **2 Operation tools** (undo_last_operation, get_recent_operations)
 
 ### 1. kb_search
@@ -774,7 +779,205 @@ You don't need to manually call these tools - Claude Code handles it transparent
 
 ---
 
+## Proactive Monitoring Tools (v0.13.0+)
+
+### 1. watch_project_changes
+
+Enable or disable real-time file monitoring to track changes and detect patterns.
+
+**Parameters**:
+- `enabled` (boolean, required): True to start monitoring, False to stop
+
+**Returns**: Dictionary with:
+- `status` - "success" or "error"
+- `monitoring` - Current monitoring state (true/false)
+- `message` - Status message
+- `config` - Monitoring configuration (when enabled):
+  - `watch_patterns` - File patterns being watched
+  - `ignore_patterns` - Ignored file patterns
+  - `debounce_seconds` - Debounce interval
+
+**Example**:
+```python
+# Enable monitoring
+result = watch_project_changes(enabled=True)
+# → {"status": "success", "monitoring": true, "message": "File monitoring started", ...}
+
+# Disable monitoring
+result = watch_project_changes(enabled=False)
+# → {"status": "success", "monitoring": false, "message": "File monitoring stopped"}
+```
+
+**Features**:
+- Real-time file change detection using `watchdog`
+- Configurable file patterns (supports `.py`, `.js`, `.ts`, `.go`, etc.)
+- Automatic ignore patterns (`.git/`, `node_modules/`, `__pycache__/`, etc.)
+- Debouncing (500ms) to avoid duplicate events
+- Background monitoring (non-blocking)
+
+**Use Cases**:
+1. **Continuous Monitoring**: Track ongoing development activity
+2. **Pattern Detection**: Identify refactoring, bulk edits, new features
+3. **Context Awareness**: Provide real-time suggestions based on changes
+4. **Workflow Automation**: Auto-update KB entries from code changes
+
+**Note**: Monitoring runs in background. Use `get_recent_changes()` to retrieve detected changes.
+
+---
+
+### 2. get_recent_changes
+
+Get recent file changes and detected patterns from the monitoring system.
+
+**Parameters**:
+- `minutes` (integer, optional): Time window in minutes (default: 60)
+
+**Returns**: Dictionary with:
+- `status` - "success" or "error"
+- `monitoring_active` - Whether monitoring is currently running
+- `time_window` - Requested time window
+- `changes` - List of file change events:
+  - `timestamp` - When change occurred (ISO 8601)
+  - `event_type` - "modified", "created", "deleted", "moved"
+  - `file_path` - Affected file path
+  - `metadata` - Additional event details
+- `patterns` - Detected patterns with confidence scores:
+  - `type` - Pattern type (bulk_edit, new_feature, refactoring, cleanup, config_change)
+  - `confidence` - Confidence score (0.0-1.0)
+  - `description` - Human-readable description
+  - `files_involved` - List of affected files
+  - `detected_at` - When pattern was detected
+
+**Pattern Types**:
+- **bulk_edit**: Same file modified multiple times rapidly
+- **new_feature**: Multiple new files created in short time
+- **refactoring**: Files renamed or moved together
+- **cleanup**: Files deleted in bulk
+- **config_change**: Configuration files modified
+
+**Example**:
+```python
+# Get last hour of changes
+result = get_recent_changes(minutes=60)
+# → {
+#   "status": "success",
+#   "monitoring_active": true,
+#   "changes": [
+#     {"timestamp": "2025-10-26T10:30:00", "event_type": "modified", "file_path": "src/auth.py"},
+#     {"timestamp": "2025-10-26T10:31:00", "event_type": "created", "file_path": "tests/test_auth.py"}
+#   ],
+#   "patterns": [
+#     {
+#       "type": "new_feature",
+#       "confidence": 0.85,
+#       "description": "New feature development detected",
+#       "files_involved": ["src/auth.py", "tests/test_auth.py"],
+#       "detected_at": "2025-10-26T10:31:30"
+#     }
+#   ]
+# }
+
+# Get last 10 minutes
+result = get_recent_changes(minutes=10)
+```
+
+**Use Cases**:
+1. **Progress Summary**: "What have I worked on in the last hour?"
+2. **Pattern Recognition**: "Am I refactoring or adding features?"
+3. **Context for Suggestions**: "Based on recent changes, suggest next tasks"
+4. **Activity Log**: Track development patterns over time
+
+**Note**: Returns empty lists if monitoring is not active or no changes in time window.
+
+---
+
+## Proactive Monitoring Workflow
+
+Here's a typical workflow for using Proactive Monitoring with Claude Code:
+
+### 1. Start Monitoring
+```python
+# Claude Code automatically calls this when starting a work session
+result = watch_project_changes(enabled=True)
+# → Monitoring starts in background
+```
+
+### 2. Development Phase
+```python
+# User edits multiple files...
+# src/auth.py (10:30:00)
+# src/auth.py (10:30:15) - quick fix
+# tests/test_auth.py (10:31:00) - add tests
+```
+
+### 3. Check Recent Activity
+```python
+# Claude Code periodically calls this (or when user asks)
+changes = get_recent_changes(minutes=30)
+# → Returns:
+#   - 3 file changes (2 edits to auth.py, 1 new test file)
+#   - Pattern: "bulk_edit" (auth.py modified rapidly)
+#   - Pattern: "new_feature" (new test file suggests feature work)
+```
+
+### 4. Proactive Suggestions
+Based on detected patterns, Claude Code can:
+- **Bulk Edit Pattern**: "I notice you're iterating on auth.py. Need help with the logic?"
+- **New Feature Pattern**: "You're adding authentication. Should I check for related KB entries?"
+- **Refactoring Pattern**: "Detected file moves. Want me to update import statements?"
+
+### 5. End Session
+```python
+# Optional: Stop monitoring when done
+result = watch_project_changes(enabled=False)
+```
+
+### Performance Characteristics
+- **Event Processing**: <5ms per file change
+- **Pattern Detection**: <10ms (runs after debounce)
+- **Memory Footprint**: ~2MB for 1000 events
+- **Background CPU**: <1% (idle when no changes)
+
+### Transparent Usage in Claude Code
+Claude Code can automatically:
+1. **Start monitoring** when project opens
+2. **Check patterns** periodically (every 5-10 minutes)
+3. **Provide suggestions** based on detected patterns
+4. **Stop monitoring** when project closes
+
+You can also manually trigger these via natural language:
+- "Start monitoring my files"
+- "What have I changed in the last hour?"
+- "Stop file monitoring"
+
+---
+
 ## Troubleshooting
+
+### Proactive Monitoring Issues
+
+**Issue**: `watch_project_changes` returns "already running" error
+- **Solution**: Call `watch_project_changes(enabled=False)` first to stop existing monitor
+- **Alternative**: Check if monitoring is active with `get_recent_changes()`
+
+**Issue**: `get_recent_changes` returns empty results
+- **Solution**: Ensure monitoring is enabled with `watch_project_changes(enabled=True)`
+- **Verify**: Check `monitoring_active` field in response
+
+**Issue**: Too many events being captured
+- **Solution**: Adjust `ignore_patterns` in MonitorConfig
+- **Common patterns**: `*.pyc`, `*.log`, `.DS_Store`, `node_modules/`
+- **Edit**: `.clauxton/monitor-config.json` (if exists)
+
+**Issue**: Patterns not being detected
+- **Verify**: Enough file changes occurred (patterns need ≥2 files or ≥3 edits)
+- **Check**: Time window is sufficient (use `minutes=120` for longer history)
+- **Debug**: Check event count in `changes` list
+
+**Issue**: High CPU usage during monitoring
+- **Solution**: Add more ignore patterns to reduce event volume
+- **Verify**: Large directories like `node_modules/`, `.venv/` are ignored
+- **Alternative**: Disable monitoring when not needed
 
 ### Repository Map Issues
 
@@ -816,10 +1019,332 @@ You don't need to manually call these tools - Claude Code handles it transparent
 
 ---
 
+---
+
+## Context Intelligence Tools (v0.13.0 Week 3 Day 2) 🚀 NEW
+
+### analyze_work_session
+
+**Analyze current work session for productivity insights.**
+
+Provides comprehensive analysis of the current work session including:
+- Duration tracking (how long you've been working)
+- Focus score based on file switching behavior (0.0-1.0)
+- Break detection (gaps in activity)
+- Active work periods (time between breaks)
+- File switch count (unique files modified)
+
+**Parameters**: None
+
+**Returns**: Dictionary with:
+- `status`: "success", "no_session", or "error"
+- `duration_minutes`: Session duration in minutes
+- `focus_score`: Focus score (0.0-1.0), higher = more focused
+  - 0.8+ = high focus (few file switches)
+  - 0.5-0.8 = medium focus
+  - <0.5 = low focus (many file switches)
+- `breaks`: List of detected breaks with:
+  - `start`: Break start timestamp (ISO format)
+  - `duration_minutes`: Break duration
+- `file_switches`: Number of unique files modified
+- `active_periods`: List of active work periods with:
+  - `start`: Period start timestamp (ISO format)
+  - `end`: Period end timestamp (ISO format)
+
+**Example**:
+```python
+result = analyze_work_session()
+
+if result["status"] == "success":
+    print(f"Session duration: {result['duration_minutes']} minutes")
+    print(f"Focus score: {result['focus_score']}")
+    print(f"Breaks detected: {len(result['breaks'])}")
+    print(f"Files modified: {result['file_switches']}")
+```
+
+**Use Cases**:
+1. **Productivity Tracking**: Understand work patterns and session quality
+2. **Break Reminders**: Detect long sessions without breaks
+3. **Focus Analysis**: Identify high/low focus periods for optimization
+4. **Session Planning**: Optimize work sessions based on historical data
+
+---
+
+### predict_next_action
+
+**Predict likely next action based on project context.**
+
+Uses rule-based prediction analyzing:
+- File change patterns (test files, implementation files)
+- Git context (uncommitted changes, branch status)
+- Time context (morning, afternoon, evening, night)
+- Work session patterns (focus, breaks, duration)
+
+**Parameters**: None
+
+**Returns**: Dictionary with:
+- `status`: "success" or "error"
+- `action`: Predicted action name (see below)
+- `task_id`: Related task ID (if available)
+- `confidence`: Confidence score (0.0-1.0)
+  - 0.8+ = high confidence
+  - 0.5-0.8 = medium confidence
+  - <0.5 = low confidence
+- `reasoning`: Explanation of why this action was predicted
+
+**Possible Actions**:
+- `run_tests`: Many files changed without recent test runs
+- `write_tests`: Implementation files changed, no test files
+- `commit_changes`: Changes ready, feature complete
+- `create_pr`: Branch ahead of main, commits ready
+- `take_break`: Long session without breaks detected
+- `morning_planning`: Morning time, no activity yet
+- `resume_work`: Coming back from break
+- `review_code`: Many changes, might need review
+- `no_clear_action`: No strong pattern detected
+
+**Example**:
+```python
+result = predict_next_action()
+
+if result["status"] == "success":
+    print(f"Recommended action: {result['action']}")
+    print(f"Confidence: {result['confidence']:.2f}")
+    print(f"Reasoning: {result['reasoning']}")
+
+    if result['task_id']:
+        print(f"Related task: {result['task_id']}")
+```
+
+**Use Cases**:
+1. **Smart Suggestions**: Proactively suggest next steps in workflow
+2. **Workflow Optimization**: Guide through development workflow automatically
+3. **Context Switching**: Help resume work after breaks or interruptions
+4. **Quality Assurance**: Remind to run tests or review code at appropriate times
+
+---
+
+### get_current_context
+
+**Get comprehensive current project context.**
+
+Provides real-time project context including:
+- Git branch and status
+- Active files (recently modified)
+- Recent commits
+- Current task (if available)
+- Time context (morning/afternoon/evening/night)
+- Work session analysis (duration, focus, breaks)
+- Predicted next action
+- Uncommitted changes and diff stats
+
+**Parameters**:
+- `include_prediction` (boolean, optional): Include next action prediction (default: True)
+  - Set to False for faster response without prediction
+
+**Returns**: Dictionary with:
+- `status`: "success" or "error"
+- `current_branch`: Git branch name
+- `active_files`: List of recently modified files
+- `recent_commits`: Recent commit information
+- `current_task`: Current task ID (if available)
+- `time_context`: "morning", "afternoon", "evening", or "night"
+- `work_session_start`: Session start timestamp (ISO format)
+- `last_activity`: Last detected activity timestamp (ISO format)
+- `is_feature_branch`: Whether current branch is a feature branch
+- `is_git_repo`: Whether project is a git repository
+- `session_duration_minutes`: Current session duration
+- `focus_score`: Focus score (0.0-1.0)
+- `breaks_detected`: Number of breaks in session
+- `predicted_next_action`: Predicted next action (if `include_prediction=True`):
+  - `action`: Action name
+  - `confidence`: Confidence score
+  - `reasoning`: Explanation
+- `uncommitted_changes`: Number of uncommitted changes
+- `diff_stats`: Git diff statistics:
+  - `additions`: Lines added
+  - `deletions`: Lines deleted
+  - `files_changed`: Number of files changed
+
+**Example**:
+```python
+# Get full context with prediction
+context = get_current_context()
+
+print(f"Branch: {context['current_branch']}")
+print(f"Session: {context['session_duration_minutes']} min")
+print(f"Focus: {context['focus_score']}")
+print(f"Changes: {context['uncommitted_changes']} uncommitted")
+
+if context['predicted_next_action']:
+    action = context['predicted_next_action']
+    print(f"Next: {action['action']} ({action['confidence']:.2f})")
+
+# Get context without prediction (faster)
+context = get_current_context(include_prediction=False)
+```
+
+**Use Cases**:
+1. **Context Awareness**: Understand current project state at a glance
+2. **Smart Suggestions**: Provide context-aware recommendations
+3. **Session Tracking**: Monitor work session progress
+4. **Status Updates**: Quick overview of current work
+
+**Performance**:
+- Fast response (<100ms typical)
+- Cached for 30 seconds for performance
+- Prediction adds ~20ms if enabled
+
+---
+
+## Proactive Suggestion Tools (v0.13.0 Week 2) 🔥 NEW
+
+### suggest_kb_updates
+
+**Analyze recent file changes to suggest Knowledge Base documentation opportunities.**
+
+Intelligently analyzes recent development activity and suggests KB entries for:
+- Module-wide changes (architecture decisions)
+- New features (feature documentation)
+- Configuration changes (setup documentation)
+- Documentation gaps (missing docs)
+
+**Parameters**:
+- `threshold` (float, optional): Minimum confidence threshold (default: 0.7, range: 0.0-1.0)
+- `minutes` (int, optional): Time window to analyze in minutes (default: 10)
+- `max_suggestions` (int, optional): Maximum number of suggestions to return (default: 5)
+
+**Returns**: Dictionary with:
+- `status`: "success", "no_suggestions", "no_changes", or "error"
+- `suggestion_count`: Number of suggestions returned
+- `time_window_minutes`: Time window analyzed
+- `threshold`: Confidence threshold used
+- `suggestions`: List of KB/documentation suggestions with:
+  - `type`: "kb_entry" or "documentation"
+  - `title`: Suggestion title
+  - `description`: Detailed description
+  - `confidence`: Confidence score (0.0-1.0)
+  - `priority`: "low", "medium", "high", or "critical"
+  - `affected_files`: List of relevant files
+  - `reasoning`: Explanation of why this suggestion was made
+  - `metadata`: Additional context
+  - `created_at`: Timestamp
+
+**Example**:
+```python
+# After refactoring authentication module
+suggest_kb_updates(threshold=0.7, minutes=30, max_suggestions=5)
+
+# Returns:
+{
+  "status": "success",
+  "suggestion_count": 2,
+  "suggestions": [
+    {
+      "type": "kb_entry",
+      "title": "Document changes in src/auth",
+      "description": "3 files modified in authentication module",
+      "confidence": 0.85,
+      "priority": "medium",
+      "affected_files": ["src/auth/login.py", "src/auth/token.py"],
+      "reasoning": "Multiple files in same module indicate architectural change"
+    }
+  ]
+}
+```
+
+**Use Cases**:
+- **Auto-Documentation**: "What should I document after this refactoring?"
+- **Knowledge Capture**: "Any KB entries I should create based on recent work?"
+- **Team Communication**: "What context should I share with the team?"
+
+**Performance**: <200ms for 10 files, <500ms for 100 files
+
+---
+
+### detect_anomalies
+
+**Detect unusual development activity patterns with severity levels.**
+
+Analyzes recent file changes to identify anomalies that may require attention:
+1. **Rapid changes** (many files in short time)
+2. **Mass deletions** (5+ files deleted)
+3. **Weekend activity** (work on Saturday/Sunday)
+4. **Late-night activity** (work 10 PM - 6 AM)
+
+**Parameters**:
+- `minutes` (int, optional): Time window to analyze in minutes (default: 60)
+- `severity_threshold` (string, optional): Minimum severity level to return
+  Values: "low" (all), "medium" (medium+), "high" (high+), "critical" (critical only)
+
+**Returns**: Dictionary with:
+- `status`: "success", "no_anomalies", "no_changes", or "error"
+- `anomaly_count`: Number of anomalies detected
+- `time_window_minutes`: Time window analyzed
+- `severity_threshold`: Severity threshold used
+- `anomalies`: List of detected anomalies (sorted by severity: critical → high → medium → low) with:
+  - `type`: "anomaly"
+  - `title`: Anomaly description
+  - `description`: Detailed explanation
+  - `confidence`: Confidence score (0.0-1.0)
+  - `priority`: Task priority level
+  - `severity`: "low", "medium", "high", or "critical"
+  - `affected_files`: List of relevant files
+  - `reasoning`: Explanation
+  - `metadata`: Additional data (e.g., change_count, deletion_count, ratios)
+  - `created_at`: Timestamp
+
+**Severity Levels**:
+- **critical**: 20+ rapid changes (immediate attention required)
+- **high**: 10+ rapid changes, mass deletions (review soon)
+- **medium**: 5+ rapid changes, weekend work (worth noting)
+- **low**: Late-night activity, minor patterns (informational)
+
+**Example**:
+```python
+# Check for anomalies in last hour
+detect_anomalies(minutes=60, severity_threshold="medium")
+
+# Returns:
+{
+  "status": "success",
+  "anomaly_count": 2,
+  "anomalies": [
+    {
+      "type": "anomaly",
+      "title": "Rapid changes: 15 changes in 10 minutes",
+      "description": "15 files changed very quickly. This may indicate automated refactoring or mass find-replace.",
+      "confidence": 0.82,
+      "priority": "high",
+      "severity": "high",
+      "metadata": {"change_count": 15, "time_span_minutes": 10}
+    },
+    {
+      "type": "anomaly",
+      "title": "Mass deletion: 8 files deleted",
+      "description": "8 files have been deleted. Ensure this is intentional and update documentation if needed.",
+      "confidence": 0.77,
+      "priority": "high",
+      "severity": "medium"
+    }
+  ]
+}
+```
+
+**Use Cases**:
+- **Quality Assurance**: "Any unusual patterns in my recent work?"
+- **Work-Life Balance**: "Am I working too much late at night?"
+- **Risk Detection**: "Any potentially risky changes I should review?"
+- **Team Health**: "How are team work patterns looking?"
+
+**Performance**: <150ms for 20 files, <300ms for 100 files
+
+---
+
 ## Next Steps
 
-- **Phase 1, Week 7**: Enhanced search with TF-IDF
-- **Phase 1, Week 8**: Integration & Documentation
+- **v0.13.0 Week 2**: Proactive suggestion tools (✅ Complete)
+- **v0.13.0 Week 3-7**: User behavior tracking & enhanced context awareness
 - **Phase 2**: Pre-merge conflict detection
 
 See [Phase 1 Plan](phase-1-plan.md) for roadmap.
