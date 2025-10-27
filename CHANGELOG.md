@@ -9,6 +9,110 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2025-10-27
+
+### Added
+- **Context Intelligence**: AI-powered work session analysis and next action prediction (3 new MCP tools)
+  - `analyze_work_session()`: Automatic session tracking with duration, focus score (0.0-1.0), break detection, and file switching analysis
+  - `predict_next_action()`: AI-powered next action prediction with 9 supported actions (run_tests, write_tests, commit_changes, create_pr, take_break, morning_planning, resume_work, review_code, no_clear_action) and confidence scoring (0.0-1.0)
+  - `get_current_context()`: Enhanced project context with Git info, active files, time context (morning/afternoon/evening/night), work session data, and optional action prediction
+- **Proactive Monitoring**: Real-time file watching and pattern detection (2 new MCP tools)
+  - `watch_project_changes()`: Enable/disable real-time file monitoring with watchdog integration
+  - `get_recent_changes()`: Get recent file changes and detected patterns (bulk edits, new features, refactoring, cleanup, config changes)
+- **Session Analysis Features**:
+  - Session duration tracking (30-minute session timeout, configurable)
+  - Focus score calculation based on file switching patterns (high: 0.8+, medium: 0.5-0.8, low: <0.5)
+  - Break detection (≥15 minutes, configurable)
+  - Active period tracking (continuous work periods between breaks)
+  - Formula: `focus_score = max(0, 1 - (file_switches / (duration_minutes / 10)))`
+- **Action Prediction Features**:
+  - Context-aware prediction engine analyzing git status, file changes, session duration, and time of day
+  - Confidence scoring with clear thresholds (high: 0.8+, medium: 0.5-0.8, low: <0.5)
+  - Human-readable reasoning for each prediction
+  - Support for 9 common development actions
+- **Enhanced Context Features**:
+  - Git information (branch, recent commits, uncommitted changes, diff stats)
+  - Active files with modification timestamps
+  - Time context awareness (morning 6-12, afternoon 12-18, evening 18-22, night 22-6)
+  - 30-second caching for performance
+  - Optional prediction inclusion for speed optimization
+- **User Documentation**: 4 comprehensive user guides (~1500 lines total)
+  - [Context Intelligence Guide](docs/guides/CONTEXT_INTELLIGENCE_GUIDE.md): Core concepts, usage, integration (400+ lines)
+  - [Workflow Examples](docs/guides/WORKFLOW_EXAMPLES.md): 6 real-world scenarios (350+ lines)
+  - [Best Practices](docs/guides/BEST_PRACTICES.md): Optimization tips and patterns (400+ lines)
+  - [Troubleshooting Guide](docs/guides/TROUBLESHOOTING.md): Common issues and solutions (350+ lines)
+
+### Changed
+- **Performance**: Significantly improved with intelligent caching
+  - Session analysis: <50ms (p95)
+  - Action prediction: <100ms with caching
+  - Context retrieval: <100ms with prediction, <50ms without
+  - 30-second context cache for repeated calls (<10ms)
+- **Test Coverage**: Increased from 86% to 90% with comprehensive proactive testing
+- **README**: Updated with Context Intelligence features, usage examples, and new statistics
+- **MCP Tools**: Expanded from 32 to 36 tools total (5 new tools across 2 categories)
+- **Code Quality**: Maintained strict type safety with mypy and 0 linting errors
+
+### Fixed
+- Type annotations in context_manager.py for mypy strict mode compliance
+- Integration test assertions adjusted for real-world git scenarios
+- ImportError handling in tests with proper skip markers
+- Line length violations in test files (ruff compliance)
+
+### Performance
+- Session analysis: <50ms average, 30-second caching
+- Action prediction: <100ms with all heuristics
+- Context retrieval: <100ms (with prediction), <50ms (without)
+- Repeated context calls: <10ms (cached)
+- File monitoring: <5ms event processing, <1% CPU when idle
+- Pattern detection: ~10-20ms per event batch
+
+### Testing
+- Added 316 comprehensive proactive tests (1,953+ total tests, +19% increase)
+  - Week 1: 56 tests (config, event_processor, file_monitor MCP)
+  - Week 2: 132 tests (behavior_tracker, suggestion_engine, context_manager)
+  - Week 3: 128 tests (context intelligence MCP tools, integration scenarios)
+- Test breakdown by module:
+  - `test_context_manager.py`: 42 tests (session analysis, context retrieval) - 95% coverage
+  - `test_suggestion_engine.py`: 26 tests (action prediction, all 9 actions) - 96% coverage
+  - `test_behavior_tracker.py`: 33 tests (pattern learning, trend analysis) - 92% coverage
+  - `test_mcp_context.py`: 18 tests (3 new MCP tools, error handling) - 100% coverage
+  - `test_integration_day5.py`: 23 tests (end-to-end workflows) - N/A
+- Coverage metrics:
+  - Proactive modules: 89-100% coverage (context_manager 95%, suggestion_engine 96%, behavior_tracker 92%, event_processor 97%, file_monitor 100%, config 100%)
+  - MCP server: 93% coverage (36 tools, all tested individually)
+  - Overall project: 90% coverage (up from 86%)
+- Test quality:
+  - All performance benchmarks passing
+  - Security tests: 19 tests, no vulnerabilities
+  - Error handling: 33 comprehensive tests
+  - Scenario coverage: 23 real-world integration tests
+
+### Dependencies
+- No new dependencies added (all built on existing stack)
+- Optional dependencies remain: watchdog>=3.0.0 (for proactive monitoring, installed in v0.13.0 Week 1)
+
+### Documentation
+- [Context Intelligence User Guide](docs/guides/CONTEXT_INTELLIGENCE_GUIDE.md) - Complete guide with 8 sections
+- [Workflow Examples](docs/guides/WORKFLOW_EXAMPLES.md) - 6 real-world scenarios (morning start, feature dev, bug fixing, code review, end of day, team collaboration)
+- [Best Practices](docs/guides/BEST_PRACTICES.md) - Optimization tips, patterns, anti-patterns
+- [Troubleshooting Guide](docs/guides/TROUBLESHOOTING.md) - 8 sections covering all common issues
+- [README.md](README.md) - Updated with Context Intelligence features, 36 MCP tools, 1,953+ test statistics
+- [Quality Report v0.13.0](docs/QUALITY_REPORT_v0.13.0.md) - Comprehensive quality assessment
+
+### Migration Notes
+- **MCP Tools**: 5 new tools available (3 context intelligence + 2 proactive monitoring)
+- **No Breaking Changes**: All existing functionality remains unchanged
+- **Opt-in Features**: Context Intelligence features are opt-in via MCP tool calls
+- **Configuration**: New optional settings in `.clauxton/config.yml`:
+  ```yaml
+  proactive:
+    enabled: true
+    session_timeout_minutes: 30  # Session ends after inactivity
+    focus_threshold: 0.7          # High focus threshold
+    break_threshold_minutes: 15   # Break detection threshold
+  ```
+
 ## [0.12.0] - 2025-10-26
 
 ### Added

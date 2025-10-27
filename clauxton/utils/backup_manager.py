@@ -14,9 +14,10 @@ All backups are stored in .clauxton/backups/ with format:
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import List
+from typing import TYPE_CHECKING, List
 
-from clauxton.core.models import ValidationError
+if TYPE_CHECKING:
+    pass
 
 
 class BackupManager:
@@ -65,6 +66,8 @@ class BackupManager:
             >>> backup.exists()
             True
         """
+        from clauxton.core.models import ValidationError
+
         if not file_path.exists():
             raise ValidationError(
                 f"Cannot backup non-existent file: {file_path}\n\n"
@@ -192,6 +195,8 @@ class BackupManager:
             ...     Path(".clauxton/tasks.yml")
             ... )
         """
+        from clauxton.core.models import ValidationError
+
         if not backup_path.exists():
             raise ValidationError(
                 f"Backup file not found: {backup_path}\n\n"
