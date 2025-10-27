@@ -83,18 +83,21 @@ def _handle_mcp_error(error: Exception, tool_name: str) -> dict[str, Any]:
     """
     if isinstance(error, ImportError):
         response = MCPErrorResponse(
+            status="error",
             error_type="import_error",
             message=f"{tool_name}: Required module not available",
             details=str(error),
         )
     elif isinstance(error, (ValueError, TypeError)):
         response = MCPErrorResponse(
+            status="error",
             error_type="validation_error",
             message=f"{tool_name}: Invalid input or data",
             details=str(error),
         )
     else:
         response = MCPErrorResponse(
+            status="error",
             error_type="runtime_error",
             message=f"{tool_name}: Operation failed",
             details=str(error),
@@ -104,51 +107,61 @@ def _handle_mcp_error(error: Exception, tool_name: str) -> dict[str, Any]:
     return response.model_dump()
 
 
-def _validate_session_analysis(analysis: dict[str, Any]) -> None:
+def _validate_field_type(
+    data: dict[str, Any], field: str, expected_types: tuple[type, ...], optional: bool = False
+) -> None:
     """
-    Validate work session analysis response structure.
+    Validate field type in dictionary.
 
     Args:
-        analysis: Analysis dictionary from ContextManager
+        data: Dictionary to validate
+        field: Field name to check
+        expected_types: Tuple of expected types
+        optional: Whether field can be None
 
     Raises:
-        ValueError: If required keys are missing or values are invalid
+        ValueError: If field type is invalid
     """
-    required_keys = ["duration_minutes", "focus_score", "breaks", "file_switches", "active_periods"]
-    missing = [key for key in required_keys if key not in analysis]
-
-    if missing:
-        raise ValueError(f"Missing required keys in session analysis: {missing}")
-
-    # Validate types and ranges
-    if not isinstance(analysis["duration_minutes"], int) or analysis["duration_minutes"] < 0:
-        raise ValueError(f"Invalid duration_minutes: {analysis['duration_minutes']}")
-
-    focus = analysis["focus_score"]
-    if focus is not None and (not isinstance(focus, (int, float)) or not 0.0 <= focus <= 1.0):
-        raise ValueError(f"Invalid focus_score: {focus}")
+    value = data.get(field)
+    if value is None and optional:
+        return
+    if not isinstance(value, expected_types):
+        type_names = " or ".join(t.__name__ for t in expected_types)
+        raise ValueError(
+            f"Invalid {field}: expected {type_names}, got {type(value).__name__}"
+        )
 
 
-def _validate_prediction(prediction: dict[str, Any]) -> None:
+def _validate_field_range(
+    data: dict[str, Any],
+    field: str,
+    min_val: float | None = None,
+    max_val: float | None = None,
+    optional: bool = False,
+) -> None:
     """
-    Validate next action prediction response structure.
+    Validate numeric field range in dictionary.
 
     Args:
-        prediction: Prediction dictionary from ContextManager
+        data: Dictionary to validate
+        field: Field name to check
+        min_val: Minimum allowed value (inclusive)
+        max_val: Maximum allowed value (inclusive)
+        optional: Whether field can be None
 
     Raises:
-        ValueError: If required keys are missing or values are invalid
+        ValueError: If field value is out of range
     """
-    required_keys = ["action", "confidence", "reasoning"]
-    missing = [key for key in required_keys if key not in prediction]
+    value = data.get(field)
+    if value is None and optional:
+        return
+    if value is None:
+        raise ValueError(f"Field {field} is required but got None")
 
-    if missing:
-        raise ValueError(f"Missing required keys in prediction: {missing}")
-
-    # Validate confidence range
-    confidence = prediction["confidence"]
-    if not isinstance(confidence, (int, float)) or not 0.0 <= confidence <= 1.0:
-        raise ValueError(f"Invalid confidence: {confidence}")
+    if min_val is not None and value < min_val:
+        raise ValueError(f"Invalid {field}: {value} < {min_val}")
+    if max_val is not None and value > max_val:
+        raise ValueError(f"Invalid {field}: {value} > {max_val}")
 
 
 @mcp.tool()
@@ -3278,6 +3291,22 @@ def analyze_work_session() -> dict[str, Any]:
         - Focus score: 0.8+ = high focus, 0.5-0.8 = medium, <0.5 = low
         - Breaks: Gaps of 15+ minutes in activity
         - No session: Returns "no_session" status if no recent activity
+
+    Error Modes:
+        **Import Error** (status="error", error_type="import_error"):
+            - Cause: ContextManager module not available
+            - Response: Error details with graceful degradation
+            - Recovery: System continues, feature unavailable
+
+        **Validation Error** (status="error", error_type="validation_error"):
+            - Cause: Invalid analysis data (e.g., focus_score > 1.0, negative duration)
+            - Response: Error with field-specific validation details
+            - Prevention: Strict Pydantic validation at source
+
+        **Runtime Error** (status="error", error_type="runtime_error"):
+            - Cause: Unexpected exceptions (filesystem errors, calculation failures)
+            - Response: Generic error with exception message
+            - Recovery: Safe fallback, no data loss
     """
     try:
         from clauxton.proactive.context_manager import ContextManager
@@ -3288,15 +3317,15 @@ def analyze_work_session() -> dict[str, Any]:
         # Get session analysis
         analysis = manager.analyze_work_session()
 
-        # Validate response structure
-        _validate_session_analysis(analysis)
-
         # Check if there's an active session
         if analysis["duration_minutes"] == 0:
             response = WorkSessionAnalysis(
                 status="no_session",
                 message="No active work session detected",
                 duration_minutes=0,
+                focus_score=None,
+                file_switches=0,
+                error=None,
             )
             return response.model_dump()
 
@@ -3308,6 +3337,8 @@ def analyze_work_session() -> dict[str, Any]:
             breaks=analysis["breaks"],
             file_switches=analysis["file_switches"],
             active_periods=analysis["active_periods"],
+            message=None,
+            error=None,
         )
         return response.model_dump()
 
@@ -3368,6 +3399,22 @@ def predict_next_action() -> dict[str, Any]:
         - Confidence: 0.8+ = high, 0.5-0.8 = medium, <0.5 = low
         - Low confidence may still provide useful suggestions
         - Predictions improve as system learns patterns
+
+    Error Modes:
+        **Import Error** (status="error", error_type="import_error"):
+            - Cause: Required module (ContextManager) not available
+            - Response: Graceful degradation with error details
+            - Example: {"status": "error", "error_type": "import_error", ...}
+
+        **Validation Error** (status="error", error_type="validation_error"):
+            - Cause: Invalid prediction structure or out-of-range values
+            - Common Issues: confidence not in [0.0, 1.0], missing required fields
+            - Response: Error with validation details
+
+        **Runtime Error** (status="error", error_type="runtime_error"):
+            - Cause: Unexpected exceptions during prediction generation
+            - Response: Generic error with exception message
+            - Recovery: Safe fallback, no data corruption
     """
     try:
         from clauxton.proactive.context_manager import ContextManager
@@ -3378,16 +3425,15 @@ def predict_next_action() -> dict[str, Any]:
         # Get prediction
         prediction = manager.predict_next_action()
 
-        # Validate response structure
-        _validate_prediction(prediction)
-
-        # Return successful prediction
+        # Return successful prediction (Pydantic handles validation)
         response = NextActionPrediction(
             status="success",
             action=prediction["action"],
             task_id=prediction.get("task_id"),
             confidence=prediction["confidence"],
             reasoning=prediction["reasoning"],
+            message=None,
+            error=None,
         )
         return response.model_dump()
 
@@ -3429,6 +3475,10 @@ def get_current_context(include_prediction: bool = True) -> dict[str, Any]:
         - focus_score: Focus score (0.0-1.0)
         - breaks_detected: Number of breaks in session
         - predicted_next_action: Predicted next action (if enabled)
+            * action: Predicted action name
+            * confidence: Confidence score (0.0-1.0)
+            * reasoning: Explanation for prediction
+            * prediction_error: Error details if prediction failed (None if successful)
         - uncommitted_changes: Number of uncommitted changes
         - diff_stats: Git diff statistics
 
@@ -3467,6 +3517,23 @@ def get_current_context(include_prediction: bool = True) -> dict[str, Any]:
         - Fast response (<100ms typical)
         - Cached for 30 seconds for performance
         - Includes prediction by default (adds ~20ms)
+
+    Error Handling:
+        **prediction_error Field**:
+            - Populated when prediction generation fails
+            - Contains error type and message
+            - Does not fail entire context retrieval
+            - Example: {"prediction_error": "import_error: ContextManager unavailable"}
+
+        **Graceful Degradation**:
+            - Prediction failure: Returns context without prediction
+            - Session analysis failure: Returns basic context only
+            - Git operations failure: Returns non-git context
+
+        **Status Codes**:
+            - "success": All operations completed successfully
+            - "partial_success": Some features unavailable
+            - "error": Critical failure (rare, entire operation failed)
     """
     # Validate input
     if not isinstance(include_prediction, bool):
@@ -3507,6 +3574,8 @@ def get_current_context(include_prediction: bool = True) -> dict[str, Any]:
             predicted_next_action=context_dict.get("predicted_next_action"),
             uncommitted_changes=context_dict.get("uncommitted_changes", 0),
             diff_stats=context_dict.get("diff_stats"),
+            message=None,
+            error=None,
         )
 
         return response.model_dump()
