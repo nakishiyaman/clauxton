@@ -9,11 +9,11 @@
 [![PyPI Version](https://img.shields.io/pypi/v/clauxton)](https://pypi.org/project/clauxton/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/clauxton)](https://pypi.org/project/clauxton/)
 [![Development Status](https://img.shields.io/badge/status-stable-green.svg)](https://github.com/nakishiyaman/clauxton)
-[![Test Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen.svg)](https://github.com/nakishiyaman/clauxton)
+[![Test Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)](https://github.com/nakishiyaman/clauxton)
 [![codecov](https://codecov.io/gh/nakishiyaman/clauxton/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/clauxton)
 
-> ✅ **Production Ready**: Clauxton v0.12.0 is stable and ready for production use. Complete with Semantic Intelligence (embeddings, vector search), Git Analysis (pattern extraction, task suggestions), Repository Map (12-language support), and comprehensive testing (1,637 tests, 86% coverage).
-> 🔥 **v0.13.0 Week 1** (2025-10-26): **Proactive Intelligence** - Real-time file monitoring with watchdog, pattern detection (bulk edits, new features, refactoring), 2 new MCP tools (27 total)!
+> ✅ **Production Ready**: Clauxton v0.13.0 is stable and ready for production use. Complete with Context Intelligence (work session analysis, action prediction, project awareness), Semantic Intelligence (embeddings, vector search), Git Analysis (pattern extraction, task suggestions), Repository Map (12-language support), and comprehensive testing (1,953+ tests, 90% coverage).
+> 🔥 **v0.13.0** (2025-10-27): **Context Intelligence & Proactive Monitoring** - Real-time work session analysis with focus scoring, AI-powered next action prediction (9 actions), enhanced project context with time awareness, 3 new MCP tools (36 total)!
 > 🤖 **v0.12.0** (2025-10-26): **Semantic Intelligence & Git Analysis** - Local semantic search (embeddings + FAISS), AI-powered task suggestions from commits, decision extraction, 10 new MCP tools (32 total)!
 > ⚡ **v0.11.2** (2025-10-25): Test Optimization - 97% faster test execution (52min → 1m46s), CI improvements for all language parsers!
 > 🚀 **v0.11.1** (2025-10-25): Daily Workflow Commands - `morning` briefing, `daily`/`weekly` summaries, `trends` analysis, `pause`/`resume` work tracking!
@@ -187,7 +187,7 @@ pip install -e .
 
 ### MCP Integration with Claude Code
 
-Set up Clauxton as MCP tools in Claude Code (32 tools available):
+Set up Clauxton as MCP tools in Claude Code (36 tools available):
 
 ```bash
 # 🆕 v0.11.0: Automatic setup with single command
@@ -231,12 +231,12 @@ Claude Code: (Begins implementation)
 - 🔍 **TF-IDF Search** - Relevance-based search with intelligent ranking (powered by scikit-learn)
 - 🤖 **Semantic Search** - ⭐ **NEW v0.12.0**: Local embeddings + FAISS vector search (100% private, no API costs)
 - 📊 **Git Analysis** - ⭐ **NEW v0.12.0**: Pattern extraction, decision detection, AI task suggestions from commits
-- 🧠 **Enhanced Context** - ⭐ **NEW v0.12.0**: Project summaries, knowledge graphs, related entry discovery
-- 👁️ **Proactive Monitoring** - 🔥 **NEW v0.13.0 Week 1**: Real-time file watching, pattern detection (bulk edits, new features, refactoring)
+- 🧠 **Context Intelligence** - 🔥 **NEW v0.13.0**: Work session analysis (duration, focus score, breaks), AI action prediction (9 actions), enhanced project awareness with time context
+- 👁️ **Proactive Monitoring** - 🔥 **NEW v0.13.0**: Real-time file watching, pattern detection (bulk edits, new features, refactoring)
 - 🗺️ **Repository Map** - Automatic codebase indexing with symbol search (12 languages, 3 modes)
 - 🌅 **Daily Workflow Commands** - `morning` briefing, `daily`/`weekly` summaries, `trends` analysis, `pause`/`resume` tracking
 - 🔒 **Privacy First** - 100% local by default, no cloud dependencies
-- 🤖 **MCP Integration** - Seamless integration with Claude Code via Model Context Protocol (34 tools: 32 base + 2 new in v0.13.0 Week 1)
+- 🤖 **MCP Integration** - Seamless integration with Claude Code via Model Context Protocol (36 tools total)
 
 ### ✅ Core Features (v0.10.0)
 
@@ -429,14 +429,19 @@ for symbol in go_symbols:
 - ✅ `get_knowledge_graph` - Knowledge graph visualization
 - ✅ `find_related_entries` - Discover related KB/tasks
 
-**Proactive Monitoring Tools** (2) - 🔥 **NEW v0.13.0 Week 1**:
+**Proactive Monitoring Tools** (2) - 🔥 **NEW v0.13.0**:
 - ✅ `watch_project_changes` - Enable/disable real-time file monitoring
 - ✅ `get_recent_changes` - Get recent changes and detected patterns
 
-**Total**: 34 tools (22 base + 10 v0.12.0 + 2 v0.13.0 Week 1)
+**Context Intelligence Tools** (3) - 🔥 **NEW v0.13.0**:
+- ✅ `analyze_work_session` - Analyze work session (duration, focus score, breaks, file switches)
+- ✅ `predict_next_action` - AI-powered next action prediction (9 supported actions with confidence)
+- ✅ `get_current_context` - Enhanced project context (Git info, active files, time context, session + prediction)
+
+**Total**: 36 tools (22 base + 10 v0.12.0 + 2 proactive + 3 context intelligence)
 
 #### 📊 Quality Metrics
-- ✅ **1,693 Tests** - Comprehensive test coverage (1,228 → 1,637 in v0.12.0 → 1,693 in v0.13.0 Week 1, +56 tests):
+- ✅ **1,953+ Tests** - Comprehensive test coverage (1,228 → 1,637 in v0.12.0 → 1,953+ in v0.13.0, +316 tests):
   - Core modules: 87-96% coverage (knowledge_base, task_manager, conflict_detector, etc.)
   - Intelligence modules: 91-92% coverage (repository_map, symbol_extractor, parser)
     - 441 intelligence tests covering 12 languages (Python, JS, TS, Go, Rust, C++, Java, C#, PHP, Ruby, Swift, Kotlin)
@@ -444,17 +449,145 @@ for symbol in go_symbols:
     - 126 semantic tests (embeddings, vector store, indexer, search engine)
   - **Analysis modules**: 95-99% coverage (git_analyzer, pattern_extractor, decision_extractor, task_suggester) - v0.12.0
     - 82 analysis tests (commit analysis, pattern extraction, task suggestions)
-  - **Proactive modules**: 96-100% coverage (file_monitor, event_processor, config) - 🔥 **NEW v0.13.0 Week 1**
-    - 56 proactive tests (21 config + 20 event_processor + 15 MCP)
-  - MCP server: 92% coverage (34 tools, all tested individually) - Updated v0.13.0 Week 1
-    - 36 total MCP integration tests (21 v0.12.0 + 15 v0.13.0)
+  - **Proactive modules**: 89-100% coverage (file_monitor, event_processor, context_manager, suggestion_engine, behavior_tracker, config) - 🔥 **NEW v0.13.0**
+    - 316 proactive tests (Week 1: 56, Week 2: 132, Week 3: 128) covering all Context Intelligence features
+  - MCP server: 93% coverage (36 tools, all tested individually) - Updated v0.13.0
+    - 54 total MCP integration tests (21 v0.12.0 + 15 proactive + 18 context intelligence)
   - CLI modules: 69-94% coverage (main, tasks, conflicts, config, repository, mcp)
   - Utils modules: 89-97% coverage (yaml, file, backup, logger)
-- ✅ **86% Coverage** - High code quality maintained across all modules (including new v0.13.0 features)
+- ✅ **90% Coverage** - High code quality maintained across all modules (including v0.13.0 Context Intelligence)
 - ✅ **Type Safe** - Full Pydantic validation with strict mypy mode
-- ✅ **Production Ready** - Stable v0.12.0 release with Semantic Intelligence & Git Analysis
+- ✅ **Production Ready** - Stable v0.13.0 release with Context Intelligence & Proactive Monitoring
 
-### 👁️ Proactive Monitoring (v0.13.0 Week 1)
+### 🧠 Context Intelligence (v0.13.0)
+
+#### 🎯 Work Session Analysis
+Automatically track and analyze your development sessions:
+- ✅ **Session Duration**: Automatic tracking from first file change (30-minute session timeout)
+- ✅ **Focus Score**: 0.0-1.0 score based on file switching patterns
+  - High focus (0.8+): Concentrated work with few file switches
+  - Medium focus (0.5-0.8): Moderate context switching
+  - Low focus (<0.5): Scattered work across many files
+- ✅ **Break Detection**: Automatically detect breaks ≥15 minutes (configurable)
+- ✅ **Active Periods**: Track continuous work periods between breaks
+- ✅ **Performance**: <50ms analysis, 30-second caching for speed
+
+**Focus Score Formula**: `max(0, 1 - (file_switches / (duration_minutes / 10)))`
+
+#### 🤖 AI Action Prediction
+Get intelligent recommendations for what to do next:
+- ✅ **9 Supported Actions**: run_tests, write_tests, commit_changes, create_pr, take_break, morning_planning, resume_work, review_code, no_clear_action
+- ✅ **Confidence Scoring**: 0.0-1.0 confidence for each prediction
+  - High (0.8+): Strong recommendation, follow it
+  - Medium (0.5-0.8): Consider as suggestion
+  - Low (<0.5): Informational only
+- ✅ **Context-Aware**: Analyzes git status, file changes, session duration, time of day
+- ✅ **Reasoning**: Human-readable explanations for each prediction
+
+**Example Predictions**:
+```
+Action: run_tests (confidence: 0.87)
+Reasoning: 15 files changed without recent test runs. Run tests before committing.
+
+Action: take_break (confidence: 0.85)
+Reasoning: Session duration 120 minutes with 0 breaks. Take a 10-minute break.
+
+Action: commit_changes (confidence: 0.75)
+Reasoning: 8 files modified, tests passing. Ready to commit.
+```
+
+#### 📊 Enhanced Project Context
+Get rich context about your project state:
+- ✅ **Git Information**: Current branch, recent commits, uncommitted changes, diff stats
+- ✅ **Active Files**: Recently modified files (last 30 minutes) with timestamps
+- ✅ **Time Context**: Morning (6-12), Afternoon (12-18), Evening (18-22), Night (22-6)
+- ✅ **Work Session**: Duration, focus score, breaks, active periods
+- ✅ **Predicted Action**: Next recommended action with confidence and reasoning (optional)
+- ✅ **Performance**: 30-second caching, <100ms with prediction, <50ms without
+
+**Use Cases**:
+- 🌅 "What should I work on today?" → Morning planning with yesterday's context
+- 🎯 "Am I ready to commit?" → Check if tests need to run first
+- 📈 "How's my session going?" → Session analysis with focus score
+- 🔄 "Where did I leave off?" → Project context with recent activity
+- ⏸️  "Should I take a break?" → Break recommendations based on session duration
+
+**CLI Usage** (coming soon):
+```bash
+# Analyze work session
+clauxton session analyze
+# → Duration: 87 minutes, Focus: 0.82 (high), Breaks: 0
+
+# Get next action prediction
+clauxton next-action
+# → Recommendation: run_tests (85% confidence)
+# → Reasoning: 12 files changed without recent test runs
+
+# Get full project context
+clauxton context
+# → Git: feature/api-refactor (3 commits ahead)
+# → Session: 87min, Focus: 0.82
+# → Prediction: run_tests (0.85)
+```
+
+**MCP Tools** (3 new tools for Claude Code):
+```python
+# Analyze work session
+analyze_work_session()
+# → {
+#   "status": "success",
+#   "duration_minutes": 87,
+#   "focus_score": 0.82,
+#   "breaks": [],
+#   "file_switches": 12
+# }
+
+# Predict next action
+predict_next_action()
+# → {
+#   "action": "run_tests",
+#   "confidence": 0.87,
+#   "reasoning": "15 files changed without recent test runs"
+# }
+
+# Get current context (with prediction)
+get_current_context(include_prediction=True)
+# → {
+#   "current_branch": "feature/api-refactor",
+#   "uncommitted_changes": 8,
+#   "session_duration_minutes": 87,
+#   "focus_score": 0.82,
+#   "predicted_next_action": {
+#     "action": "run_tests",
+#     "confidence": 0.87
+#   }
+# }
+```
+
+**Natural Language with Claude Code**:
+```
+You: "How's my work session going?"
+Claude Code: → Calls analyze_work_session()
+"Your session: 87 minutes with high focus (0.82).
+You've modified 12 files without taking a break.
+Consider taking a short break after 90 minutes."
+
+You: "What should I do before committing?"
+Claude Code: → Calls predict_next_action()
+"Recommendation: Run tests (85% confidence).
+You've changed 15 files without recent test runs."
+
+You: "Give me full project context"
+Claude Code: → Calls get_current_context(include_prediction=True)
+"Working on: feature/api-refactor (3 commits ahead)
+Session: 87 minutes, focus 0.82 (high)
+Uncommitted: 8 files
+Suggestion: run_tests (85% confidence)"
+```
+
+See [Context Intelligence Guide](docs/guides/CONTEXT_INTELLIGENCE_GUIDE.md) for complete documentation.
+
+### 👁️ Proactive Monitoring (v0.13.0)
 
 #### 🔥 Real-time File Monitoring
 - ✅ **watchdog Integration**: Background file change detection
@@ -770,7 +903,7 @@ The Clauxton MCP Server provides full Knowledge Base and Task Management for Cla
 - `task_next()` - Get AI-recommended next task
 - `task_delete(task_id)` - Delete task
 
-See [MCP Documentation Index](docs/mcp-index.md) for complete MCP Server documentation (36 tools across 8 categories).
+See [MCP Documentation Index](docs/mcp-index.md) for complete MCP Server documentation (36 tools across 9 categories).
 
 ### Conflict Detection Commands
 
@@ -927,10 +1060,14 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 - [Quick Start Guide](docs/quick-start.md) - Get started in 5 minutes (CLI)
 - **[Developer Workflow Guide](docs/DEVELOPER_WORKFLOW_GUIDE.md)** - Complete development workflow with examples and diagrams ✨ v0.10.0
 - **[Installation Guide](docs/INSTALLATION_GUIDE.md)** - Shell alias setup, virtual environment isolation explained
-- **[MCP Integration Guide](docs/MCP_INTEGRATION_GUIDE.md)** - Step-by-step Claude Code integration (34 tools)
+- **[MCP Integration Guide](docs/MCP_INTEGRATION_GUIDE.md)** - Step-by-step Claude Code integration (36 tools)
+- **[Context Intelligence Guide](docs/guides/CONTEXT_INTELLIGENCE_GUIDE.md)** - Work session analysis, action prediction, project context ✨ v0.13.0 🔥
+- **[Workflow Examples](docs/guides/WORKFLOW_EXAMPLES.md)** - Real-world workflows with Context Intelligence ✨ v0.13.0 🔥
+- **[Best Practices](docs/guides/BEST_PRACTICES.md)** - Optimization tips and proven patterns ✨ v0.13.0 🔥
+- **[Troubleshooting Guide](docs/guides/TROUBLESHOOTING.md)** - Common issues and solutions ✨ v0.13.0 🔥
 - **[Semantic Search Guide](docs/SEMANTIC_SEARCH_GUIDE.md)** - Local semantic search with embeddings and FAISS ✨ v0.12.0
 - **[Git Analysis Guide](docs/GIT_ANALYSIS_GUIDE.md)** - Pattern extraction and task suggestions from commits ✨ v0.12.0
-- **[Proactive Monitoring Guide](docs/PROACTIVE_MONITORING_GUIDE.md)** - Real-time file watching and pattern detection ✨ v0.13.0 Week 1 🔥
+- **[Proactive Monitoring Guide](docs/PROACTIVE_MONITORING_GUIDE.md)** - Real-time file watching and pattern detection ✨ v0.13.0 🔥
 - **[Repository Map Guide](docs/REPOSITORY_MAP_GUIDE.md)** - Multi-language symbol extraction and search ✨ v0.11.0
 - **[Daily Workflow Guide](docs/DAILY_WORKFLOW_GUIDE.md)** - Morning briefing, summaries, and trends ✨ v0.11.1
 - [Tutorial: Your First Knowledge Base](docs/tutorial-first-kb.md) - 30-minute beginner guide
