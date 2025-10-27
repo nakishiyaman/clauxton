@@ -88,15 +88,19 @@ class ContextManager:
         self._cache: Dict[str, Any] = {}
         self._cache_timeout = timedelta(seconds=30)  # Cache for 30 seconds
 
-    def get_current_context(self) -> ProjectContext:
+    def get_current_context(self, include_prediction: bool = True) -> ProjectContext:
         """
         Get comprehensive project context.
+
+        Args:
+            include_prediction: Whether to include next action prediction (default: True)
+                               Set to False to avoid circular dependency
 
         Returns:
             ProjectContext with all available information
         """
         # Check cache
-        cache_key = "current_context"
+        cache_key = f"current_context_{include_prediction}"
         if cache_key in self._cache:
             cached_data = self._cache[cache_key]
             cached_context: ProjectContext = cached_data[0]
@@ -104,8 +108,16 @@ class ContextManager:
             if datetime.now() - cached_time < self._cache_timeout:
                 return cached_context
 
-        # Build fresh context
+        # Week 3: Calculate new fields
+        session_duration = self._calculate_session_duration()
+        focus_score = self._calculate_focus_score()
+        breaks = self._detect_breaks()
+        uncommitted = self._count_uncommitted_changes()
+        diff_stats = self._get_git_diff_stats()
+
+        # Build fresh context (without prediction first to avoid circular dependency)
         context = ProjectContext(
+            # Original fields
             current_branch=self._get_current_branch(),
             active_files=self.detect_active_files(minutes=30),
             recent_commits=self._get_recent_commits(limit=5),
@@ -115,12 +127,161 @@ class ContextManager:
             last_activity=datetime.now(),
             is_feature_branch=self._is_feature_branch(),
             is_git_repo=self._is_git_repository(),
+            # Week 3: New fields
+            session_duration_minutes=session_duration,
+            focus_score=round(focus_score, 2) if focus_score else None,
+            breaks_detected=len(breaks),
+            uncommitted_changes=uncommitted,
+            diff_stats=diff_stats,
+            predicted_next_action=None,  # Will be populated below if needed
         )
 
-        # Cache the result
+        # Cache the basic context temporarily for prediction
         self._cache[cache_key] = (context, datetime.now())
 
+        # Add prediction if requested (uses the cached context above)
+        if include_prediction:
+            try:
+                prediction = self._predict_next_action_internal(context)
+                context = ProjectContext(
+                    **context.model_dump(exclude={"predicted_next_action"}),
+                    predicted_next_action=prediction,
+                )
+                # Update cache with full context
+                self._cache[cache_key] = (context, datetime.now())
+            except Exception as e:
+                logger.error(f"Error predicting next action: {e}")
+                # Keep context without prediction
+
         return context
+
+    def _predict_next_action_internal(
+        self, context: ProjectContext
+    ) -> Dict[str, Any]:
+        """
+        Internal prediction method that uses provided context.
+
+        Args:
+            context: ProjectContext to use for prediction
+
+        Returns:
+            Dictionary with prediction details
+        """
+        predictions: List[Dict[str, Any]] = []
+
+        # 1. File change patterns
+        active_files = context.active_files
+
+        # Check for test files
+        test_files = [f for f in active_files if "test" in f.lower()]
+        impl_files = [
+            f
+            for f in active_files
+            if f.endswith(".py") and "test" not in f.lower()
+        ]
+
+        if test_files:
+            predictions.append(
+                {
+                    "action": "run_tests",
+                    "confidence": 0.80,
+                    "reasoning": f"{len(test_files)} test file(s) recently modified",
+                }
+            )
+        elif impl_files and not test_files:
+            predictions.append(
+                {
+                    "action": "write_tests",
+                    "confidence": 0.70,
+                    "reasoning": f"{len(impl_files)} implementation file(s) modified without tests",
+                }
+            )
+
+        # 2. Git context - uncommitted changes
+        uncommitted = context.uncommitted_changes
+        if uncommitted >= 10:
+            predictions.append(
+                {
+                    "action": "commit_changes",
+                    "confidence": 0.85,
+                    "reasoning": f"{uncommitted} uncommitted file(s) - good time to commit",
+                }
+            )
+        elif uncommitted >= 5:
+            predictions.append(
+                {
+                    "action": "review_changes",
+                    "confidence": 0.70,
+                    "reasoning": f"{uncommitted} uncommitted file(s) - review before committing",
+                }
+            )
+
+        # 3. Feature branch with many changes
+        if context.is_feature_branch and uncommitted >= 15:
+            predictions.append(
+                {
+                    "action": "create_pr",
+                    "confidence": 0.75,
+                    "reasoning": f"Feature branch with {uncommitted} changes - ready for PR",
+                }
+            )
+
+        # 4. Time context
+        time_ctx = context.time_context
+        if time_ctx == "morning" and uncommitted < 3:
+            predictions.append(
+                {
+                    "action": "planning",
+                    "confidence": 0.60,
+                    "reasoning": "Morning with few changes - good for planning",
+                }
+            )
+        elif time_ctx == "evening" and uncommitted >= 3:
+            predictions.append(
+                {
+                    "action": "documentation",
+                    "confidence": 0.65,
+                    "reasoning": "Evening with changes made - good for documentation",
+                }
+            )
+        elif time_ctx == "night":
+            predictions.append(
+                {
+                    "action": "wrap_up",
+                    "confidence": 0.70,
+                    "reasoning": "Late evening - consider wrapping up work",
+                }
+            )
+
+        # 5. Long session with high focus
+        session_duration = context.session_duration_minutes or 0
+        focus_score = context.focus_score or 0.5
+        if session_duration > 90 and focus_score > 0.7:
+            predictions.append(
+                {
+                    "action": "take_break",
+                    "confidence": 0.75,
+                    "reasoning": f"Long focused session ({session_duration}min) - time for a break",
+                }
+            )
+
+        # Return highest confidence prediction
+        if predictions:
+            best = max(predictions, key=lambda p: p["confidence"])
+            return {
+                "action": best["action"],
+                "task_id": context.current_task,
+                "confidence": round(best["confidence"], 2),
+                "reasoning": best["reasoning"],
+            }
+
+        # Default: continue work
+        return {
+            "action": "continue_work",
+            "task_id": context.current_task,
+            "confidence": 0.50,
+            "reasoning": "No clear pattern detected - continue current work",
+        }
 
     def detect_active_files(self, minutes: int = 30) -> List[str]:
         """
@@ -403,3 +564,318 @@ class ContextManager:
     def clear_cache(self) -> None:
         """Clear the context cache."""
         self._cache.clear()
+
+    # Week 3: Git Statistics Methods
+
+    def _count_uncommitted_changes(self) -> int:
+        """
+        Count number of files with uncommitted changes.
+
+        Returns:
+            Number of files with uncommitted changes (0 if not a git repo)
+        """
+        if not self._is_git_repository():
+            return 0
+
+        try:
+            result = subprocess.run(
+                ["git", "status", "--porcelain"],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+                timeout=3,
+            )
+
+            if result.returncode == 0:
+                lines = result.stdout.strip().split("\n")
+                return len([line for line in lines if line.strip()])
+
+        except subprocess.TimeoutExpired:
+            logger.warning("Timeout counting uncommitted changes")
+        except FileNotFoundError:
+            logger.debug("git command not available")
+        except Exception as e:
+            logger.error(f"Error counting uncommitted changes: {e}")
+
+        return 0
+
+    def _get_git_diff_stats(self) -> Optional[Dict[str, int]]:
+        """
+        Get git diff statistics for uncommitted changes.
+
+        Returns:
+            Dictionary with keys: additions, deletions, files_changed
+            or None if not a git repo or error occurs
+        """
+        if not self._is_git_repository():
+            return None
+
+        try:
+            # Get diff stats
+            result = subprocess.run(
+                ["git", "diff", "--stat"],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+
+            if result.returncode == 0:
+                output = result.stdout.strip()
+                if not output:
+                    return {"additions": 0, "deletions": 0, "files_changed": 0}
+
+                # Parse last line: "X files changed, Y insertions(+), Z deletions(-)"
+                lines = output.split("\n")
+                summary = lines[-1] if lines else ""
+
+                # Extract numbers using regex
+                import re
+
+                files_match = re.search(r"(\d+) files? changed", summary)
+                additions_match = re.search(r"(\d+) insertions?", summary)
+                deletions_match = re.search(r"(\d+) deletions?", summary)
+
+                return {
+                    "additions": int(additions_match.group(1)) if additions_match else 0,
+                    "deletions": int(deletions_match.group(1)) if deletions_match else 0,
+                    "files_changed": int(files_match.group(1)) if files_match else 0,
+                }
+
+        except subprocess.TimeoutExpired:
+            logger.warning("Timeout getting git diff stats")
+        except FileNotFoundError:
+            logger.debug("git command not available")
+        except Exception as e:
+            logger.error(f"Error getting git diff stats: {e}")
+
+        return None
+
+    # Week 3: Session Analysis Helper Methods
+
+    def _calculate_session_duration(self) -> int:
+        """
+        Calculate current session duration in minutes.
+
+        Returns:
+            Session duration in minutes (0 if no session detected)
+        """
+        session_start = self._estimate_session_start()
+        if session_start:
+            duration = (datetime.now() - session_start).total_seconds() / 60
+            return int(duration)
+        return 0
+
+    def _calculate_focus_score(self) -> float:
+        """
+        Calculate focus score based on file switch frequency.
+
+        Algorithm:
+        - High focus (0.8-1.0): <5 file switches per hour
+        - Medium focus (0.5-0.8): 5-15 switches per hour
+        - Low focus (0.0-0.5): >15 switches per hour
+
+        Returns:
+            Focus score between 0.0 and 1.0
+        """
+        duration_minutes = self._calculate_session_duration()
+        if duration_minutes == 0:
+            return 0.5  # Neutral score for new sessions
+
+        active_files = self.detect_active_files(minutes=duration_minutes)
+        file_count = len(active_files)
+
+        # Calculate switches per hour
+        duration_hours = duration_minutes / 60.0
+        if duration_hours > 0:
+            switches_per_hour = file_count / duration_hours
+
+            if switches_per_hour < 5:
+                # High focus: map [0, 5) to [0.85, 1.0]
+                return min(1.0, 0.85 + (5 - switches_per_hour) * 0.03)
+            elif switches_per_hour < 15:
+                # Medium focus: map [5, 15) to [0.5, 0.85]
+                normalized = (15 - switches_per_hour) / 10.0  # [0, 1]
+                return 0.5 + normalized * 0.35
+            else:
+                # Low focus: map [15, ∞) to [0.0, 0.5]
+                penalty = min(switches_per_hour - 15, 25) / 25.0  # Cap at 40 switches/hr
+                return max(0.0, 0.5 - penalty * 0.5)
+
+        return 0.5
+
+    def _detect_breaks(self) -> List[Dict[str, Any]]:
+        """
+        Detect breaks in work session (15+ minute gaps in file activity).
+
+        Returns:
+            List of breaks with start and end times
+        """
+        breaks: List[Dict[str, Any]] = []
+
+        # Get active files from last 2 hours
+        active_files = self.detect_active_files(minutes=120)
+        if not active_files:
+            return breaks
+
+        # Get modification times for all files
+        file_times: List[datetime] = []
+        for file_path in active_files:
+            try:
+                full_path = self.project_root / file_path
+                if full_path.exists():
+                    mtime = datetime.fromtimestamp(full_path.stat().st_mtime)
+                    file_times.append(mtime)
+            except Exception:
+                pass
+
+        if len(file_times) < 2:
+            return breaks
+
+        # Sort times
+        file_times.sort()
+
+        # Find gaps of 15+ minutes
+        break_threshold = timedelta(minutes=15)
+        for i in range(len(file_times) - 1):
+            gap = file_times[i + 1] - file_times[i]
+            if gap >= break_threshold:
+                breaks.append(
+                    {
+                        "start": file_times[i],
+                        "end": file_times[i + 1],
+                        "duration_minutes": int(gap.total_seconds() / 60),
+                    }
+                )
+
+        return breaks
+
+    def _calculate_active_periods(
+        self, breaks: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """
+        Calculate active work periods between breaks.
+
+        Args:
+            breaks: List of breaks from _detect_breaks()
+
+        Returns:
+            List of active periods with start, end, and duration
+        """
+        if not breaks:
+            # No breaks: entire session is one active period
+            session_start = self._estimate_session_start()
+            if session_start:
+                duration = (datetime.now() - session_start).total_seconds() / 60
+                return [
+                    {
+                        "start": session_start,
+                        "end": datetime.now(),
+                        "duration_minutes": int(duration),
+                    }
+                ]
+            return []
+
+        active_periods: List[Dict[str, Any]] = []
+        session_start = self._estimate_session_start()
+
+        if not session_start:
+            return []
+
+        # Period before first break
+        first_break = breaks[0]
+        if first_break["start"] > session_start:
+            duration = (first_break["start"] - session_start).total_seconds() / 60
+            active_periods.append(
+                {
+                    "start": session_start,
+                    "end": first_break["start"],
+                    "duration_minutes": int(duration),
+                }
+            )
+
+        # Periods between breaks
+        for i in range(len(breaks) - 1):
+            current_break = breaks[i]
+            next_break = breaks[i + 1]
+            duration = (
+                next_break["start"] - current_break["end"]
+            ).total_seconds() / 60
+            active_periods.append(
+                {
+                    "start": current_break["end"],
+                    "end": next_break["start"],
+                    "duration_minutes": int(duration),
+                }
+            )
+
+        # Period after last break
+        last_break = breaks[-1]
+        duration = (datetime.now() - last_break["end"]).total_seconds() / 60
+        active_periods.append(
+            {
+                "start": last_break["end"],
+                "end": datetime.now(),
+                "duration_minutes": int(duration),
+            }
+        )
+
+        return active_periods
+
+    # Week 3: Main Analysis Methods
+
+    def analyze_work_session(self) -> Dict[str, Any]:
+        """
+        Analyze current work session.
+
+        Returns:
+            Dictionary with session analysis:
+            - duration_minutes: Session duration in minutes
+            - focus_score: Focus score (0.0-1.0)
+            - breaks: List of breaks detected
+            - file_switches: Number of file switches
+            - active_periods: List of active work periods
+        """
+        # Calculate duration
+        duration_minutes = self._calculate_session_duration()
+
+        # Calculate focus score
+        focus_score = self._calculate_focus_score()
+
+        # Detect breaks
+        breaks = self._detect_breaks()
+
+        # Get active files
+        minutes = duration_minutes if duration_minutes > 0 else 30
+        active_files = self.detect_active_files(minutes=minutes)
+
+        # Calculate active periods
+        active_periods = self._calculate_active_periods(breaks)
+
+        return {
+            "duration_minutes": duration_minutes,
+            "focus_score": round(focus_score, 2),
+            "breaks": breaks,
+            "file_switches": len(active_files),
+            "active_periods": active_periods,
+        }
+
+    def predict_next_action(self) -> Dict[str, Any]:
+        """
+        Predict likely next action based on context.
+
+        Uses rule-based prediction analyzing:
+        - File change patterns (test files, implementation files)
+        - Git context (uncommitted changes, branch status)
+        - Time context (morning, afternoon, evening, night)
+
+        Returns:
+            Dictionary with prediction:
+            - action: Predicted action name
+            - task_id: Related task ID (if available)
+            - confidence: Confidence score (0.0-1.0)
+            - reasoning: Explanation of prediction
+        """
+        # Get context without prediction to avoid circular dependency
+        context = self.get_current_context(include_prediction=False)
+        return self._predict_next_action_internal(context)
