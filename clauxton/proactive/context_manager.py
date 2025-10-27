@@ -6,6 +6,7 @@ including git branch, active files, recent commits, and time-based context.
 """
 
 import logging
+import re
 import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -14,6 +15,12 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 logger = logging.getLogger(__name__)
+
+# Week 3: Context Intelligence Constants
+BREAK_THRESHOLD_MINUTES = 15  # Minimum gap to be considered a break
+HIGH_FOCUS_THRESHOLD = 5  # File switches per hour for high focus
+MEDIUM_FOCUS_THRESHOLD = 15  # File switches per hour for medium focus
+SESSION_LOOKBACK_HOURS = 2  # How far back to look for session start
 
 
 class ProjectContext(BaseModel):
@@ -519,8 +526,6 @@ class ContextManager:
 
         # Try to extract task ID from branch name
         # Common patterns: feature/TASK-123, fix/TASK-456
-        import re
-
         task_pattern = r"TASK-\d+"
         match = re.search(task_pattern, branch)
         if match:
@@ -539,10 +544,14 @@ class ContextManager:
         """
         Estimate when current work session started.
 
+        Looks back SESSION_LOOKBACK_HOURS hours to find the oldest
+        modified file, which approximates when the work session began.
+
         Returns:
-            Estimated session start time
+            Estimated session start time or None if no active files
         """
-        active_files = self.detect_active_files(minutes=120)  # Check last 2 hours
+        lookback_minutes = SESSION_LOOKBACK_HOURS * 60
+        active_files = self.detect_active_files(minutes=lookback_minutes)
 
         if not active_files:
             return None
@@ -558,7 +567,11 @@ class ContextManager:
                         oldest_time = mtime
 
             return oldest_time
-        except Exception:
+        except OSError as e:
+            logger.warning(f"Error accessing file stats: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error estimating session start: {e}")
             return None
 
     def clear_cache(self) -> None:
@@ -630,8 +643,6 @@ class ContextManager:
                 summary = lines[-1] if lines else ""
 
                 # Extract numbers using regex
-                import re
-
                 files_match = re.search(r"(\d+) files? changed", summary)
                 additions_match = re.search(r"(\d+) insertions?", summary)
                 deletions_match = re.search(r"(\d+) deletions?", summary)
@@ -671,9 +682,14 @@ class ContextManager:
         Calculate focus score based on file switch frequency.
 
         Algorithm:
-        - High focus (0.8-1.0): <5 file switches per hour
-        - Medium focus (0.5-0.8): 5-15 switches per hour
-        - Low focus (0.0-0.5): >15 switches per hour
+        - High focus (0.8-1.0): < HIGH_FOCUS_THRESHOLD switches/hour
+        - Medium focus (0.5-0.8): HIGH_FOCUS_THRESHOLD to MEDIUM_FOCUS_THRESHOLD switches/hour
+        - Low focus (0.0-0.5): > MEDIUM_FOCUS_THRESHOLD switches/hour
+
+        The algorithm considers that:
+        - Very few switches = deep focus on one area
+        - Moderate switches = exploring related code
+        - Many switches = scattered attention or exploratory work
 
         Returns:
             Focus score between 0.0 and 1.0
@@ -682,39 +698,52 @@ class ContextManager:
         if duration_minutes == 0:
             return 0.5  # Neutral score for new sessions
 
+        # For very short sessions (<5 min), return neutral score
+        if duration_minutes < 5:
+            return 0.5
+
         active_files = self.detect_active_files(minutes=duration_minutes)
         file_count = len(active_files)
 
+        # Single file = maximum focus
+        if file_count <= 1:
+            return 1.0
+
         # Calculate switches per hour
         duration_hours = duration_minutes / 60.0
-        if duration_hours > 0:
-            switches_per_hour = file_count / duration_hours
+        switches_per_hour = file_count / duration_hours
 
-            if switches_per_hour < 5:
-                # High focus: map [0, 5) to [0.85, 1.0]
-                return min(1.0, 0.85 + (5 - switches_per_hour) * 0.03)
-            elif switches_per_hour < 15:
-                # Medium focus: map [5, 15) to [0.5, 0.85]
-                normalized = (15 - switches_per_hour) / 10.0  # [0, 1]
-                return 0.5 + normalized * 0.35
-            else:
-                # Low focus: map [15, ∞) to [0.0, 0.5]
-                penalty = min(switches_per_hour - 15, 25) / 25.0  # Cap at 40 switches/hr
-                return max(0.0, 0.5 - penalty * 0.5)
-
-        return 0.5
+        if switches_per_hour < HIGH_FOCUS_THRESHOLD:
+            # High focus: map [0, 5) to [0.85, 1.0]
+            normalized = (HIGH_FOCUS_THRESHOLD - switches_per_hour) / HIGH_FOCUS_THRESHOLD
+            return min(1.0, 0.85 + normalized * 0.15)
+        elif switches_per_hour < MEDIUM_FOCUS_THRESHOLD:
+            # Medium focus: map [5, 15) to [0.5, 0.85]
+            range_size = MEDIUM_FOCUS_THRESHOLD - HIGH_FOCUS_THRESHOLD
+            normalized = (MEDIUM_FOCUS_THRESHOLD - switches_per_hour) / range_size
+            return 0.5 + normalized * 0.35
+        else:
+            # Low focus: map [15, ∞) to [0.0, 0.5]
+            # Cap at 40 switches/hr for the calculation
+            capped_switches = min(switches_per_hour, 40)
+            penalty = (capped_switches - MEDIUM_FOCUS_THRESHOLD) / 25.0
+            return max(0.0, 0.5 - penalty * 0.5)
 
     def _detect_breaks(self) -> List[Dict[str, Any]]:
         """
-        Detect breaks in work session (15+ minute gaps in file activity).
+        Detect breaks in work session (BREAK_THRESHOLD_MINUTES+ gaps in file activity).
+
+        A break is defined as a gap of BREAK_THRESHOLD_MINUTES or more between
+        file modifications. This helps identify when the user stepped away from work.
 
         Returns:
-            List of breaks with start and end times
+            List of breaks with start, end, and duration_minutes
         """
         breaks: List[Dict[str, Any]] = []
 
-        # Get active files from last 2 hours
-        active_files = self.detect_active_files(minutes=120)
+        # Get active files from last SESSION_LOOKBACK_HOURS
+        lookback_minutes = SESSION_LOOKBACK_HOURS * 60
+        active_files = self.detect_active_files(minutes=lookback_minutes)
         if not active_files:
             return breaks
 
@@ -726,17 +755,21 @@ class ContextManager:
                 if full_path.exists():
                     mtime = datetime.fromtimestamp(full_path.stat().st_mtime)
                     file_times.append(mtime)
-            except Exception:
-                pass
+            except OSError as e:
+                logger.debug(f"Could not stat file {file_path}: {e}")
+                continue
+            except Exception as e:
+                logger.warning(f"Unexpected error getting file time for {file_path}: {e}")
+                continue
 
         if len(file_times) < 2:
             return breaks
 
-        # Sort times
-        file_times.sort()
+        # Sort and deduplicate times (files modified at same second)
+        file_times = sorted(set(file_times))
 
-        # Find gaps of 15+ minutes
-        break_threshold = timedelta(minutes=15)
+        # Find gaps of BREAK_THRESHOLD_MINUTES+ minutes
+        break_threshold = timedelta(minutes=BREAK_THRESHOLD_MINUTES)
         for i in range(len(file_times) - 1):
             gap = file_times[i + 1] - file_times[i]
             if gap >= break_threshold:
@@ -751,36 +784,37 @@ class ContextManager:
         return breaks
 
     def _calculate_active_periods(
-        self, breaks: List[Dict[str, Any]]
+        self, breaks: List[Dict[str, Any]], session_start: Optional[datetime] = None
     ) -> List[Dict[str, Any]]:
         """
         Calculate active work periods between breaks.
 
         Args:
             breaks: List of breaks from _detect_breaks()
+            session_start: Optional pre-calculated session start time (avoids redundant call)
 
         Returns:
-            List of active periods with start, end, and duration
+            List of active periods with start, end, and duration_minutes
         """
-        if not breaks:
-            # No breaks: entire session is one active period
+        # Get session start (use cached value if provided)
+        if session_start is None:
             session_start = self._estimate_session_start()
-            if session_start:
-                duration = (datetime.now() - session_start).total_seconds() / 60
-                return [
-                    {
-                        "start": session_start,
-                        "end": datetime.now(),
-                        "duration_minutes": int(duration),
-                    }
-                ]
-            return []
-
-        active_periods: List[Dict[str, Any]] = []
-        session_start = self._estimate_session_start()
 
         if not session_start:
             return []
+
+        if not breaks:
+            # No breaks: entire session is one active period
+            duration = (datetime.now() - session_start).total_seconds() / 60
+            return [
+                {
+                    "start": session_start,
+                    "end": datetime.now(),
+                    "duration_minutes": int(duration),
+                }
+            ]
+
+        active_periods: List[Dict[str, Any]] = []
 
         # Period before first break
         first_break = breaks[0]
@@ -828,16 +862,28 @@ class ContextManager:
         """
         Analyze current work session.
 
+        Provides a comprehensive analysis of the current work session including:
+        - Duration tracking
+        - Focus score based on file switching behavior
+        - Break detection (gaps in activity)
+        - Active work periods (time between breaks)
+
         Returns:
             Dictionary with session analysis:
             - duration_minutes: Session duration in minutes
             - focus_score: Focus score (0.0-1.0)
             - breaks: List of breaks detected
-            - file_switches: Number of file switches
+            - file_switches: Number of unique files modified
             - active_periods: List of active work periods
         """
+        # Get session start once (used by multiple methods)
+        session_start = self._estimate_session_start()
+
         # Calculate duration
-        duration_minutes = self._calculate_session_duration()
+        if session_start:
+            duration_minutes = int((datetime.now() - session_start).total_seconds() / 60)
+        else:
+            duration_minutes = 0
 
         # Calculate focus score
         focus_score = self._calculate_focus_score()
@@ -849,8 +895,8 @@ class ContextManager:
         minutes = duration_minutes if duration_minutes > 0 else 30
         active_files = self.detect_active_files(minutes=minutes)
 
-        # Calculate active periods
-        active_periods = self._calculate_active_periods(breaks)
+        # Calculate active periods (pass session_start to avoid redundant calculation)
+        active_periods = self._calculate_active_periods(breaks, session_start)
 
         return {
             "duration_minutes": duration_minutes,
