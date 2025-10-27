@@ -177,6 +177,44 @@ clauxton config set confirmation_mode never   # Maximum speed
 clauxton config list            # View all configuration
 ```
 
+#### 🖥️ Interactive TUI (v0.14.0 NEW!)
+
+Launch the Terminal User Interface for a visual, keyboard-driven experience:
+
+```bash
+# Launch Clauxton TUI
+clauxton tui
+
+# Key features:
+# → Visual Knowledge Base browser with tree view
+# → Fast search with autocomplete (4 modes: Normal/AI/File/Symbol)
+# → AI suggestions panel with auto-refresh
+# → Vim-style navigation (hjkl)
+# → Quick actions (a=Ask AI, s=Suggestions, n=New Task, e=New Entry)
+# → Context-aware help (F1 or ?)
+
+# Essential shortcuts:
+#   /        - Open search modal
+#   a        - Ask AI question
+#   s        - Toggle suggestions panel
+#   h/l      - Navigate between panels
+#   F1 or ?  - Show all keyboard shortcuts
+#   q        - Quit
+```
+
+**Learn More**:
+- 📖 **[TUI User Guide](docs/TUI_USER_GUIDE.md)** - Complete guide with workflows and troubleshooting
+- ⌨️ **[Keyboard Shortcuts](docs/TUI_KEYBOARD_SHORTCUTS.md)** - Quick reference card (printable)
+
+**TUI Features**:
+- 🎨 Clean, organized interface with multiple panels
+- ⚡ Fast file search with caching (no lag even with 10,000+ files)
+- 🔍 Multi-mode search (Normal, AI, File, Symbol)
+- 💡 Context-aware AI suggestions with auto-refresh
+- ⌨️ Extensive keyboard shortcuts for power users
+- 🎯 Vim-style navigation support
+- 📊 Real-time statistics and status indicators
+
 ### Install from Source (Development)
 
 ```bash
@@ -225,6 +263,7 @@ Claude Code: (Begins implementation)
 
 ## ✨ Features
 
+- 🖥️ **Interactive TUI** - 🔥 **NEW v0.14.0**: Terminal UI with visual KB browser, multi-mode search, AI suggestions, Vim navigation
 - 🧠 **Persistent Knowledge Base** - Store architecture decisions, patterns, constraints across sessions
 - 📋 **Task Management** - AI-powered task tracking with automatic dependency inference
 - ⚠️ **Conflict Detection** - Predict file conflicts before they occur, get safe execution order

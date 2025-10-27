@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "clauxton"
-version = "0.13.0"
+version = "0.14.0"
 description = "Context that persists for Claude Code - Knowledge Base, Task Management, and Conflict Detection"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -57,6 +57,12 @@ semantic = [
 # Proactive Monitoring (v0.13.0+) - Optional
 proactive = [
     "watchdog>=3.0.0",               # File system monitoring
+]
+
+# Interactive TUI (v0.14.0+) - Optional
+tui = [
+    "textual>=0.47.0",               # Modern TUI framework
+    "prompt-toolkit>=3.0.43",        # Advanced input handling
 ]
 
 # Language parsers (optional - install only what you need)

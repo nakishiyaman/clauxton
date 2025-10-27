@@ -9,6 +9,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2025-10-28
+
+### Added
+- **Interactive TUI (Terminal User Interface)**: Full-featured terminal UI for Clauxton
+  - Dashboard screen with 3-panel layout (KB Browser, Content Viewer, AI Suggestions)
+  - Real-time knowledge base browsing with visual indicators
+  - Content viewer with syntax highlighting and rich text rendering
+  - AI-powered suggestions panel with actionable recommendations
+  - Query modal for search and command execution (slash commands, natural language)
+  - Help modal with comprehensive keyboard shortcuts reference
+  - Status bar with context information and command hints
+- **Keyboard Navigation**: Vim-style navigation and shortcuts
+  - Navigation: `j/k` (down/up), `h/l` (left/right), `g/G` (top/bottom)
+  - Actions: `/` (search), `:` (command), `?` (help), `q` (quit)
+  - Focus control: `Tab/Shift+Tab` (cycle panels), `Ctrl+h/j/k/l` (panel navigation)
+  - Quick actions: `a` (add KB), `t` (add task), `r` (refresh)
+- **Visual Features**:
+  - Theme support (light/dark modes with customizable colors)
+  - Syntax highlighting for code and markdown
+  - Progress indicators and loading states
+  - Visual focus indicators for accessibility
+- **Intelligence Features**:
+  - File indexing with symbol extraction
+  - Query autocomplete with intelligent suggestions
+  - Context-aware AI recommendations
+  - Real-time suggestion updates
+- **Comprehensive Testing**: 189 integration tests, 18 edge case tests
+  - Workflow tests (22 tests): KB browser, query modal, quick actions, navigation, user journeys
+  - Modal tests (24 tests): Lifecycle, mode switching, help modal, interactions, focus
+  - Navigation tests (37 tests): Panel focus, Vim-style, widget navigation, boundaries
+  - Edge case tests (18 tests): Data boundaries, UI boundaries, error handling, search limits
+- **User Documentation**:
+  - [TUI User Guide](docs/TUI_USER_GUIDE.md): Complete interface guide with examples
+  - [Keyboard Shortcuts](docs/TUI_KEYBOARD_SHORTCUTS.md): All shortcuts and navigation patterns
+  - [Quality Report](docs/TUI_QUALITY_REPORT.md): Test coverage and quality metrics
+
+### Changed
+- CLI now supports `clauxton tui` command to launch interactive interface
+- Enhanced file monitoring for TUI real-time updates
+- Improved performance with efficient rendering and caching
+
+### Technical Details
+- Built with Textual framework for rich terminal UI
+- Async/await architecture for responsive interface
+- Modular widget system for extensibility
+- Comprehensive test coverage (85% overall, 189 integration tests)
+- Full keyboard accessibility (no mouse required)
+
 ## [0.13.0] - 2025-10-27
 
 ### Added

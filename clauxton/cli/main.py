@@ -2693,6 +2693,77 @@ def init(ctx: click.Context, force: bool) -> None:
     click.echo(click.style("   clauxton repo index", fg="cyan"))
 
 
+@cli.command()
+@click.option(
+    "--config",
+    type=click.Path(exists=False, path_type=Path),
+    help="Path to TUI config file",
+)
+def tui(config: Optional[Path]) -> None:
+    """
+    Launch Interactive Terminal UI (v0.14.0+).
+
+    Provides a modern, keyboard-driven interface with AI integration:
+    - AI-enhanced dashboard with real-time suggestions
+    - Knowledge Base browser with semantic search
+    - Code review workflow
+    - KB generation from commits
+    - Interactive chat with AI
+
+    Keyboard Shortcuts:
+    - Ctrl+P: Command palette
+    - Ctrl+K: Focus KB browser
+    - Ctrl+L: Focus content panel
+    - Ctrl+J: Focus AI suggestions
+    - Ctrl+T: Toggle theme
+    - Q: Quit
+    - ?: Help
+
+    Example:
+        $ clauxton tui
+        $ clauxton tui --config ~/.clauxton/custom-tui.yml
+
+    Note: Requires 'textual' package. Install with:
+        $ pip install clauxton[tui]
+    """
+    try:
+        from clauxton.tui.app import run_tui
+    except ImportError:
+        click.echo(
+            click.style(
+                "❌ TUI requires 'textual' package. Install with:",
+                fg="red",
+            )
+        )
+        click.echo(click.style("   pip install clauxton[tui]", fg="cyan"))
+        click.echo()
+        raise click.Abort()
+
+    root_dir = Path.cwd()
+    clauxton_dir = root_dir / ".clauxton"
+
+    if not clauxton_dir.exists():
+        click.echo(
+            click.style("⚠ .clauxton/ not found. Run 'clauxton init' first", fg="red")
+        )
+        raise click.Abort()
+
+    # Launch TUI
+    click.echo(click.style("🚀 Launching Clauxton TUI...", fg="cyan"))
+    click.echo()
+
+    try:
+        run_tui(project_root=root_dir, config_path=config)
+    except KeyboardInterrupt:
+        click.echo("\n" + click.style("👋 Bye!", fg="cyan"))
+    except Exception as e:
+        click.echo(click.style(f"\n❌ TUI crashed: {e}", fg="red"))
+        click.echo()
+        click.echo(click.style("Check log file:", fg="yellow"))
+        click.echo(click.style(f"   {clauxton_dir / 'tui.log'}", fg="cyan"))
+        raise
+
+
 @cli.group()
 def kb() -> None:
     """
