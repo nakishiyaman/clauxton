@@ -42,6 +42,7 @@ dependencies = [
     "numpy>=1.24",
     "tree-sitter>=0.20",
     "rich>=13.0",  # For better CLI output
+    "watchdog>=3.0.0",  # File system monitoring (v0.13.0+)
 ]
 
 [project.optional-dependencies]

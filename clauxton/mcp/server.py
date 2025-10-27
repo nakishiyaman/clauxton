@@ -104,7 +104,8 @@ def _handle_mcp_error(error: Exception, tool_name: str) -> dict[str, Any]:
         )
 
     logger.error(f"{tool_name} failed: {error}", exc_info=True)
-    return response.model_dump()
+    result: dict[str, Any] = response.model_dump()
+    return result
 
 
 def _validate_field_type(
@@ -3339,7 +3340,8 @@ def analyze_work_session() -> dict[str, Any]:
                 file_switches=0,
                 error=None,
             )
-            return response.model_dump()
+            result: dict[str, Any] = response.model_dump()
+            return result
 
         # Return successful analysis
         response = WorkSessionAnalysis(
@@ -3352,7 +3354,8 @@ def analyze_work_session() -> dict[str, Any]:
             message=None,
             error=None,
         )
-        return response.model_dump()
+        result_success: dict[str, Any] = response.model_dump()
+        return result_success
 
     except (ImportError, ValueError, TypeError, KeyError, AttributeError) as e:
         return _handle_mcp_error(e, "analyze_work_session")
@@ -3459,7 +3462,8 @@ def predict_next_action() -> dict[str, Any]:
             message=None,
             error=None,
         )
-        return response.model_dump()
+        result_predict: dict[str, Any] = response.model_dump()
+        return result_predict
 
     except (ImportError, ValueError, TypeError, KeyError, AttributeError) as e:
         return _handle_mcp_error(e, "predict_next_action")
@@ -3615,7 +3619,8 @@ def get_current_context(include_prediction: bool = True) -> dict[str, Any]:
             error=None,
         )
 
-        return response.model_dump()
+        result_context: dict[str, Any] = response.model_dump()
+        return result_context
 
     except (ImportError, ValueError, TypeError, KeyError, AttributeError) as e:
         return _handle_mcp_error(e, "get_current_context")
