@@ -54,7 +54,7 @@ class EventProcessor:
         key_data = "|".join(
             sorted(f"{c.path}:{c.change_type.value}" for c in changes)
         )
-        return hashlib.md5(key_data.encode()).hexdigest()
+        return hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()
 
     def _get_cached_patterns(
         self, cache_key: str, confidence_threshold: float
