@@ -5,20 +5,33 @@ Provides tools for interacting with the Knowledge Base through
 the Model Context Protocol.
 """
 
+import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, List, Optional, TypeVar
 
 from mcp.server.fastmcp import FastMCP
 
 from clauxton.core.conflict_detector import ConflictDetector
 from clauxton.core.knowledge_base import KnowledgeBase
-from clauxton.core.models import KnowledgeBaseEntry, Task
+from clauxton.core.models import (
+    CurrentContextResponse,
+    KnowledgeBaseEntry,
+    MCPErrorResponse,
+    NextActionPrediction,
+    Task,
+    WorkSessionAnalysis,
+)
 from clauxton.core.task_manager import TaskManager
 from clauxton.intelligence.repository_map import RepositoryMap
 from clauxton.proactive.config import MonitorConfig
 from clauxton.proactive.event_processor import EventProcessor
 from clauxton.proactive.file_monitor import FileMonitor
+
+logger = logging.getLogger(__name__)
+
+# Type variable for decorator
+T = TypeVar("T")
 
 # Create MCP server instance
 mcp = FastMCP("Clauxton")
@@ -55,6 +68,87 @@ def _get_event_processor() -> EventProcessor:
         _event_processor = EventProcessor(project_root)
 
     return _event_processor
+
+
+def _handle_mcp_error(error: Exception, tool_name: str) -> dict[str, Any]:
+    """
+    Standardized error handler for MCP tools.
+
+    Args:
+        error: The exception that occurred
+        tool_name: Name of the MCP tool that failed
+
+    Returns:
+        Standardized error response dictionary
+    """
+    if isinstance(error, ImportError):
+        response = MCPErrorResponse(
+            error_type="import_error",
+            message=f"{tool_name}: Required module not available",
+            details=str(error),
+        )
+    elif isinstance(error, (ValueError, TypeError)):
+        response = MCPErrorResponse(
+            error_type="validation_error",
+            message=f"{tool_name}: Invalid input or data",
+            details=str(error),
+        )
+    else:
+        response = MCPErrorResponse(
+            error_type="runtime_error",
+            message=f"{tool_name}: Operation failed",
+            details=str(error),
+        )
+
+    logger.error(f"{tool_name} failed: {error}", exc_info=True)
+    return response.model_dump()
+
+
+def _validate_session_analysis(analysis: dict[str, Any]) -> None:
+    """
+    Validate work session analysis response structure.
+
+    Args:
+        analysis: Analysis dictionary from ContextManager
+
+    Raises:
+        ValueError: If required keys are missing or values are invalid
+    """
+    required_keys = ["duration_minutes", "focus_score", "breaks", "file_switches", "active_periods"]
+    missing = [key for key in required_keys if key not in analysis]
+
+    if missing:
+        raise ValueError(f"Missing required keys in session analysis: {missing}")
+
+    # Validate types and ranges
+    if not isinstance(analysis["duration_minutes"], int) or analysis["duration_minutes"] < 0:
+        raise ValueError(f"Invalid duration_minutes: {analysis['duration_minutes']}")
+
+    focus = analysis["focus_score"]
+    if focus is not None and (not isinstance(focus, (int, float)) or not 0.0 <= focus <= 1.0):
+        raise ValueError(f"Invalid focus_score: {focus}")
+
+
+def _validate_prediction(prediction: dict[str, Any]) -> None:
+    """
+    Validate next action prediction response structure.
+
+    Args:
+        prediction: Prediction dictionary from ContextManager
+
+    Raises:
+        ValueError: If required keys are missing or values are invalid
+    """
+    required_keys = ["action", "confidence", "reasoning"]
+    missing = [key for key in required_keys if key not in prediction]
+
+    if missing:
+        raise ValueError(f"Missing required keys in prediction: {missing}")
+
+    # Validate confidence range
+    confidence = prediction["confidence"]
+    if not isinstance(confidence, (int, float)) or not 0.0 <= confidence <= 1.0:
+        raise ValueError(f"Invalid confidence: {confidence}")
 
 
 @mcp.tool()
@@ -3194,35 +3288,34 @@ def analyze_work_session() -> dict[str, Any]:
         # Get session analysis
         analysis = manager.analyze_work_session()
 
+        # Validate response structure
+        _validate_session_analysis(analysis)
+
         # Check if there's an active session
         if analysis["duration_minutes"] == 0:
-            return {
-                "status": "no_session",
-                "message": "No active work session detected",
-                "duration_minutes": 0,
-            }
+            response = WorkSessionAnalysis(
+                status="no_session",
+                message="No active work session detected",
+                duration_minutes=0,
+            )
+            return response.model_dump()
 
-        return {
-            "status": "success",
-            "duration_minutes": analysis["duration_minutes"],
-            "focus_score": analysis["focus_score"],
-            "breaks": analysis["breaks"],
-            "file_switches": analysis["file_switches"],
-            "active_periods": analysis["active_periods"],
-        }
+        # Return successful analysis
+        response = WorkSessionAnalysis(
+            status="success",
+            duration_minutes=analysis["duration_minutes"],
+            focus_score=analysis["focus_score"],
+            breaks=analysis["breaks"],
+            file_switches=analysis["file_switches"],
+            active_periods=analysis["active_periods"],
+        )
+        return response.model_dump()
 
-    except ImportError as e:
-        return {
-            "status": "error",
-            "message": "Context manager not available",
-            "error": str(e),
-        }
+    except (ImportError, ValueError, TypeError, KeyError, AttributeError) as e:
+        return _handle_mcp_error(e, "analyze_work_session")
     except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Failed to analyze work session: {str(e)}",
-            "error": str(e),
-        }
+        logger.critical(f"Unexpected error in analyze_work_session: {e}", exc_info=True)
+        return _handle_mcp_error(e, "analyze_work_session")
 
 
 @mcp.tool()
@@ -3285,26 +3378,24 @@ def predict_next_action() -> dict[str, Any]:
         # Get prediction
         prediction = manager.predict_next_action()
 
-        return {
-            "status": "success",
-            "action": prediction["action"],
-            "task_id": prediction.get("task_id"),
-            "confidence": prediction["confidence"],
-            "reasoning": prediction["reasoning"],
-        }
+        # Validate response structure
+        _validate_prediction(prediction)
 
-    except ImportError as e:
-        return {
-            "status": "error",
-            "message": "Context manager not available",
-            "error": str(e),
-        }
+        # Return successful prediction
+        response = NextActionPrediction(
+            status="success",
+            action=prediction["action"],
+            task_id=prediction.get("task_id"),
+            confidence=prediction["confidence"],
+            reasoning=prediction["reasoning"],
+        )
+        return response.model_dump()
+
+    except (ImportError, ValueError, TypeError, KeyError, AttributeError) as e:
+        return _handle_mcp_error(e, "predict_next_action")
     except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Failed to predict next action: {str(e)}",
-            "error": str(e),
-        }
+        logger.critical(f"Unexpected error in predict_next_action: {e}", exc_info=True)
+        return _handle_mcp_error(e, "predict_next_action")
 
 
 @mcp.tool()
@@ -3377,6 +3468,15 @@ def get_current_context(include_prediction: bool = True) -> dict[str, Any]:
         - Cached for 30 seconds for performance
         - Includes prediction by default (adds ~20ms)
     """
+    # Validate input
+    if not isinstance(include_prediction, bool):
+        response = MCPErrorResponse(
+            error_type="validation_error",
+            message="get_current_context: Invalid parameter type",
+            details=f"include_prediction must be bool, got {type(include_prediction).__name__}",
+        )
+        return response.model_dump()
+
     try:
         from clauxton.proactive.context_manager import ContextManager
 
@@ -3386,26 +3486,36 @@ def get_current_context(include_prediction: bool = True) -> dict[str, Any]:
         # Get full context
         context = manager.get_current_context(include_prediction=include_prediction)
 
-        # Convert to dict
+        # Convert to dict with JSON mode for proper datetime serialization
         context_dict = context.model_dump(mode="json")
 
-        # Add status
-        context_dict["status"] = "success"
+        # Create response model with proper validation
+        response = CurrentContextResponse(
+            status="success",
+            current_branch=context_dict.get("current_branch"),
+            active_files=context_dict.get("active_files", []),
+            recent_commits=context_dict.get("recent_commits", []),
+            current_task=context_dict.get("current_task"),
+            time_context=context_dict.get("time_context"),
+            work_session_start=context_dict.get("work_session_start"),
+            last_activity=context_dict.get("last_activity"),
+            is_feature_branch=context_dict.get("is_feature_branch", False),
+            is_git_repo=context_dict.get("is_git_repo", True),
+            session_duration_minutes=context_dict.get("session_duration_minutes"),
+            focus_score=context_dict.get("focus_score"),
+            breaks_detected=context_dict.get("breaks_detected", 0),
+            predicted_next_action=context_dict.get("predicted_next_action"),
+            uncommitted_changes=context_dict.get("uncommitted_changes", 0),
+            diff_stats=context_dict.get("diff_stats"),
+        )
 
-        return context_dict
+        return response.model_dump()
 
-    except ImportError as e:
-        return {
-            "status": "error",
-            "message": "Context manager not available",
-            "error": str(e),
-        }
+    except (ImportError, ValueError, TypeError, KeyError, AttributeError) as e:
+        return _handle_mcp_error(e, "get_current_context")
     except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Failed to get current context: {str(e)}",
-            "error": str(e),
-        }
+        logger.critical(f"Unexpected error in get_current_context: {e}", exc_info=True)
+        return _handle_mcp_error(e, "get_current_context")
 
 
 def main() -> None:

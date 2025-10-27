@@ -8,9 +8,33 @@ This module defines all core data structures using Pydantic v2 for:
 """
 
 from datetime import datetime
+from enum import Enum
 from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
+
+# ============================================================================
+# Enums
+# ============================================================================
+
+
+class Priority(str, Enum):
+    """Task priority levels."""
+
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
+class TaskStatus(str, Enum):
+    """Task status values."""
+
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    BLOCKED = "blocked"
+
 
 # ============================================================================
 # Custom Exceptions
@@ -361,3 +385,104 @@ TaskStatusType = Literal["pending", "in_progress", "completed", "blocked"]
 TaskPriorityType = Literal["low", "medium", "high", "critical"]
 ConflictTypeType = Literal["file_overlap", "dependency_violation"]
 RiskLevelType = Literal["low", "medium", "high"]
+
+
+# ============================================================================
+# MCP Response Models (v0.13.0 Week 3)
+# ============================================================================
+
+
+class MCPErrorResponse(BaseModel):
+    """Standardized error response for MCP tools."""
+
+    status: Literal["error"] = Field("error", description="Response status")
+    error_type: str = Field(
+        ...,
+        description="Error category (import_error, validation_error, runtime_error)",
+    )
+    message: str = Field(..., min_length=1, description="Human-readable error message")
+    details: Optional[str] = Field(None, description="Detailed error information")
+
+
+class BreakPeriod(BaseModel):
+    """Represents a break in work session."""
+
+    start: str = Field(..., description="Break start timestamp (ISO format)")
+    end: str = Field(..., description="Break end timestamp (ISO format)")
+    duration_minutes: int = Field(..., ge=0, description="Break duration in minutes")
+
+
+class ActivePeriod(BaseModel):
+    """Represents an active work period."""
+
+    start: str = Field(..., description="Period start timestamp (ISO format)")
+    end: str = Field(..., description="Period end timestamp (ISO format)")
+    duration_minutes: int = Field(..., ge=0, description="Period duration in minutes")
+
+
+class WorkSessionAnalysis(BaseModel):
+    """Response model for work session analysis."""
+
+    status: Literal["success", "error", "no_session"] = Field(..., description="Response status")
+    duration_minutes: int = Field(0, ge=0, description="Session duration in minutes")
+    focus_score: Optional[float] = Field(None, ge=0.0, le=1.0, description="Focus score (0.0-1.0)")
+    breaks: List[dict] = Field(default_factory=list, description="Detected breaks")
+    file_switches: int = Field(0, ge=0, description="Number of unique files modified")
+    active_periods: List[dict] = Field(default_factory=list, description="Active work periods")
+    message: Optional[str] = Field(None, description="Status message (for no_session/error)")
+    error: Optional[str] = Field(None, description="Error details (for error status)")
+
+
+class NextActionPrediction(BaseModel):
+    """Response model for next action prediction."""
+
+    status: Literal["success", "error"] = Field(..., description="Response status")
+    action: Optional[str] = Field(None, description="Predicted action name")
+    task_id: Optional[str] = Field(None, description="Related task ID")
+    confidence: Optional[float] = Field(
+        None, ge=0.0, le=1.0, description="Prediction confidence (0.0-1.0)"
+    )
+    reasoning: Optional[str] = Field(None, description="Explanation of prediction")
+    message: Optional[str] = Field(None, description="Error message (for error status)")
+    error: Optional[str] = Field(None, description="Error details (for error status)")
+
+
+class CurrentContextResponse(BaseModel):
+    """Response model for current context retrieval."""
+
+    status: Literal["success", "error"] = Field(..., description="Response status")
+    current_branch: Optional[str] = Field(None, description="Git branch name")
+    active_files: List[str] = Field(
+        default_factory=list, description="Recently modified files"
+    )
+    recent_commits: List[dict] = Field(
+        default_factory=list, description="Recent commit information"
+    )
+    current_task: Optional[str] = Field(None, description="Current task ID")
+    time_context: Optional[str] = Field(
+        None, description="Time context (morning/afternoon/evening/night)"
+    )
+    work_session_start: Optional[str] = Field(
+        None, description="Session start timestamp (ISO format)"
+    )
+    last_activity: Optional[str] = Field(
+        None, description="Last activity timestamp (ISO format)"
+    )
+    is_feature_branch: bool = Field(
+        False, description="Whether current branch is a feature branch"
+    )
+    is_git_repo: bool = Field(True, description="Whether project is a git repository")
+    session_duration_minutes: Optional[int] = Field(
+        None, ge=0, description="Current session duration"
+    )
+    focus_score: Optional[float] = Field(
+        None, ge=0.0, le=1.0, description="Focus score (0.0-1.0)"
+    )
+    breaks_detected: int = Field(0, ge=0, description="Number of breaks detected")
+    predicted_next_action: Optional[dict] = Field(
+        None, description="Predicted next action (if enabled)"
+    )
+    uncommitted_changes: int = Field(0, ge=0, description="Number of uncommitted changes")
+    diff_stats: Optional[dict] = Field(None, description="Git diff statistics")
+    message: Optional[str] = Field(None, description="Error message (for error status)")
+    error: Optional[str] = Field(None, description="Error details (for error status)")

@@ -71,6 +71,9 @@ class ProjectContext(BaseModel):
     predicted_next_action: Optional[Dict[str, Any]] = Field(
         None, description="Predicted next action based on patterns"
     )
+    prediction_error: Optional[str] = Field(
+        None, description="Error message if prediction failed"
+    )
 
     # Week 3: Enhanced git stats
     uncommitted_changes: int = Field(
@@ -151,14 +154,22 @@ class ContextManager:
             try:
                 prediction = self._predict_next_action_internal(context)
                 context = ProjectContext(
-                    **context.model_dump(exclude={"predicted_next_action"}),
+                    **context.model_dump(exclude={"predicted_next_action", "prediction_error"}),
                     predicted_next_action=prediction,
+                    prediction_error=None,
                 )
                 # Update cache with full context
                 self._cache[cache_key] = (context, datetime.now())
             except Exception as e:
                 logger.error(f"Error predicting next action: {e}")
-                # Keep context without prediction
+                # Surface error to caller
+                context = ProjectContext(
+                    **context.model_dump(exclude={"predicted_next_action", "prediction_error"}),
+                    predicted_next_action=None,
+                    prediction_error=str(e),
+                )
+                # Update cache with error context
+                self._cache[cache_key] = (context, datetime.now())
 
         return context
 

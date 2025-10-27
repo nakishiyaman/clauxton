@@ -204,8 +204,12 @@ class TestAnalyzeWorkSession:
             result = server.analyze_work_session()
 
             assert result["status"] == "error"
-            assert "error" in result
+            # New standardized error response structure
+            assert "error_type" in result
             assert "message" in result
+            assert "details" in result
+            assert result["error_type"] == "runtime_error"
+            assert "Test error" in result["details"]
 
 
 class TestPredictNextAction:
