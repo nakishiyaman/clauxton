@@ -14,13 +14,11 @@ import os
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
 
 from clauxton.mcp import server
-from clauxton.proactive.context_manager import ContextManager
 
 
 def setup_test_project(tmp_path: Path) -> None:
@@ -110,7 +108,9 @@ def helper_function_{i}(value: str) -> str:
         os.utime(file_path, (file_time.timestamp(), file_time.timestamp()))
 
 
-def create_feature_branch_context(tmp_path: Path, branch_name: str = "feature/TASK-123-auth") -> None:
+def create_feature_branch_context(
+    tmp_path: Path, branch_name: str = "feature/TASK-123-auth"
+) -> None:
     """Setup feature branch context with git mock."""
     (tmp_path / ".git").mkdir(exist_ok=True)
     # Note: Actual git operations would require subprocess mocking in tests

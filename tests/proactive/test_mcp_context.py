@@ -714,7 +714,10 @@ class TestGetCurrentContext:
 class TestAnalyzeWorkSessionErrors:
     """Comprehensive error handling tests for analyze_work_session."""
 
-    @pytest.mark.skip(reason="ImportError testing requires complex mocking - covered by integration tests")
+    @pytest.mark.skip(
+        reason="ImportError testing requires complex mocking - "
+        "covered by integration tests"
+    )
     def test_import_error_context_manager_unavailable(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -733,7 +736,10 @@ class TestAnalyzeWorkSessionErrors:
         setup_temp_project(tmp_path)
 
         # Mock ContextManager to return invalid focus_score
-        with patch("clauxton.proactive.context_manager.ContextManager.analyze_work_session") as mock_analyze:
+        with patch(
+            "clauxton.proactive.context_manager.ContextManager"
+            ".analyze_work_session"
+        ) as mock_analyze:
             mock_analyze.return_value = {
                 "duration_minutes": 60,
                 "focus_score": 1.5,  # Invalid: > 1.0
@@ -756,7 +762,10 @@ class TestAnalyzeWorkSessionErrors:
         setup_temp_project(tmp_path)
 
         # Mock ContextManager to return wrong type that can't be coerced
-        with patch("clauxton.proactive.context_manager.ContextManager.analyze_work_session") as mock_analyze:
+        with patch(
+            "clauxton.proactive.context_manager.ContextManager"
+            ".analyze_work_session"
+        ) as mock_analyze:
             mock_analyze.return_value = {
                 "duration_minutes": [60],  # Wrong type: list instead of int
                 "focus_score": 0.8,
@@ -778,7 +787,10 @@ class TestAnalyzeWorkSessionErrors:
         setup_temp_project(tmp_path)
 
         # Mock ContextManager to return incomplete data
-        with patch("clauxton.proactive.context_manager.ContextManager.analyze_work_session") as mock_analyze:
+        with patch(
+            "clauxton.proactive.context_manager.ContextManager"
+            ".analyze_work_session"
+        ) as mock_analyze:
             mock_analyze.return_value = {
                 "duration_minutes": 30,
                 # Missing: focus_score, breaks, file_switches, active_periods
@@ -797,7 +809,10 @@ class TestAnalyzeWorkSessionErrors:
         setup_temp_project(tmp_path)
 
         # Mock ContextManager to raise unexpected exception
-        with patch("clauxton.proactive.context_manager.ContextManager.analyze_work_session") as mock_analyze:
+        with patch(
+            "clauxton.proactive.context_manager.ContextManager"
+            ".analyze_work_session"
+        ) as mock_analyze:
             mock_analyze.side_effect = RuntimeError("Unexpected filesystem error")
 
             result = server.analyze_work_session()
@@ -810,7 +825,10 @@ class TestAnalyzeWorkSessionErrors:
 class TestPredictNextActionErrors:
     """Comprehensive error handling tests for predict_next_action."""
 
-    @pytest.mark.skip(reason="ImportError testing requires complex mocking - covered by integration tests")
+    @pytest.mark.skip(
+        reason="ImportError testing requires complex mocking - "
+        "covered by integration tests"
+    )
     def test_import_error_prediction_module_unavailable(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -828,7 +846,10 @@ class TestPredictNextActionErrors:
         monkeypatch.chdir(tmp_path)
         setup_temp_project(tmp_path)
 
-        with patch("clauxton.proactive.context_manager.ContextManager.predict_next_action") as mock_predict:
+        with patch(
+            "clauxton.proactive.context_manager.ContextManager"
+            ".predict_next_action"
+        ) as mock_predict:
             mock_predict.return_value = {
                 "action": "run_tests",
                 "confidence": 1.5,  # Invalid: > 1.0
@@ -847,7 +868,10 @@ class TestPredictNextActionErrors:
         monkeypatch.chdir(tmp_path)
         setup_temp_project(tmp_path)
 
-        with patch("clauxton.proactive.context_manager.ContextManager.predict_next_action") as mock_predict:
+        with patch(
+            "clauxton.proactive.context_manager.ContextManager"
+            ".predict_next_action"
+        ) as mock_predict:
             mock_predict.return_value = {
                 "action": "commit_changes",
                 "confidence": -0.2,  # Invalid: < 0.0
@@ -866,7 +890,10 @@ class TestPredictNextActionErrors:
         monkeypatch.chdir(tmp_path)
         setup_temp_project(tmp_path)
 
-        with patch("clauxton.proactive.context_manager.ContextManager.predict_next_action") as mock_predict:
+        with patch(
+            "clauxton.proactive.context_manager.ContextManager"
+            ".predict_next_action"
+        ) as mock_predict:
             mock_predict.return_value = {
                 # Missing: action
                 "confidence": 0.75,
@@ -884,7 +911,10 @@ class TestPredictNextActionErrors:
         monkeypatch.chdir(tmp_path)
         setup_temp_project(tmp_path)
 
-        with patch("clauxton.proactive.context_manager.ContextManager.predict_next_action") as mock_predict:
+        with patch(
+            "clauxton.proactive.context_manager.ContextManager"
+            ".predict_next_action"
+        ) as mock_predict:
             mock_predict.side_effect = RuntimeError("Prediction logic failed")
 
             result = server.predict_next_action()
@@ -910,7 +940,10 @@ class TestGetCurrentContextErrors:
         assert result["error_type"] == "validation_error"
         assert "include_prediction must be bool" in result["details"]
 
-    @pytest.mark.skip(reason="ImportError testing requires complex mocking - covered by integration tests")
+    @pytest.mark.skip(
+        reason="ImportError testing requires complex mocking - "
+        "covered by integration tests"
+    )
     def test_import_error_context_manager_module(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -952,7 +985,10 @@ class TestGetCurrentContextErrors:
         monkeypatch.chdir(tmp_path)
         setup_temp_project(tmp_path)
 
-        with patch("clauxton.proactive.context_manager.ContextManager.get_current_context") as mock_context:
+        with patch(
+            "clauxton.proactive.context_manager.ContextManager"
+            ".get_current_context"
+        ) as mock_context:
             # Mock returns object without required attributes
             mock_context.side_effect = AttributeError("Missing attribute 'current_branch'")
 
@@ -972,7 +1008,10 @@ class TestMCPToolEdgeCases:
         monkeypatch.chdir(tmp_path)
         setup_temp_project(tmp_path)
 
-        with patch("clauxton.proactive.context_manager.ContextManager.analyze_work_session") as mock_analyze:
+        with patch(
+            "clauxton.proactive.context_manager.ContextManager"
+            ".analyze_work_session"
+        ) as mock_analyze:
             mock_analyze.return_value = {
                 "duration_minutes": 0,
                 "focus_score": None,  # Can be None
@@ -993,7 +1032,10 @@ class TestMCPToolEdgeCases:
         monkeypatch.chdir(tmp_path)
         setup_temp_project(tmp_path)
 
-        with patch("clauxton.proactive.context_manager.ContextManager.predict_next_action") as mock_predict:
+        with patch(
+            "clauxton.proactive.context_manager.ContextManager"
+            ".predict_next_action"
+        ) as mock_predict:
             mock_predict.return_value = {
                 "action": "planning",
                 "task_id": None,  # Optional
@@ -1056,7 +1098,10 @@ class TestMCPToolEdgeCases:
         monkeypatch.chdir(tmp_path)
         setup_temp_project(tmp_path)
 
-        with patch("clauxton.proactive.context_manager.ContextManager.analyze_work_session") as mock_analyze:
+        with patch(
+            "clauxton.proactive.context_manager.ContextManager"
+            ".analyze_work_session"
+        ) as mock_analyze:
             mock_analyze.return_value = {
                 "duration_minutes": 1500,  # 25 hours (very long)
                 "focus_score": 0.3,
