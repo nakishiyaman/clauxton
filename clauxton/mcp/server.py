@@ -3308,6 +3308,10 @@ def analyze_work_session() -> dict[str, Any]:
             - Response: Generic error with exception message
             - Recovery: Safe fallback, no data loss
     """
+    import time
+
+    start_time = time.perf_counter()
+
     try:
         from clauxton.proactive.context_manager import ContextManager
 
@@ -3316,6 +3320,14 @@ def analyze_work_session() -> dict[str, Any]:
 
         # Get session analysis
         analysis = manager.analyze_work_session()
+
+        # Log performance metrics
+        elapsed = time.perf_counter() - start_time
+        logger.debug(
+            f"analyze_work_session completed in {elapsed*1000:.2f}ms "
+            f"(duration: {analysis.get('duration_minutes', 0)}min, "
+            f"switches: {analysis.get('file_switches', 0)})"
+        )
 
         # Check if there's an active session
         if analysis["duration_minutes"] == 0:
@@ -3416,6 +3428,10 @@ def predict_next_action() -> dict[str, Any]:
             - Response: Generic error with exception message
             - Recovery: Safe fallback, no data corruption
     """
+    import time
+
+    start_time = time.perf_counter()
+
     try:
         from clauxton.proactive.context_manager import ContextManager
 
@@ -3424,6 +3440,14 @@ def predict_next_action() -> dict[str, Any]:
 
         # Get prediction
         prediction = manager.predict_next_action()
+
+        # Log performance metrics
+        elapsed = time.perf_counter() - start_time
+        logger.debug(
+            f"predict_next_action completed in {elapsed*1000:.2f}ms "
+            f"(action: {prediction.get('action')}, "
+            f"confidence: {prediction.get('confidence', 0):.2f})"
+        )
 
         # Return successful prediction (Pydantic handles validation)
         response = NextActionPrediction(
@@ -3535,6 +3559,10 @@ def get_current_context(include_prediction: bool = True) -> dict[str, Any]:
             - "partial_success": Some features unavailable
             - "error": Critical failure (rare, entire operation failed)
     """
+    import time
+
+    start_time = time.perf_counter()
+
     # Validate input
     if not isinstance(include_prediction, bool):
         response = MCPErrorResponse(
@@ -3555,6 +3583,15 @@ def get_current_context(include_prediction: bool = True) -> dict[str, Any]:
 
         # Convert to dict with JSON mode for proper datetime serialization
         context_dict = context.model_dump(mode="json")
+
+        # Log performance metrics
+        elapsed = time.perf_counter() - start_time
+        logger.debug(
+            f"get_current_context completed in {elapsed*1000:.2f}ms "
+            f"(prediction: {include_prediction}, "
+            f"active_files: {len(context_dict.get('active_files', []))}, "
+            f"branch: {context_dict.get('current_branch')})"
+        )
 
         # Create response model with proper validation
         response = CurrentContextResponse(

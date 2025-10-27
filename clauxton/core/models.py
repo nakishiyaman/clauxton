@@ -393,7 +393,25 @@ RiskLevelType = Literal["low", "medium", "high"]
 
 
 class MCPErrorResponse(BaseModel):
-    """Standardized error response for MCP tools."""
+    """
+    Standardized error response for MCP tools.
+
+    Provides consistent error handling across all MCP tools with:
+    - Categorized error types for programmatic handling
+    - Human-readable messages for user feedback
+    - Optional detailed information for debugging
+
+    Error Types:
+        - import_error: Required module/dependency not available
+        - validation_error: Invalid input parameters or data
+        - runtime_error: Unexpected exception during execution
+        - filesystem_error: File system operations failed
+        - git_error: Git operations failed
+
+    Usage:
+        Always check status field first. If "error", inspect error_type
+        for programmatic handling and message for user display.
+    """
 
     status: Literal["error"] = Field("error", description="Response status")
     error_type: str = Field(
@@ -421,7 +439,31 @@ class ActivePeriod(BaseModel):
 
 
 class WorkSessionAnalysis(BaseModel):
-    """Response model for work session analysis."""
+    """
+    Response model for work session analysis.
+
+    Provides comprehensive analysis of current work session including:
+    - Session duration tracking
+    - Focus score based on file switching patterns
+    - Break detection (15+ minute gaps)
+    - Active work periods
+    - File modification statistics
+
+    Status Values:
+        - "success": Session analysis completed successfully
+        - "no_session": No recent activity detected (no files modified)
+        - "error": Analysis failed (check error field for details)
+
+    Focus Score Interpretation:
+        - 0.8-1.0: High focus (few context switches, deep work)
+        - 0.5-0.8: Medium focus (moderate switching, normal work)
+        - 0.0-0.5: Low focus (frequent switching, scattered work)
+
+    Validation:
+        - duration_minutes: Must be >= 0
+        - focus_score: Must be in range [0.0, 1.0] or None
+        - file_switches: Must be >= 0
+    """
 
     status: Literal["success", "error", "no_session"] = Field(..., description="Response status")
     duration_minutes: int = Field(0, ge=0, description="Session duration in minutes")
@@ -434,7 +476,35 @@ class WorkSessionAnalysis(BaseModel):
 
 
 class NextActionPrediction(BaseModel):
-    """Response model for next action prediction."""
+    """
+    Response model for next action prediction.
+
+    Provides intelligent prediction of developer's likely next action based on:
+    - File change patterns (tests vs implementation)
+    - Git context (commits, branch status, uncommitted changes)
+    - Time context (morning, afternoon, evening)
+    - Work session patterns (duration, focus, breaks)
+
+    Possible Actions:
+        - "run_tests": Tests needed after implementation changes
+        - "write_tests": Implementation complete, tests missing
+        - "commit_changes": Changes ready to commit
+        - "create_pr": Feature complete, ready for pull request
+        - "take_break": Long session without breaks
+        - "morning_planning": Start of day planning
+        - "resume_work": Return from break
+        - "review_code": Changes need review before commit
+        - "no_clear_action": No strong pattern detected
+
+    Confidence Levels:
+        - 0.8-1.0: High confidence (strong pattern match)
+        - 0.5-0.8: Medium confidence (moderate evidence)
+        - 0.0-0.5: Low confidence (weak or conflicting signals)
+
+    Validation:
+        - confidence: Must be in range [0.0, 1.0] or None
+        - action: Must be non-empty string if status="success"
+    """
 
     status: Literal["success", "error"] = Field(..., description="Response status")
     action: Optional[str] = Field(None, description="Predicted action name")
@@ -448,7 +518,43 @@ class NextActionPrediction(BaseModel):
 
 
 class CurrentContextResponse(BaseModel):
-    """Response model for current context retrieval."""
+    """
+    Response model for current context retrieval.
+
+    Provides comprehensive real-time project context including:
+    - Git information (branch, commits, uncommitted changes)
+    - Active files and recent activity
+    - Work session analysis (duration, focus, breaks)
+    - Next action prediction (optional)
+    - Time context for time-aware suggestions
+
+    Context Categories:
+        **Git Context**:
+            - current_branch: Active git branch
+            - is_feature_branch: Whether on feature branch
+            - uncommitted_changes: Count of modified/staged files
+            - recent_commits: Recent commit history
+
+        **Session Context**:
+            - session_duration_minutes: How long working
+            - focus_score: Focus quality (0.0-1.0)
+            - breaks_detected: Number of breaks taken
+            - last_activity: Most recent file modification
+
+        **Prediction Context**:
+            - predicted_next_action: AI-suggested next step
+            - prediction_error: Error if prediction failed
+
+    Performance:
+        - Cached for 30 seconds for fast response
+        - Typical response time: <100ms
+        - Prediction adds ~20ms overhead
+
+    Validation:
+        - focus_score: Must be in [0.0, 1.0] or None
+        - session_duration_minutes: Must be >= 0 or None
+        - breaks_detected: Must be >= 0
+    """
 
     status: Literal["success", "error"] = Field(..., description="Response status")
     current_branch: Optional[str] = Field(None, description="Git branch name")

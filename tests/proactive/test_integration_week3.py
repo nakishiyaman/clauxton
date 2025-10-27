@@ -43,12 +43,66 @@ def setup_test_project(tmp_path: Path) -> None:
 def create_modified_files(
     tmp_path: Path, count: int, time_spread_minutes: int = 30
 ) -> None:
-    """Create modified files with realistic timestamps."""
+    """Create modified files with realistic Python content and timestamps."""
     now = datetime.now()
 
+    # Realistic content patterns for different file types
+    content_patterns = [
+        lambda i: f'''"""Service module for feature {i}."""
+
+class Service{i}:
+    """Handles business logic for feature {i}."""
+
+    def __init__(self):
+        self.name = "service_{i}"
+
+    def process(self, data: dict) -> dict:
+        """Process data for feature {i}."""
+        return {{"result": "processed", "feature": {i}}}
+''',
+        lambda i: f'''"""Tests for feature {i}."""
+import pytest
+
+class TestFeature{i}:
+    """Test suite for feature {i}."""
+
+    def test_basic_functionality(self):
+        """Test basic functionality."""
+        assert True
+
+    def test_edge_case(self):
+        """Test edge case."""
+        result = process_feature_{i}({{}})
+        assert result is not None
+''',
+        lambda i: f'''"""Configuration for module {i}."""
+from pydantic import BaseModel
+
+class Config{i}(BaseModel):
+    """Configuration settings."""
+    enabled: bool = True
+    timeout: int = 30
+    max_retries: int = 3
+''',
+        lambda i: f'''"""Utils for feature {i}."""
+import logging
+
+logger = logging.getLogger(__name__)
+
+def helper_function_{i}(value: str) -> str:
+    """Helper function for feature {i}."""
+    logger.debug(f"Processing: {{value}}")
+    return value.upper()
+''',
+    ]
+
     for i in range(count):
-        file_path = tmp_path / "src" / f"file{i}.py"
-        file_path.write_text(f"# File {i}\nprint('test {i}')\n")
+        file_path = tmp_path / "src" / f"feature_{i}.py"
+
+        # Use different patterns for variety
+        pattern = content_patterns[i % len(content_patterns)]
+        content = pattern(i)
+        file_path.write_text(content)
 
         # Set modification time
         minutes_ago = time_spread_minutes - (i * (time_spread_minutes // max(count, 1)))

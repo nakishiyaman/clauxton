@@ -10,8 +10,6 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from clauxton.proactive.context_manager import ContextManager
 
 
@@ -199,8 +197,10 @@ class TestPerformance:
         cached_call_time = time.time() - start_time
 
         # Cached call should be much faster (at least 5x)
-        assert cached_call_time < first_call_time / 5, \
-            f"Cache not effective: first={first_call_time*1000:.1f}ms, cached={cached_call_time*1000:.1f}ms"
+        assert cached_call_time < first_call_time / 5, (
+            f"Cache not effective: first={first_call_time*1000:.1f}ms, "
+            f"cached={cached_call_time*1000:.1f}ms"
+        )
 
         # Verify same result
         assert context1.current_branch == context2.current_branch
@@ -311,7 +311,6 @@ class TestPerformance:
 
     def test_performance_memory_usage_reasonable(self, tmp_path: Path):
         """Test memory usage stays reasonable with many files."""
-        import sys
         manager = ContextManager(tmp_path)
 
         # Create 1000 files

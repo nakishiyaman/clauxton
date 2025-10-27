@@ -38,6 +38,27 @@ class WatchConfig(BaseModel):
         description="Debounce interval in milliseconds",
     )
 
+    max_queue_size: int = Field(
+        default=1000,
+        ge=100,
+        le=10000,
+        description="Maximum number of events to keep in queue",
+    )
+
+    max_debounce_entries: int = Field(
+        default=1000,
+        ge=100,
+        le=10000,
+        description="Maximum debounce tracking entries before cleanup",
+    )
+
+    debounce_cleanup_hours: int = Field(
+        default=1,
+        ge=1,
+        le=24,
+        description="Remove debounce entries older than N hours",
+    )
+
 
 class SuggestionConfig(BaseModel):
     """Suggestion configuration."""

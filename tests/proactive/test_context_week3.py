@@ -7,16 +7,11 @@ Tests cover:
 - Git statistics (diff stats, uncommitted changes)
 """
 
-import subprocess
-import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict
 from unittest.mock import MagicMock, patch
 
-import pytest
-
-from clauxton.proactive.context_manager import ContextManager, ProjectContext
+from clauxton.proactive.context_manager import ContextManager
 
 
 class TestSessionAnalysis:
@@ -75,7 +70,8 @@ class TestSessionAnalysis:
         """Test medium focus score with moderate file switches."""
         manager = ContextManager(tmp_path)
 
-        # Create 10 files modified in last 25 minutes (10 switches/25min = 24 switches/hour = medium-low focus)
+        # Create 10 files modified in last 25 minutes
+        # (10 switches/25min = 24 switches/hour = medium-low focus)
         for i in range(10):
             test_file = tmp_path / f"test{i}.py"
             test_file.write_text(f"print({i})")
@@ -94,7 +90,8 @@ class TestSessionAnalysis:
         """Test low focus score with many file switches."""
         manager = ContextManager(tmp_path)
 
-        # Create 30 files modified in last 25 minutes (30 switches/25min = 72 switches/hour = very low focus)
+        # Create 30 files modified in last 25 minutes
+        # (30 switches/25min = 72 switches/hour = very low focus)
         for i in range(30):
             test_file = tmp_path / f"test{i}.py"
             test_file.write_text(f"print({i})")

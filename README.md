@@ -13,6 +13,7 @@
 [![codecov](https://codecov.io/gh/nakishiyaman/clauxton/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/clauxton)
 
 > ✅ **Production Ready**: Clauxton v0.12.0 is stable and ready for production use. Complete with Semantic Intelligence (embeddings, vector search), Git Analysis (pattern extraction, task suggestions), Repository Map (12-language support), and comprehensive testing (1,637 tests, 86% coverage).
+> 🔥 **v0.13.0 Week 1** (2025-10-26): **Proactive Intelligence** - Real-time file monitoring with watchdog, pattern detection (bulk edits, new features, refactoring), 2 new MCP tools (27 total)!
 > 🤖 **v0.12.0** (2025-10-26): **Semantic Intelligence & Git Analysis** - Local semantic search (embeddings + FAISS), AI-powered task suggestions from commits, decision extraction, 10 new MCP tools (32 total)!
 > ⚡ **v0.11.2** (2025-10-25): Test Optimization - 97% faster test execution (52min → 1m46s), CI improvements for all language parsers!
 > 🚀 **v0.11.1** (2025-10-25): Daily Workflow Commands - `morning` briefing, `daily`/`weekly` summaries, `trends` analysis, `pause`/`resume` work tracking!
@@ -231,10 +232,11 @@ Claude Code: (Begins implementation)
 - 🤖 **Semantic Search** - ⭐ **NEW v0.12.0**: Local embeddings + FAISS vector search (100% private, no API costs)
 - 📊 **Git Analysis** - ⭐ **NEW v0.12.0**: Pattern extraction, decision detection, AI task suggestions from commits
 - 🧠 **Enhanced Context** - ⭐ **NEW v0.12.0**: Project summaries, knowledge graphs, related entry discovery
+- 👁️ **Proactive Monitoring** - 🔥 **NEW v0.13.0 Week 1**: Real-time file watching, pattern detection (bulk edits, new features, refactoring)
 - 🗺️ **Repository Map** - Automatic codebase indexing with symbol search (12 languages, 3 modes)
 - 🌅 **Daily Workflow Commands** - `morning` briefing, `daily`/`weekly` summaries, `trends` analysis, `pause`/`resume` tracking
 - 🔒 **Privacy First** - 100% local by default, no cloud dependencies
-- 🤖 **MCP Integration** - Seamless integration with Claude Code via Model Context Protocol (32 tools)
+- 🤖 **MCP Integration** - Seamless integration with Claude Code via Model Context Protocol (34 tools: 32 base + 2 new in v0.13.0 Week 1)
 
 ### ✅ Core Features (v0.10.0)
 
@@ -427,24 +429,60 @@ for symbol in go_symbols:
 - ✅ `get_knowledge_graph` - Knowledge graph visualization
 - ✅ `find_related_entries` - Discover related KB/tasks
 
-**Total**: 32 tools (22 base + 10 new in v0.12.0)
+**Proactive Monitoring Tools** (2) - 🔥 **NEW v0.13.0 Week 1**:
+- ✅ `watch_project_changes` - Enable/disable real-time file monitoring
+- ✅ `get_recent_changes` - Get recent changes and detected patterns
+
+**Total**: 34 tools (22 base + 10 v0.12.0 + 2 v0.13.0 Week 1)
 
 #### 📊 Quality Metrics
-- ✅ **1,637 Tests** - Comprehensive test coverage (1,228 → 1,637, +409 tests in v0.12.0):
+- ✅ **1,693 Tests** - Comprehensive test coverage (1,228 → 1,637 in v0.12.0 → 1,693 in v0.13.0 Week 1, +56 tests):
   - Core modules: 87-96% coverage (knowledge_base, task_manager, conflict_detector, etc.)
   - Intelligence modules: 91-92% coverage (repository_map, symbol_extractor, parser)
     - 441 intelligence tests covering 12 languages (Python, JS, TS, Go, Rust, C++, Java, C#, PHP, Ruby, Swift, Kotlin)
-  - **Semantic modules**: 91-98% coverage (embeddings, indexer, search, vector_store) - ⭐ **NEW v0.12.0**
+  - **Semantic modules**: 91-98% coverage (embeddings, indexer, search, vector_store) - v0.12.0
     - 126 semantic tests (embeddings, vector store, indexer, search engine)
-  - **Analysis modules**: 95-99% coverage (git_analyzer, pattern_extractor, decision_extractor, task_suggester) - ⭐ **NEW v0.12.0**
+  - **Analysis modules**: 95-99% coverage (git_analyzer, pattern_extractor, decision_extractor, task_suggester) - v0.12.0
     - 82 analysis tests (commit analysis, pattern extraction, task suggestions)
-  - MCP server: 92% coverage (32 tools, all tested individually) - ⭐ **Updated v0.12.0**
-    - 21 new MCP integration tests (semantic + analysis + context tools)
+  - **Proactive modules**: 96-100% coverage (file_monitor, event_processor, config) - 🔥 **NEW v0.13.0 Week 1**
+    - 56 proactive tests (21 config + 20 event_processor + 15 MCP)
+  - MCP server: 92% coverage (34 tools, all tested individually) - Updated v0.13.0 Week 1
+    - 36 total MCP integration tests (21 v0.12.0 + 15 v0.13.0)
   - CLI modules: 69-94% coverage (main, tasks, conflicts, config, repository, mcp)
   - Utils modules: 89-97% coverage (yaml, file, backup, logger)
-- ✅ **86% Coverage** - High code quality maintained across all modules (including new v0.12.0 features)
+- ✅ **86% Coverage** - High code quality maintained across all modules (including new v0.13.0 features)
 - ✅ **Type Safe** - Full Pydantic validation with strict mypy mode
 - ✅ **Production Ready** - Stable v0.12.0 release with Semantic Intelligence & Git Analysis
+
+### 👁️ Proactive Monitoring (v0.13.0 Week 1)
+
+#### 🔥 Real-time File Monitoring
+- ✅ **watchdog Integration**: Background file change detection
+- ✅ **Debounced Events**: 500ms debounce to avoid duplicates
+- ✅ **Configurable Patterns**: Watch specific file types, ignore directories
+- ✅ **Performance**: <5ms event processing, <1% CPU when idle
+- ✅ **MCP Tool**: `watch_project_changes(enabled)` - Start/stop monitoring
+
+#### 🎯 Pattern Detection (5 Algorithms)
+- ✅ **Bulk Edit Detection**: Same file modified 3+ times rapidly (confidence scoring)
+- ✅ **New Feature Detection**: Multiple new files created in short time
+- ✅ **Refactoring Detection**: Files renamed/moved together
+- ✅ **Cleanup Detection**: Files deleted in bulk
+- ✅ **Config Change Detection**: Configuration file modifications
+- ✅ **MCP Tool**: `get_recent_changes(minutes)` - Retrieve changes and patterns
+
+#### 📊 Event Processing
+- ✅ **Event Types**: modified, created, deleted, moved
+- ✅ **Metadata Tracking**: Timestamps, file paths, event details
+- ✅ **Confidence Scoring**: 0.0-1.0 confidence for each pattern
+- ✅ **Time Windows**: Flexible query by minutes (default: 60)
+- ✅ **Pattern Descriptions**: Human-readable pattern explanations
+
+**Use Cases**:
+- 🤖 "What have I changed in the last hour?"
+- 🎯 "Show me detected patterns in my recent work"
+- 📈 "Based on my changes, suggest next tasks"
+- 🔍 "I'm refactoring - did the system detect it?"
 
 ### ⚠️ Conflict Detection
 
@@ -467,11 +505,18 @@ for symbol in go_symbols:
 - ✅ **208 New Tests**: 126 semantic + 82 analysis tests
 - ✅ **Production Ready**: A grade (94.7/100) quality
 
-**v0.13.0 Roadmap** (Planned):
-- 📋 **Proactive Intelligence**: Real-time monitoring with watchdog
-- 📋 **Background Monitoring**: Detect patterns as you code
-- 📋 **Learning from Behavior**: Personalized suggestions
-- 📋 **Adaptive Context**: Time-based and activity-based context
+**v0.13.0 Week 1 Complete** (2025-10-26) ✅:
+- ✅ **Real-time File Monitoring**: watchdog-based change tracking
+- ✅ **Pattern Detection**: 5 algorithms (bulk_edit, new_feature, refactoring, cleanup, config_change)
+- ✅ **Event Processing**: Debounced events with confidence scoring
+- ✅ **2 New MCP Tools**: watch_project_changes(), get_recent_changes()
+- ✅ **56 New Tests**: 21 config + 20 event_processor + 15 MCP tests
+- ✅ **96-100% Coverage**: High-quality implementation
+
+**v0.13.0 Week 2-3 Roadmap** (Planned):
+- 📋 **Proactive Suggestions**: Context-aware task and KB recommendations
+- 📋 **Learning from Behavior**: Personalized suggestions based on patterns
+- 📋 **Enhanced Context**: Activity-based context awareness
 
 **v0.14.0+ Future Vision**:
 - 📋 **Interactive TUI**: Modern terminal interface with AI panels
@@ -725,7 +770,7 @@ The Clauxton MCP Server provides full Knowledge Base and Task Management for Cla
 - `task_next()` - Get AI-recommended next task
 - `task_delete(task_id)` - Delete task
 
-See [MCP Server Guide](docs/mcp-server.md) for complete documentation.
+See [MCP Documentation Index](docs/mcp-index.md) for complete MCP Server documentation (36 tools across 8 categories).
 
 ### Conflict Detection Commands
 
@@ -838,6 +883,11 @@ clauxton/
 │   ├── pattern_extractor.py   # Pattern recognition ✅
 │   ├── task_suggester.py      # Task suggestions ✅
 │   └── decision_extractor.py  # Decision extraction ✅
+├── proactive/                 # Proactive Intelligence (v0.13.0) 🔥
+│   ├── config.py              # MonitorConfig ✅
+│   ├── models.py              # FileEvent, DetectedPattern ✅
+│   ├── file_monitor.py        # Real-time file monitoring ✅
+│   └── event_processor.py     # Pattern detection ✅
 ├── intelligence/              # Code Intelligence (v0.11.0)
 │   ├── symbol_extractor.py    # Multi-language symbol extraction ✅
 │   ├── parser.py              # Tree-sitter parsers ✅
@@ -853,7 +903,7 @@ clauxton/
 │   ├── conflicts.py           # Conflict detection commands ✅
 │   └── config.py              # Configuration commands ✅
 └── mcp/                       # MCP Server integration
-    └── server.py              # 32 MCP tools ✅
+    └── server.py              # 34 MCP tools ✅
 ```
 
 **Storage**:
@@ -877,9 +927,10 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 - [Quick Start Guide](docs/quick-start.md) - Get started in 5 minutes (CLI)
 - **[Developer Workflow Guide](docs/DEVELOPER_WORKFLOW_GUIDE.md)** - Complete development workflow with examples and diagrams ✨ v0.10.0
 - **[Installation Guide](docs/INSTALLATION_GUIDE.md)** - Shell alias setup, virtual environment isolation explained
-- **[MCP Integration Guide](docs/MCP_INTEGRATION_GUIDE.md)** - Step-by-step Claude Code integration (32 tools)
-- **[Semantic Search Guide](docs/SEMANTIC_SEARCH_GUIDE.md)** - Local semantic search with embeddings and FAISS ✨ v0.12.0 🆕
-- **[Git Analysis Guide](docs/GIT_ANALYSIS_GUIDE.md)** - Pattern extraction and task suggestions from commits ✨ v0.12.0 🆕
+- **[MCP Integration Guide](docs/MCP_INTEGRATION_GUIDE.md)** - Step-by-step Claude Code integration (34 tools)
+- **[Semantic Search Guide](docs/SEMANTIC_SEARCH_GUIDE.md)** - Local semantic search with embeddings and FAISS ✨ v0.12.0
+- **[Git Analysis Guide](docs/GIT_ANALYSIS_GUIDE.md)** - Pattern extraction and task suggestions from commits ✨ v0.12.0
+- **[Proactive Monitoring Guide](docs/PROACTIVE_MONITORING_GUIDE.md)** - Real-time file watching and pattern detection ✨ v0.13.0 Week 1 🔥
 - **[Repository Map Guide](docs/REPOSITORY_MAP_GUIDE.md)** - Multi-language symbol extraction and search ✨ v0.11.0
 - **[Daily Workflow Guide](docs/DAILY_WORKFLOW_GUIDE.md)** - Morning briefing, summaries, and trends ✨ v0.11.1
 - [Tutorial: Your First Knowledge Base](docs/tutorial-first-kb.md) - 30-minute beginner guide
@@ -889,7 +940,7 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 - [YAML Task Format Guide](docs/YAML_TASK_FORMAT.md) - YAML bulk import specification ✨ v0.10.0
 - [Search Algorithm](docs/search-algorithm.md) - TF-IDF search explanation
 - [YAML Format Reference](docs/yaml-format.md) - Complete Knowledge Base YAML specification
-- [MCP Server Guide](docs/mcp-server.md) - Complete MCP Server documentation
+- **[MCP Server Documentation](docs/mcp-index.md)** - Complete MCP Server documentation (36 tools, split into focused guides) ✨ **Reorganized v0.13.0**
 - [Conflict Detection Guide](docs/conflict-detection.md) - Complete conflict detection documentation
 - [Configuration Guide](docs/configuration-guide.md) - Configuration management ✨ v0.10.0
 - [Logging Guide](docs/logging-guide.md) - Operation logging system ✨ v0.10.0

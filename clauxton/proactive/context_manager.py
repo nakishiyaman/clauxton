@@ -115,8 +115,19 @@ class ContextManager:
             cached_data = self._cache[cache_key]
             cached_context: ProjectContext = cached_data[0]
             cached_time: datetime = cached_data[1]
-            if datetime.now() - cached_time < self._cache_timeout:
+            age = datetime.now() - cached_time
+            if age < self._cache_timeout:
+                logger.debug(
+                    f"Cache hit for {cache_key} (age: {age.total_seconds():.1f}s, "
+                    f"timeout: {self._cache_timeout.total_seconds()}s)"
+                )
                 return cached_context
+            else:
+                logger.debug(
+                    f"Cache expired for {cache_key} (age: {age.total_seconds():.1f}s)"
+                )
+        else:
+            logger.debug(f"Cache miss for {cache_key}")
 
         # Week 3: Calculate new fields
         session_duration = self._calculate_session_duration()
@@ -144,6 +155,7 @@ class ContextManager:
             uncommitted_changes=uncommitted,
             diff_stats=diff_stats,
             predicted_next_action=None,  # Will be populated below if needed
+            prediction_error=None,
         )
 
         # Cache the basic context temporarily for prediction

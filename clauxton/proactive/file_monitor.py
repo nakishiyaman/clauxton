@@ -5,7 +5,7 @@ import time
 from collections import deque
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Deque, List, Optional
+from typing import Any, Deque, Dict, List, Optional
 
 from watchdog.events import (
     DirCreatedEvent,
@@ -64,6 +64,8 @@ class ChangeEventHandler(FileSystemEventHandler):
         ignore_matcher: IgnorePatternMatcher,
         change_queue: Deque[FileChange],
         debounce_ms: int,
+        max_debounce_entries: int,
+        debounce_cleanup_hours: int,
     ):
         """Initialize event handler."""
         super().__init__()
@@ -71,7 +73,9 @@ class ChangeEventHandler(FileSystemEventHandler):
         self.ignore_matcher = ignore_matcher
         self.change_queue = change_queue
         self.debounce_ms = debounce_ms
-        self.last_event_time: dict = {}
+        self.max_debounce_entries = max_debounce_entries
+        self.debounce_cleanup_hours = debounce_cleanup_hours
+        self.last_event_time: Dict[str, float] = {}
         self.lock = threading.Lock()
 
     def _should_process(self, path: Path) -> bool:
@@ -85,6 +89,15 @@ class ChangeEventHandler(FileSystemEventHandler):
         current_time = time.time()
 
         with self.lock:
+            # Cleanup old entries if threshold reached
+            if len(self.last_event_time) > self.max_debounce_entries:
+                cutoff_time = current_time - (self.debounce_cleanup_hours * 3600)
+                self.last_event_time = {
+                    k: v
+                    for k, v in self.last_event_time.items()
+                    if v >= cutoff_time
+                }
+
             last_time = self.last_event_time.get(path_str, 0)
             time_diff_ms = (current_time - last_time) * 1000
 
@@ -115,7 +128,7 @@ class ChangeEventHandler(FileSystemEventHandler):
     def on_created(self, event: FileSystemEvent) -> None:
         """Handle file/directory creation."""
         if isinstance(event, (FileCreatedEvent, DirCreatedEvent)):
-            self._add_change(Path(event.src_path), ChangeType.CREATED)
+            self._add_change(Path(str(event.src_path)), ChangeType.CREATED)
 
     def on_modified(self, event: FileSystemEvent) -> None:
         """Handle file/directory modification."""
@@ -123,20 +136,20 @@ class ChangeEventHandler(FileSystemEventHandler):
             # Ignore directory modifications (too noisy)
             if isinstance(event, DirModifiedEvent):
                 return
-            self._add_change(Path(event.src_path), ChangeType.MODIFIED)
+            self._add_change(Path(str(event.src_path)), ChangeType.MODIFIED)
 
     def on_deleted(self, event: FileSystemEvent) -> None:
         """Handle file/directory deletion."""
         if isinstance(event, (FileDeletedEvent, DirDeletedEvent)):
-            self._add_change(Path(event.src_path), ChangeType.DELETED)
+            self._add_change(Path(str(event.src_path)), ChangeType.DELETED)
 
     def on_moved(self, event: FileSystemEvent) -> None:
         """Handle file/directory move/rename."""
         if isinstance(event, (FileMovedEvent, DirMovedEvent)):
             self._add_change(
-                Path(event.dest_path),
+                Path(str(event.dest_path)),
                 ChangeType.MOVED,
-                src_path=Path(event.src_path),
+                src_path=Path(str(event.src_path)),
             )
 
 
@@ -155,8 +168,10 @@ class FileMonitor:
         self.config = config or MonitorConfig()
         self.is_running = False
 
-        # Change queue (thread-safe deque)
-        self.change_queue: Deque[FileChange] = deque(maxlen=1000)
+        # Change queue (thread-safe deque with configurable size)
+        self.change_queue: Deque[FileChange] = deque(
+            maxlen=self.config.watch.max_queue_size
+        )
 
         # Ignore pattern matcher
         self.ignore_matcher = IgnorePatternMatcher(self.config.watch.ignore_patterns)
@@ -167,10 +182,12 @@ class FileMonitor:
             ignore_matcher=self.ignore_matcher,
             change_queue=self.change_queue,
             debounce_ms=self.config.watch.debounce_ms,
+            max_debounce_entries=self.config.watch.max_debounce_entries,
+            debounce_cleanup_hours=self.config.watch.debounce_cleanup_hours,
         )
 
-        # Watchdog observer
-        self.observer: Optional[Observer] = None
+        # Watchdog observer (type: ignore due to watchdog type stubs issue)
+        self.observer: Optional[Any] = None
 
     def start(self) -> None:
         """Start monitoring file system."""

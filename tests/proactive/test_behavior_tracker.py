@@ -4,7 +4,7 @@ Tests for BehaviorTracker - User behavior tracking and learning.
 Week 2 Day 5 - v0.13.0
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 import pytest

@@ -12,14 +12,14 @@ All operations prioritize data integrity and prevent corruption.
 
 import shutil
 from pathlib import Path
-from typing import Any, Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict
 
 import yaml
 
 from clauxton.utils.backup_manager import BackupManager
 
 if TYPE_CHECKING:
-    from clauxton.core.models import ValidationError
+    pass
 
 
 def read_yaml(file_path: Path) -> Dict[str, Any]:

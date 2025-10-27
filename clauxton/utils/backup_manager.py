@@ -14,10 +14,10 @@ All backups are stored in .clauxton/backups/ with format:
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
-    from clauxton.core.models import ValidationError
+    pass
 
 
 class BackupManager:

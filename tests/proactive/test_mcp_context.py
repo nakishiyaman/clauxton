@@ -56,16 +56,75 @@ def create_modified_files(
     tmp_path: Path, count: int, time_spread_minutes: int = 30
 ) -> None:
     """
-    Create modified files with specific timestamps.
+    Create modified files with realistic Python content and timestamps.
 
     Args:
         tmp_path: Base directory
         count: Number of files to create
         time_spread_minutes: Time spread for file modifications
     """
+    # Realistic file content templates
+    templates = [
+        # API module
+        '''"""API endpoints for {name}."""
+from typing import Optional
+from fastapi import APIRouter, HTTPException
+
+router = APIRouter()
+
+@router.get("/{name}/{{id}}")
+async def get_{name}(id: int) -> dict:
+    """Get {name} by ID."""
+    return {{"id": id, "name": "{name}"}}
+''',
+        # Data model
+        '''"""Data models for {name}."""
+from datetime import datetime
+from pydantic import BaseModel, Field
+
+class {name_title}(BaseModel):
+    """Represents a {name}."""
+    id: int = Field(..., description="Unique identifier")
+    name: str = Field(..., min_length=1)
+    created_at: datetime = Field(default_factory=datetime.now)
+''',
+        # Utility module
+        '''"""Utility functions for {name}."""
+import logging
+from typing import Any
+
+logger = logging.getLogger(__name__)
+
+def process_{name}(data: dict[str, Any]) -> dict[str, Any]:
+    """Process {name} data."""
+    logger.info(f"Processing {name}: {{data}}")
+    return {{"status": "success", "data": data}}
+''',
+        # Test module
+        '''"""Tests for {name} module."""
+import pytest
+from src.{name} import process_{name}
+
+class Test{name_title}:
+    """Test {name} functionality."""
+
+    def test_process_{name}_success(self):
+        """Test successful {name} processing."""
+        result = process_{name}({{"key": "value"}})
+        assert result["status"] == "success"
+''',
+    ]
+
     for i in range(count):
-        file_path = tmp_path / "src" / f"file{i}.py"
-        file_path.write_text(f"# File {i}\nprint('test')")
+        file_path = tmp_path / "src" / f"module_{i}.py"
+
+        # Use different templates for variety
+        template = templates[i % len(templates)]
+        name = f"item{i}"
+        name_title = f"Item{i}"
+
+        content = template.format(name=name, name_title=name_title)
+        file_path.write_text(content)
 
         # Set modification time
         minutes_ago = time_spread_minutes - (i * (time_spread_minutes // max(count, 1)))

@@ -1,6 +1,5 @@
 """Tests for event processor."""
 
-import asyncio
 from datetime import datetime, timedelta
 from pathlib import Path
 

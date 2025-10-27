@@ -1,6 +1,5 @@
 """Tests for MCP monitoring tools."""
 
-import time
 from datetime import datetime
 from pathlib import Path
 
@@ -29,7 +28,9 @@ class TestMCPMonitoring:
         server._file_monitor = None
         server._event_processor = None
 
-    def test_watch_project_changes_enable(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_watch_project_changes_enable(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test enabling file monitoring."""
         monkeypatch.chdir(tmp_path)
 
@@ -56,7 +57,9 @@ class TestMCPMonitoring:
         assert result["status"] == "already_enabled"
         assert result["message"] == "File monitoring already running"
 
-    def test_watch_project_changes_disable(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_watch_project_changes_disable(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test disabling file monitoring."""
         monkeypatch.chdir(tmp_path)
 
@@ -105,7 +108,7 @@ class TestMCPMonitoring:
         monkeypatch.chdir(tmp_path)
 
         # Initialize monitor but don't make changes
-        monitor = server._get_file_monitor()
+        _monitor = server._get_file_monitor()
 
         result = await server.get_recent_changes(minutes=10)
 
