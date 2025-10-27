@@ -280,6 +280,8 @@ class TestPredictNextActionIntegration:
             "no_clear_action",
             "documentation",  # May suggest documentation
             "continue_work",  # May suggest continuing work
+            "wrap_up",  # May suggest wrapping up (night time)
+            "planning",  # May suggest planning (morning time)
         ]
 
         if result["confidence"] is not None:
@@ -321,6 +323,8 @@ class TestPredictNextActionIntegration:
             "no_clear_action",
             "continue_work",  # May suggest continuing work
             "write_tests",
+            "wrap_up",  # May suggest wrapping up (night time)
+            "planning",  # May suggest planning (morning time)
         ]
 
     @patch("subprocess.run")
@@ -356,6 +360,8 @@ class TestPredictNextActionIntegration:
             "review_changes",
             "no_clear_action",
             "continue_work",  # May suggest continuing work
+            "wrap_up",  # May suggest wrapping up (night time)
+            "planning",  # May suggest planning (morning time)
         ]
 
     def test_predict_no_clear_action(
