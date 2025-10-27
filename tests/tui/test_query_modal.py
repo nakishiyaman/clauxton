@@ -242,7 +242,7 @@ class TestQueryModal:
         # Initial mode
         assert modal.current_mode == QueryMode.NORMAL
 
-        # After cycling (we can't call action_next_mode without mounting, but we can test the method exists)
+        # Can't call action_next_mode without mounting, test method exists
         assert hasattr(modal, "action_next_mode")
         assert callable(modal.action_next_mode)
 
@@ -255,6 +255,7 @@ class TestQueryModal:
         # Verify all modes exist
         modes = list(QueryMode)
         assert len(modes) == 4
+        assert modal.current_mode in modes
         assert QueryMode.NORMAL in modes
         assert QueryMode.AI in modes
         assert QueryMode.FILE in modes

@@ -12,7 +12,8 @@
 [![Test Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)](https://github.com/nakishiyaman/clauxton)
 [![codecov](https://codecov.io/gh/nakishiyaman/clauxton/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/clauxton)
 
-> ✅ **Production Ready**: Clauxton v0.13.0 is stable and ready for production use. Complete with Context Intelligence (work session analysis, action prediction, project awareness), Semantic Intelligence (embeddings, vector search), Git Analysis (pattern extraction, task suggestions), Repository Map (12-language support), and comprehensive testing (1,953+ tests, 90% coverage).
+> ✅ **Production Ready**: Clauxton v0.14.0 is stable and ready for production use. Complete with Interactive TUI, Context Intelligence (work session analysis, action prediction), Semantic Intelligence (embeddings, vector search), Git Analysis (pattern extraction), Repository Map (12-language support), and comprehensive testing (2,163+ tests, 85% coverage).
+> 🎨 **v0.14.0** (2025-10-28): **Interactive TUI** - Full-featured Terminal User Interface with 3-panel dashboard, Vim-style navigation, query modal with autocomplete, AI suggestions, comprehensive testing (189 integration tests)!
 > 🔥 **v0.13.0** (2025-10-27): **Context Intelligence & Proactive Monitoring** - Real-time work session analysis with focus scoring, AI-powered next action prediction (9 actions), enhanced project context with time awareness, 3 new MCP tools (36 total)!
 > 🤖 **v0.12.0** (2025-10-26): **Semantic Intelligence & Git Analysis** - Local semantic search (embeddings + FAISS), AI-powered task suggestions from commits, decision extraction, 10 new MCP tools (32 total)!
 > ⚡ **v0.11.2** (2025-10-25): Test Optimization - 97% faster test execution (52min → 1m46s), CI improvements for all language parsers!
@@ -48,7 +49,7 @@ pip install clauxton[parsers-enterprise]    # Java/C#/Kotlin
 pip install clauxton[parsers-all]           # All 12 languages (~2 minutes)
 
 # Verify installation
-clauxton --version  # Should show: clauxton, version 0.12.0
+clauxton --version  # Should show: clauxton, version 0.14.0
 ```
 
 **Note**: Language parsers are optional. Install only what you need for your project.
@@ -91,10 +92,24 @@ clauxton mcp status             # Check MCP configuration
 clauxton status                 # Repository Map, Tasks, KB, MCP - all in one
 ```
 
+#### 🎨 Interactive TUI (v0.14.0 NEW!)
+
+```bash
+# Launch interactive Terminal User Interface
+clauxton tui
+
+# Features:
+# • 3-panel dashboard (KB Browser, Content Viewer, AI Suggestions)
+# • Vim-style navigation (j/k/h/l, g/G)
+# • Query modal with autocomplete (/, :)
+# • Help system (?)
+# • Theme support (light/dark)
+```
+
 #### 🔧 Daily Usage
 
 ```bash
-# 🌅 Start your day (v0.11.1 NEW!)
+# 🌅 Start your day (v0.11.1)
 clauxton morning
 # → Shows yesterday's wins, suggests today's tasks, sets focus interactively
 
@@ -711,7 +726,7 @@ pip install clauxton
 pip install clauxton[semantic]
 
 # Verify installation
-clauxton --version  # Should show: clauxton, version 0.12.0
+clauxton --version  # Should show: clauxton, version 0.14.0
 
 # Install specific version (example)
 pip install clauxton==0.12.0

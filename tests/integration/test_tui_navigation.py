@@ -391,7 +391,9 @@ class TestNavigationWithModals:
             assert app_with_content.is_running
 
     @pytest.mark.asyncio
-    async def test_navigation_resumes_after_modal_close(self, app_with_content: ClauxtonApp) -> None:
+    async def test_navigation_resumes_after_modal_close(
+        self, app_with_content: ClauxtonApp
+    ) -> None:
         """Test navigation works normally after modal closes."""
         async with app_with_content.run_test() as pilot:
             await pilot.pause()
