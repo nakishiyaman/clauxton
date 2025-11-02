@@ -1146,6 +1146,17 @@ See [docs/architecture.md](docs/architecture.md) for complete design.
 - [Troubleshooting Guide](docs/troubleshooting.md) - Common issues and solutions ✨ v0.10.0
 - [Contributing](CONTRIBUTING.md) - Contribution guidelines
 
+### Strategic Documentation (Post-v0.14.0)
+- **[Strategic Summary](docs/STRATEGIC_SUMMARY.md)** - Post-v0.14.0 strategic direction, core values, and roadmap 🎯 NEW
+- **[Market Positioning](docs/POSITIONING.md)** - Market analysis, competitive positioning, target segments 📊 NEW
+- **[Deprecation Plan](docs/DEPRECATION_PLAN.md)** - Feature reduction plan (36→25 tools, 40→20 commands) 📉 NEW
+- **[Development Roadmap](docs/ROADMAP.md)** - v0.15.0+ roadmap with Unified Memory Model 🗺️ UPDATED
+- **[v0.15.0 Implementation Plan](docs/v0.15.0_IMPLEMENTATION_PLAN.md)** - 8-week detailed implementation plan 📝 NEW
+
+**Key Insight**: "削減" ではなく "統合と深化" - Focus on essence through integration, not reduction
+- **Core Value**: "Obsidian for Code Projects, Built for Claude"
+- **Market Category**: Project Memory System for AI Development (新カテゴリー創造)
+
 ---
 
 ## 🧪 Testing
