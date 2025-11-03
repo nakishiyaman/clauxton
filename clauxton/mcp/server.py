@@ -4050,6 +4050,185 @@ def memory_find_related(memory_id: str, limit: int = 5) -> List[dict[str, Any]]:
         return []
 
 
+# ============================================================================
+# Memory Intelligence Tools (Phase 3)
+# ============================================================================
+
+
+@mcp.tool()
+def answer_question(question: str, top_k: int = 5) -> dict[str, Any]:
+    """
+    Answer a question about the project using memory search.
+
+    Uses the Memory Question-Answering system to search relevant memories
+    and generate an answer with confidence scoring and source tracking.
+
+    Question Types Supported:
+    - Architecture: "Why did we switch to PostgreSQL?"
+    - Patterns: "What authentication method do we use?"
+    - Tasks: "What should I work on next?"
+    - History: "When did we add feature X?"
+
+    Args:
+        question: Question to answer
+        top_k: Number of memories to consider (default: 5)
+
+    Returns:
+        Dictionary with answer, confidence score, and source memory IDs
+
+    Examples:
+        answer_question("Why did we switch to PostgreSQL?")
+        answer_question("What authentication method do we use?")
+        answer_question("What should I work on next?", top_k=3)
+    """
+    try:
+        from clauxton.semantic.memory_qa import MemoryQA
+
+        project_root = _get_project_root()
+        qa = MemoryQA(project_root)
+
+        answer, confidence, sources = qa.answer_question(question, top_k=top_k)
+
+        return {
+            "status": "success",
+            "question": question,
+            "answer": answer,
+            "confidence": confidence,
+            "sources": sources,
+            "top_k": top_k,
+        }
+
+    except ImportError as e:
+        logger.error(f"answer_question: Import failed: {e}")
+        return _handle_mcp_error(e, "answer_question")
+    except Exception as e:
+        logger.error(f"answer_question failed: {e}", exc_info=True)
+        return _handle_mcp_error(e, "answer_question")
+
+
+@mcp.tool()
+def get_project_summary() -> dict[str, Any]:
+    """
+    Get comprehensive project summary from memories.
+
+    Returns comprehensive summary with:
+    - Architecture decisions
+    - Active patterns
+    - Tech stack
+    - Constraints
+    - Recent changes (last 7 days)
+    - Statistics
+
+    Returns:
+        Dictionary with summary sections
+
+    Example:
+        get_project_summary()
+    """
+    try:
+        from clauxton.semantic.memory_summarizer import MemorySummarizer
+
+        project_root = _get_project_root()
+        summarizer = MemorySummarizer(project_root)
+
+        summary = summarizer.summarize_project()
+
+        # Format for better readability
+        return {
+            "status": "success",
+            "summary": summary,
+        }
+
+    except ImportError as e:
+        logger.error(f"get_project_summary: Import failed: {e}")
+        return _handle_mcp_error(e, "get_project_summary")
+    except Exception as e:
+        logger.error(f"get_project_summary failed: {e}", exc_info=True)
+        return _handle_mcp_error(e, "get_project_summary")
+
+
+@mcp.tool()
+def suggest_next_tasks(context: Optional[str] = None, limit: int = 5) -> dict[str, Any]:
+    """
+    Get suggested next tasks based on project state.
+
+    Analyzes project memories to predict likely next tasks based on:
+    - Incomplete patterns (e.g., auth without tests)
+    - Pending task memories
+    - Recent activity trends
+
+    Args:
+        context: Optional context filter (e.g., "frontend", "backend")
+        limit: Maximum number of suggestions (default: 5)
+
+    Returns:
+        List of task suggestions with reasons and confidence scores
+
+    Example:
+        suggest_next_tasks()
+        suggest_next_tasks(context="api", limit=3)
+    """
+    try:
+        from clauxton.semantic.memory_summarizer import MemorySummarizer
+
+        project_root = _get_project_root()
+        summarizer = MemorySummarizer(project_root)
+
+        predictions = summarizer.predict_next_tasks(context=context, limit=limit)
+
+        return {
+            "status": "success",
+            "predictions": predictions,
+            "count": len(predictions),
+        }
+
+    except ImportError as e:
+        logger.error(f"suggest_next_tasks: Import failed: {e}")
+        return _handle_mcp_error(e, "suggest_next_tasks")
+    except Exception as e:
+        logger.error(f"suggest_next_tasks failed: {e}", exc_info=True)
+        return _handle_mcp_error(e, "suggest_next_tasks")
+
+
+@mcp.tool()
+def detect_knowledge_gaps() -> dict[str, Any]:
+    """
+    Detect missing knowledge or decisions in project.
+
+    Checks for:
+    - Missing expected categories (auth, api, database, testing, deployment)
+    - Missing error handling documentation
+    - Missing security considerations
+    - Missing performance documentation
+
+    Returns:
+        List of knowledge gaps with severity levels
+
+    Example:
+        detect_knowledge_gaps()
+    """
+    try:
+        from clauxton.semantic.memory_summarizer import MemorySummarizer
+
+        project_root = _get_project_root()
+        summarizer = MemorySummarizer(project_root)
+
+        gaps = summarizer.generate_knowledge_gaps()
+
+        return {
+            "status": "success",
+            "gaps": gaps,
+            "count": len(gaps),
+        }
+
+    except ImportError as e:
+        logger.error(f"detect_knowledge_gaps: Import failed: {e}")
+        return _handle_mcp_error(e, "detect_knowledge_gaps")
+    except Exception as e:
+        logger.error(f"detect_knowledge_gaps failed: {e}", exc_info=True)
+        return _handle_mcp_error(e, "detect_knowledge_gaps")
+
+
 def main() -> None:
     """Run the MCP server."""
     mcp.run()

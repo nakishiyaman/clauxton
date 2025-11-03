@@ -797,3 +797,91 @@ def suggest_merge(threshold: float, limit: int) -> None:
     except Exception as e:
         click.echo(click.style(f"Error: {e}", fg="red"), err=True)
         raise click.Abort()
+
+
+@memory.command("graph")
+@click.option("--output", "-o", help="Output file path")
+@click.option(
+    "--format",
+    "-f",
+    type=click.Choice(["dot", "mermaid", "json"]),
+    default="mermaid",
+    help="Output format",
+)
+@click.option("--type", "memory_type", help="Filter by memory type")
+@click.option("--max-nodes", type=int, default=100, help="Maximum number of nodes")
+def generate_graph(
+    output: Optional[str], format: str, memory_type: Optional[str], max_nodes: int
+) -> None:
+    """
+    Generate memory relationship graph.
+
+    Creates a visual representation of memory relationships in various formats:
+    - DOT: Graphviz format for high-quality rendering
+    - Mermaid: Markdown-compatible diagrams
+    - JSON: Data format for web visualizations
+
+    Examples:
+        clauxton memory graph
+        clauxton memory graph --format mermaid --output graph.md
+        clauxton memory graph --output graph.dot --format dot
+        clauxton memory graph --type knowledge --format json
+    """
+    from clauxton.visualization.memory_graph import MemoryGraph
+
+    project_root = Path.cwd()
+
+    # Check if .clauxton exists
+    if not (project_root / ".clauxton").exists():
+        click.echo(click.style("⚠ .clauxton/ not found. Run 'clauxton init' first", fg="red"))
+        raise click.Abort()
+
+    try:
+        graph = MemoryGraph(project_root)
+
+        # Generate output filename if not provided
+        if not output:
+            ext = "md" if format == "mermaid" else format
+            output = f"memory_graph.{ext}"
+
+        output_path = Path(output)
+
+        click.echo(f"Generating {format} graph...")
+
+        # Export based on format
+        if format == "dot":
+            graph.export_to_dot(output_path, memory_type, max_nodes)
+        elif format == "mermaid":
+            graph.export_to_mermaid(output_path, memory_type, max_nodes)
+        elif format == "json":
+            graph.export_to_json(output_path, memory_type, max_nodes)
+
+        click.echo(click.style(f"\n✓ Graph exported to {output_path}", fg="green"))
+
+        # Show statistics
+        graph_data = graph.generate_graph_data(memory_type, max_nodes)
+        click.echo(f"  Nodes: {graph_data['metadata']['total_nodes']}")
+        click.echo(f"  Edges: {graph_data['metadata']['total_edges']}")
+
+        if memory_type:
+            click.echo(f"  Type: {memory_type}")
+
+        # Show usage hints based on format
+        if format == "dot":
+            click.echo(
+                click.style(
+                    f"\nRender with: dot -Tpng {output_path} -o {output_path.stem}.png",
+                    fg="yellow",
+                )
+            )
+        elif format == "mermaid":
+            click.echo(
+                click.style(
+                    f"\nInclude in Markdown or view on GitHub/GitLab",
+                    fg="yellow",
+                )
+            )
+
+    except Exception as e:
+        click.echo(click.style(f"Error: {e}", fg="red"), err=True)
+        raise click.Abort()
