@@ -9,6 +9,86 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2025-11-03
+
+### Added
+- **Unified Memory Model**: Integrated Knowledge Base, Task Management, and Code Intelligence into a single memory system
+  - `MemoryEntry` model with 5 types: knowledge, decision, code, task, pattern
+  - Unified storage in `.clauxton/memories.yml` with atomic writes
+  - Relationship support: `related_to`, `supersedes` fields for memory connections
+  - Confidence scoring (0.0-1.0) for auto-extracted memories
+  - Legacy ID preservation for seamless migration
+- **Memory Core**: New core modules for memory management
+  - `Memory` class with CRUD operations (add, get, search, update, delete, find_related)
+  - `MemoryStore` with YAML-based storage, in-memory caching, and automatic backups
+  - TF-IDF search with simple keyword fallback
+  - Sequential Memory ID generation (MEM-YYYYMMDD-NNN format)
+- **Backward Compatibility Layer**: Existing APIs continue to work
+  - `KnowledgeBaseCompat` - KB API → Memory API mapping
+  - `TaskManagerCompat` - Task API → Memory API mapping
+  - Deprecation warnings with migration guidance (removal in v0.17.0)
+  - Full bidirectional conversion (KB/Task ↔ Memory)
+- **Migration Utilities**: Safe migration from KB/Tasks to Memory
+  - `MemoryMigrator` class with dry-run mode
+  - Automatic timestamped backups before migration
+  - Rollback support for failed migrations
+  - CLI commands: `clauxton migrate memory`, `clauxton migrate rollback`
+- **Memory CLI Commands**: 7 new commands for memory management
+  - `clauxton memory add` - Add memory with interactive mode
+  - `clauxton memory search` - TF-IDF search with type/category filters
+  - `clauxton memory list` - List all memories with filters
+  - `clauxton memory get` - View detailed memory information
+  - `clauxton memory update` - Update memory fields
+  - `clauxton memory delete` - Safe deletion with confirmation
+  - `clauxton memory related` - Find related memories
+- **Memory MCP Tools**: 6 new MCP server tools for Claude Code integration
+  - `memory_add()` - Add memory entries (all 5 types)
+  - `memory_search()` - Search with TF-IDF ranking
+  - `memory_get()` - Retrieve memory by ID
+  - `memory_list()` - List with type/category/tag filters
+  - `memory_update()` - Update memory fields
+  - `memory_find_related()` - Find related memories
+- **Comprehensive Testing**: 183 tests with high coverage
+  - Memory Core: 62 tests (82-95% coverage)
+  - Backward Compatibility: 40 tests (79-83% coverage)
+  - Migration: 17 tests (91% coverage)
+  - CLI: 30 tests (82% coverage)
+  - MCP: 34 tests (90%+ coverage)
+
+### Changed
+- Knowledge Base and Task Management now use unified Memory system internally
+- All existing KB/Task APIs remain functional with deprecation warnings
+- MCP server updated with 6 new memory tools (32 → 38 total tools)
+
+### Deprecated
+- `KnowledgeBase` API (use `Memory` with `type="knowledge"` instead)
+- `TaskManager` API (use `Memory` with `type="task"` instead)
+- Legacy KB MCP tools: `kb_add()`, `kb_search()`, `kb_list()`, `kb_get()`, `kb_update()`, `kb_delete()`
+- Legacy Task MCP tools: `task_add()`, `task_list()`, `task_get()`, `task_update()`, `task_next()`, `task_delete()`
+- **Note**: Deprecated APIs will be removed in v0.17.0 (planned for 2026-Q2)
+
+### Fixed
+- Line length violations in migration CLI (E501)
+- Type safety improvements with strict mypy compliance
+
+### Security
+- 0 vulnerabilities detected in security audit
+- YAML safe loading enforced (no code execution risk)
+- Input validation via Pydantic models
+- Atomic file writes with automatic backups
+
+### Performance
+- Memory.search(): 5-20ms (target: <100ms) ✅ 5-10x faster
+- Memory.add(): 5-10ms (target: <50ms) ✅ 5-10x faster
+- In-memory caching for repeated operations
+- JSON-based index for fast lookups
+
+### Documentation
+- Phase 1 quality review reports (5 documents, 4,508 lines)
+- Comprehensive API documentation (Google-style docstrings)
+- CLI help texts for all memory commands
+- MCP tool descriptions with examples
+
 ## [0.14.0] - 2025-10-28
 
 ### Added

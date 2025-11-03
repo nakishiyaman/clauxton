@@ -12,7 +12,8 @@
 [![Test Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)](https://github.com/nakishiyaman/clauxton)
 [![codecov](https://codecov.io/gh/nakishiyaman/clauxton/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/clauxton)
 
-> ✅ **Production Ready**: Clauxton v0.14.0 is stable and ready for production use. Complete with Interactive TUI, Context Intelligence (work session analysis, action prediction), Semantic Intelligence (embeddings, vector search), Git Analysis (pattern extraction), Repository Map (12-language support), and comprehensive testing (2,163+ tests, 85% coverage).
+> ✅ **Production Ready**: Clauxton v0.15.0 is stable and ready for production use. Complete with Unified Memory Model, Interactive TUI, Context Intelligence (work session analysis, action prediction), Semantic Intelligence (embeddings, vector search), Git Analysis (pattern extraction), Repository Map (12-language support), and comprehensive testing (2,346+ tests, 90% coverage).
+> 🧠 **v0.15.0** (2025-11-03): **Unified Memory Model** - Integrated KB/Task/Code into single memory system (5 types: knowledge/decision/code/task/pattern), auto-migration with rollback, 6 new MCP tools (38 total), backward compatible!
 > 🎨 **v0.14.0** (2025-10-28): **Interactive TUI** - Full-featured Terminal User Interface with 3-panel dashboard, Vim-style navigation, query modal with autocomplete, AI suggestions, comprehensive testing (189 integration tests)!
 > 🔥 **v0.13.0** (2025-10-27): **Context Intelligence & Proactive Monitoring** - Real-time work session analysis with focus scoring, AI-powered next action prediction (9 actions), enhanced project context with time awareness, 3 new MCP tools (36 total)!
 > 🤖 **v0.12.0** (2025-10-26): **Semantic Intelligence & Git Analysis** - Local semantic search (embeddings + FAISS), AI-powered task suggestions from commits, decision extraction, 10 new MCP tools (32 total)!
@@ -49,7 +50,7 @@ pip install clauxton[parsers-enterprise]    # Java/C#/Kotlin
 pip install clauxton[parsers-all]           # All 12 languages (~2 minutes)
 
 # Verify installation
-clauxton --version  # Should show: clauxton, version 0.14.0
+clauxton --version  # Should show: clauxton, version 0.15.0
 ```
 
 **Note**: Language parsers are optional. Install only what you need for your project.
@@ -162,16 +163,35 @@ clauxton trends
 clauxton trends --days 7
 # → Last week's trends
 
-# Add knowledge to your Knowledge Base
-clauxton kb add
-# Enter: Title, Category, Content, Tags
+# 🧠 Unified Memory System (v0.15.0 NEW!)
+# Add memories (5 types: knowledge, decision, code, task, pattern)
+clauxton memory add --type knowledge --title "API Design" \
+  --content "Use REST with versioning" --category architecture
 
-# Search with TF-IDF relevance ranking
-clauxton kb search "FastAPI authentication"
-# Results are ranked by relevance - most relevant first!
+# Interactive mode with smart defaults
+clauxton memory add --interactive
 
-# Get next recommended task (AI-powered)
-clauxton task next
+# Search across all memory types
+clauxton memory search "authentication"
+
+# Search specific types
+clauxton memory search "API" --type knowledge --type decision
+
+# List all memories
+clauxton memory list
+
+# Find related memories
+clauxton memory related MEM-20251103-001
+
+# 📦 Migration from v0.14.0 (KB/Tasks → Memory)
+clauxton migrate memory --dry-run    # Preview migration
+clauxton migrate memory --confirm     # Execute migration
+clauxton migrate rollback <backup>    # Rollback if needed
+
+# 🔄 Legacy commands (still work, deprecated)
+clauxton kb add                       # Works with deprecation warning
+clauxton task add                     # Works with deprecation warning
+# → Automatically use unified Memory system internally
 
 # Search symbols across codebase
 clauxton repo search "authenticate" --mode exact
@@ -726,7 +746,7 @@ pip install clauxton
 pip install clauxton[semantic]
 
 # Verify installation
-clauxton --version  # Should show: clauxton, version 0.14.0
+clauxton --version  # Should show: clauxton, version 0.15.0
 
 # Install specific version (example)
 pip install clauxton==0.12.0

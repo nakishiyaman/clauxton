@@ -6,6 +6,7 @@ the Model Context Protocol.
 """
 
 import logging
+import warnings
 from datetime import datetime
 from pathlib import Path
 from typing import Any, List, Optional, TypeVar
@@ -14,6 +15,7 @@ from mcp.server.fastmcp import FastMCP
 
 from clauxton.core.conflict_detector import ConflictDetector
 from clauxton.core.knowledge_base import KnowledgeBase
+from clauxton.core.memory import Memory, MemoryEntry
 from clauxton.core.models import (
     CurrentContextResponse,
     KnowledgeBaseEntry,
@@ -172,7 +174,9 @@ def kb_search(
     limit: int = 10,
 ) -> List[dict[str, Any]]:
     """
-    Search the Knowledge Base for entries matching the query.
+    [DEPRECATED] Search the Knowledge Base for entries matching the query.
+
+    This tool is deprecated in v0.15.0. Use memory_search(type_filter=['knowledge']) instead.
 
     Args:
         query: Search query string
@@ -182,6 +186,11 @@ def kb_search(
     Returns:
         List of matching Knowledge Base entries with id, title, category, content, tags
     """
+    warnings.warn(
+        "kb_search() is deprecated in v0.15.0. Use memory_search(type_filter=['knowledge']) instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     kb = KnowledgeBase(Path.cwd())
     results = kb.search(query, category=category, limit=limit)
     return [
@@ -206,7 +215,9 @@ def kb_add(
     tags: Optional[List[str]] = None,
 ) -> dict[str, str]:
     """
-    Add a new entry to the Knowledge Base.
+    [DEPRECATED] Add a new entry to the Knowledge Base.
+
+    This tool is deprecated in v0.15.0. Use memory_add(type='knowledge') instead.
 
     Args:
         title: Entry title (max 50 characters)
@@ -217,6 +228,11 @@ def kb_add(
     Returns:
         Dictionary with id and success message
     """
+    warnings.warn(
+        "kb_add() is deprecated in v0.15.0. Use memory_add(type='knowledge') instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     kb = KnowledgeBase(Path.cwd())
 
     # Generate entry ID
@@ -249,7 +265,9 @@ def kb_add(
 @mcp.tool()
 def kb_list(category: Optional[str] = None) -> List[dict[str, Any]]:
     """
-    List all Knowledge Base entries.
+    [DEPRECATED] List all Knowledge Base entries.
+
+    This tool is deprecated in v0.15.0. Use memory_list(type_filter=['knowledge']) instead.
 
     Args:
         category: Optional category filter (architecture, constraint, decision, pattern, convention)
@@ -257,6 +275,11 @@ def kb_list(category: Optional[str] = None) -> List[dict[str, Any]]:
     Returns:
         List of all Knowledge Base entries
     """
+    warnings.warn(
+        "kb_list() is deprecated in v0.15.0. Use memory_list(type_filter=['knowledge']) instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     kb = KnowledgeBase(Path.cwd())
     entries = kb.list_all()
 
@@ -281,7 +304,9 @@ def kb_list(category: Optional[str] = None) -> List[dict[str, Any]]:
 @mcp.tool()
 def kb_get(entry_id: str) -> dict[str, Any]:
     """
-    Get a specific Knowledge Base entry by ID.
+    [DEPRECATED] Get a specific Knowledge Base entry by ID.
+
+    This tool is deprecated in v0.15.0. Use memory_get() instead.
 
     Args:
         entry_id: Entry ID (e.g., KB-20251019-001)
@@ -289,6 +314,11 @@ def kb_get(entry_id: str) -> dict[str, Any]:
     Returns:
         Knowledge Base entry details
     """
+    warnings.warn(
+        "kb_get() is deprecated in v0.15.0. Use memory_get() instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     kb = KnowledgeBase(Path.cwd())
     entry = kb.get(entry_id)
     return {
@@ -312,7 +342,9 @@ def kb_update(
     tags: Optional[List[str]] = None,
 ) -> dict[str, Any]:
     """
-    Update an existing Knowledge Base entry.
+    [DEPRECATED] Update an existing Knowledge Base entry.
+
+    This tool is deprecated in v0.15.0. Use memory_update() instead.
 
     Args:
         entry_id: Entry ID to update (e.g., KB-20251019-001)
@@ -324,6 +356,11 @@ def kb_update(
     Returns:
         Updated entry details including new version number
     """
+    warnings.warn(
+        "kb_update() is deprecated in v0.15.0. Use memory_update() instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     kb = KnowledgeBase(Path.cwd())
 
     # Prepare updates dictionary
@@ -361,7 +398,9 @@ def kb_update(
 @mcp.tool()
 def kb_delete(entry_id: str) -> dict[str, str]:
     """
-    Delete a Knowledge Base entry.
+    [DEPRECATED] Delete a Knowledge Base entry.
+
+    This tool is deprecated in v0.15.0. Use memory_delete() instead (not yet implemented).
 
     Args:
         entry_id: Entry ID to delete (e.g., KB-20251019-001)
@@ -369,6 +408,11 @@ def kb_delete(entry_id: str) -> dict[str, str]:
     Returns:
         Success message
     """
+    warnings.warn(
+        "kb_delete() is deprecated in v0.15.0.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     kb = KnowledgeBase(Path.cwd())
 
     # Get entry title for confirmation message
@@ -395,7 +439,9 @@ def task_add(
     estimate: Optional[float] = None,
 ) -> dict[str, Any]:
     """
-    Add a new task to the task list.
+    [DEPRECATED] Add a new task to the task list.
+
+    This tool is deprecated in v0.15.0. Use memory_add(type='task') instead.
 
     Args:
         name: Task name (required)
@@ -409,6 +455,11 @@ def task_add(
     Returns:
         Dictionary with task_id and success message
     """
+    warnings.warn(
+        "task_add() is deprecated in v0.15.0. Use memory_add(type='task') instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     tm = TaskManager(Path.cwd())
 
     # Generate task ID
@@ -446,7 +497,9 @@ def task_list(
     priority: Optional[str] = None,
 ) -> List[dict[str, Any]]:
     """
-    List all tasks with optional filters.
+    [DEPRECATED] List all tasks with optional filters.
+
+    This tool is deprecated in v0.15.0. Use memory_list(type_filter=['task']) instead.
 
     Args:
         status: Filter by status (pending, in_progress, completed, blocked)
@@ -455,6 +508,11 @@ def task_list(
     Returns:
         List of tasks with details
     """
+    warnings.warn(
+        "task_list() is deprecated in v0.15.0. Use memory_list(type_filter=['task']) instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     tm = TaskManager(Path.cwd())
     tasks = tm.list_all(
         status=status,  # type: ignore[arg-type]
@@ -484,7 +542,9 @@ def task_list(
 @mcp.tool()
 def task_get(task_id: str) -> dict[str, Any]:
     """
-    Get detailed information about a specific task.
+    [DEPRECATED] Get detailed information about a specific task.
+
+    This tool is deprecated in v0.15.0. Use memory_get() instead.
 
     Args:
         task_id: Task ID (e.g., TASK-001)
@@ -492,6 +552,11 @@ def task_get(task_id: str) -> dict[str, Any]:
     Returns:
         Task details
     """
+    warnings.warn(
+        "task_get() is deprecated in v0.15.0. Use memory_get() instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     tm = TaskManager(Path.cwd())
     task = tm.get(task_id)
 
@@ -521,7 +586,9 @@ def task_update(
     description: Optional[str] = None,
 ) -> dict[str, str]:
     """
-    Update a task's fields.
+    [DEPRECATED] Update a task's fields.
+
+    This tool is deprecated in v0.15.0. Use memory_update() instead.
 
     Args:
         task_id: Task ID to update
@@ -533,6 +600,11 @@ def task_update(
     Returns:
         Dictionary with success message and updated fields
     """
+    warnings.warn(
+        "task_update() is deprecated in v0.15.0. Use memory_update() instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     tm = TaskManager(Path.cwd())
 
     updates: dict[str, Any] = {}
@@ -561,13 +633,20 @@ def task_update(
 @mcp.tool()
 def task_next() -> Optional[dict[str, Any]]:
     """
-    Get the next recommended task to work on.
+    [DEPRECATED] Get the next recommended task to work on.
+
+    This tool is deprecated in v0.15.0. Task prioritization will be integrated into memory system.
 
     Returns highest priority task whose dependencies are completed.
 
     Returns:
         Next task details, or None if no tasks are available
     """
+    warnings.warn(
+        "task_next() is deprecated in v0.15.0.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     tm = TaskManager(Path.cwd())
     next_task = tm.get_next_task()
 
@@ -588,7 +667,9 @@ def task_next() -> Optional[dict[str, Any]]:
 @mcp.tool()
 def task_delete(task_id: str) -> dict[str, str]:
     """
-    Delete a task.
+    [DEPRECATED] Delete a task.
+
+    This tool is deprecated in v0.15.0. Use memory_delete() instead (not yet implemented).
 
     Args:
         task_id: Task ID to delete
@@ -596,6 +677,11 @@ def task_delete(task_id: str) -> dict[str, str]:
     Returns:
         Dictionary with success message
     """
+    warnings.warn(
+        "task_delete() is deprecated in v0.15.0.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     tm = TaskManager(Path.cwd())
     tm.delete(task_id)
     return {
@@ -3627,6 +3713,341 @@ def get_current_context(include_prediction: bool = True) -> dict[str, Any]:
     except Exception as e:
         logger.critical(f"Unexpected error in get_current_context: {e}", exc_info=True)
         return _handle_mcp_error(e, "get_current_context")
+
+
+# ============================================================================
+# Memory System MCP Tools (v0.15.0 Unified Memory Model)
+# ============================================================================
+
+
+@mcp.tool()
+def memory_add(
+    type: str,
+    title: str,
+    content: str,
+    category: str,
+    tags: Optional[List[str]] = None,
+    related_to: Optional[List[str]] = None,
+) -> dict[str, str]:
+    """
+    Add memory entry to unified memory system.
+
+    Args:
+        type: Memory type (knowledge, decision, code, task, pattern)
+        title: Memory title
+        content: Memory content
+        category: Category (e.g., architecture, api, database)
+        tags: Optional tags for filtering
+        related_to: Optional related memory IDs
+
+    Returns:
+        Dictionary with id and success message
+
+    Examples:
+        memory_add(
+            type="knowledge",
+            title="API Design Pattern",
+            content="Use RESTful API with versioning",
+            category="architecture",
+            tags=["api", "rest"]
+        )
+    """
+    try:
+        project_root = _get_project_root()
+        memory = Memory(project_root)
+
+        # Generate memory ID
+        now = datetime.now()
+        memory_id = memory._generate_memory_id()
+
+        # Create memory entry
+        entry = MemoryEntry(
+            id=memory_id,
+            type=type,  # type: ignore[arg-type]
+            title=title,
+            content=content,
+            category=category,
+            tags=tags or [],
+            created_at=now,
+            updated_at=now,
+            related_to=related_to or [],
+            source="manual",
+            confidence=1.0,
+        )
+
+        memory.add(entry)
+        return {
+            "id": memory_id,
+            "message": f"Successfully added memory: {memory_id}",
+        }
+
+    except Exception as e:
+        logger.error(f"memory_add failed: {e}", exc_info=True)
+        return {
+            "error": "Failed to add memory",
+            "message": str(e),
+        }
+
+
+@mcp.tool()
+def memory_search(
+    query: str,
+    type_filter: Optional[List[str]] = None,
+    limit: int = 10,
+) -> List[dict[str, Any]]:
+    """
+    Search memories using TF-IDF ranking.
+
+    Args:
+        query: Search query
+        type_filter: Optional filter by types (knowledge, decision, etc.)
+        limit: Maximum results (default: 10)
+
+    Returns:
+        List of matching memory entries with relevance ranking
+
+    Examples:
+        memory_search("authentication", type_filter=["knowledge", "decision"])
+        memory_search("API design")
+    """
+    try:
+        project_root = _get_project_root()
+        memory = Memory(project_root)
+
+        results = memory.search(query, type_filter=type_filter, limit=limit)
+
+        return [
+            {
+                "id": entry.id,
+                "type": entry.type,
+                "title": entry.title,
+                "category": entry.category,
+                "content": entry.content,
+                "tags": entry.tags,
+                "created_at": entry.created_at.isoformat(),
+                "updated_at": entry.updated_at.isoformat(),
+                "related_to": entry.related_to,
+                "source": entry.source,
+                "confidence": entry.confidence,
+            }
+            for entry in results
+        ]
+
+    except Exception as e:
+        logger.error(f"memory_search failed: {e}", exc_info=True)
+        return []
+
+
+@mcp.tool()
+def memory_get(memory_id: str) -> dict[str, Any]:
+    """
+    Get memory details by ID.
+
+    Args:
+        memory_id: Memory ID (e.g., "MEM-20260127-001")
+
+    Returns:
+        Memory entry details
+
+    Example:
+        memory_get("MEM-20260127-001")
+    """
+    try:
+        project_root = _get_project_root()
+        memory = Memory(project_root)
+
+        entry = memory.get(memory_id)
+
+        if entry is None:
+            return {
+                "error": "Memory not found",
+                "message": f"No memory found with ID: {memory_id}",
+            }
+
+        return {
+            "id": entry.id,
+            "type": entry.type,
+            "title": entry.title,
+            "category": entry.category,
+            "content": entry.content,
+            "tags": entry.tags,
+            "created_at": entry.created_at.isoformat(),
+            "updated_at": entry.updated_at.isoformat(),
+            "related_to": entry.related_to,
+            "supersedes": entry.supersedes,
+            "source": entry.source,
+            "confidence": entry.confidence,
+            "source_ref": entry.source_ref,
+            "legacy_id": entry.legacy_id,
+        }
+
+    except Exception as e:
+        logger.error(f"memory_get failed: {e}", exc_info=True)
+        return {
+            "error": "Failed to get memory",
+            "message": str(e),
+        }
+
+
+@mcp.tool()
+def memory_list(
+    type_filter: Optional[List[str]] = None,
+    category_filter: Optional[str] = None,
+    tag_filter: Optional[List[str]] = None,
+) -> List[dict[str, Any]]:
+    """
+    List all memories with optional filters.
+
+    Args:
+        type_filter: Filter by types (e.g., ["knowledge", "decision"])
+        category_filter: Filter by category (e.g., "architecture")
+        tag_filter: Filter by tags (any match, e.g., ["api", "rest"])
+
+    Returns:
+        List of memory entries
+
+    Examples:
+        memory_list()
+        memory_list(type_filter=["knowledge"])
+        memory_list(category_filter="architecture")
+    """
+    try:
+        project_root = _get_project_root()
+        memory = Memory(project_root)
+
+        memories = memory.list_all(
+            type_filter=type_filter,
+            category_filter=category_filter,
+            tag_filter=tag_filter,
+        )
+
+        return [
+            {
+                "id": entry.id,
+                "type": entry.type,
+                "title": entry.title,
+                "category": entry.category,
+                "tags": entry.tags,
+                "created_at": entry.created_at.isoformat(),
+                "updated_at": entry.updated_at.isoformat(),
+                "source": entry.source,
+            }
+            for entry in memories
+        ]
+
+    except Exception as e:
+        logger.error(f"memory_list failed: {e}", exc_info=True)
+        return []
+
+
+@mcp.tool()
+def memory_update(
+    memory_id: str,
+    title: Optional[str] = None,
+    content: Optional[str] = None,
+    category: Optional[str] = None,
+    tags: Optional[List[str]] = None,
+) -> dict[str, Any]:
+    """
+    Update memory entry.
+
+    Args:
+        memory_id: Memory ID to update
+        title: Optional new title
+        content: Optional new content
+        category: Optional new category
+        tags: Optional new tags
+
+    Returns:
+        Updated entry details with success message
+
+    Example:
+        memory_update("MEM-20260127-001", title="New Title")
+    """
+    try:
+        project_root = _get_project_root()
+        memory = Memory(project_root)
+
+        # Prepare updates dictionary
+        kwargs: dict[str, Any] = {}
+        if title is not None:
+            kwargs["title"] = title
+        if content is not None:
+            kwargs["content"] = content
+        if category is not None:
+            kwargs["category"] = category
+        if tags is not None:
+            kwargs["tags"] = tags
+
+        if not kwargs:
+            return {
+                "error": "No fields to update",
+                "message": "Provide at least one field to update",
+            }
+
+        success = memory.update(memory_id, **kwargs)
+
+        if success:
+            updated_entry = memory.get(memory_id)
+            if updated_entry:
+                return {
+                    "id": updated_entry.id,
+                    "title": updated_entry.title,
+                    "category": updated_entry.category,
+                    "tags": updated_entry.tags,
+                    "updated_at": updated_entry.updated_at.isoformat(),
+                    "message": f"Successfully updated memory: {memory_id}",
+                }
+
+        return {
+            "error": "Memory not found",
+            "message": f"No memory found with ID: {memory_id}",
+        }
+
+    except Exception as e:
+        logger.error(f"memory_update failed: {e}", exc_info=True)
+        return {
+            "error": "Failed to update memory",
+            "message": str(e),
+        }
+
+
+@mcp.tool()
+def memory_find_related(memory_id: str, limit: int = 5) -> List[dict[str, Any]]:
+    """
+    Find related memories.
+
+    Args:
+        memory_id: Memory ID
+        limit: Maximum results (default: 5)
+
+    Returns:
+        List of related memory entries
+
+    Example:
+        memory_find_related("MEM-20260127-001")
+    """
+    try:
+        project_root = _get_project_root()
+        memory = Memory(project_root)
+
+        related = memory.find_related(memory_id, limit=limit)
+
+        return [
+            {
+                "id": entry.id,
+                "type": entry.type,
+                "title": entry.title,
+                "category": entry.category,
+                "tags": entry.tags,
+                "created_at": entry.created_at.isoformat(),
+            }
+            for entry in related
+        ]
+
+    except Exception as e:
+        logger.error(f"memory_find_related failed: {e}", exc_info=True)
+        return []
 
 
 def main() -> None:
