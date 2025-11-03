@@ -187,7 +187,8 @@ def kb_search(
         List of matching Knowledge Base entries with id, title, category, content, tags
     """
     warnings.warn(
-        "kb_search() is deprecated in v0.15.0. Use memory_search(type_filter=['knowledge']) instead.",
+        "kb_search() is deprecated in v0.15.0. "
+        "Use memory_search(type_filter=['knowledge']) instead.",
         DeprecationWarning,
         stacklevel=2,
     )
@@ -4148,9 +4149,9 @@ def get_project_summary() -> dict[str, Any]:
 
 
 @mcp.tool()
-def suggest_next_tasks(context: Optional[str] = None, limit: int = 5) -> dict[str, Any]:
+def predict_tasks_from_memory(context: Optional[str] = None, limit: int = 5) -> dict[str, Any]:
     """
-    Get suggested next tasks based on project state.
+    Predict next tasks based on project memories (v0.15.0+).
 
     Analyzes project memories to predict likely next tasks based on:
     - Incomplete patterns (e.g., auth without tests)
@@ -4162,11 +4163,14 @@ def suggest_next_tasks(context: Optional[str] = None, limit: int = 5) -> dict[st
         limit: Maximum number of suggestions (default: 5)
 
     Returns:
-        List of task suggestions with reasons and confidence scores
+        List of task predictions with reasons and confidence scores
 
     Example:
-        suggest_next_tasks()
-        suggest_next_tasks(context="api", limit=3)
+        predict_tasks_from_memory()
+        predict_tasks_from_memory(context="api", limit=3)
+
+    Note:
+        For Git commit-based suggestions, use suggest_next_tasks() instead.
     """
     try:
         from clauxton.semantic.memory_summarizer import MemorySummarizer
@@ -4183,11 +4187,11 @@ def suggest_next_tasks(context: Optional[str] = None, limit: int = 5) -> dict[st
         }
 
     except ImportError as e:
-        logger.error(f"suggest_next_tasks: Import failed: {e}")
-        return _handle_mcp_error(e, "suggest_next_tasks")
+        logger.error(f"predict_tasks_from_memory: Import failed: {e}")
+        return _handle_mcp_error(e, "predict_tasks_from_memory")
     except Exception as e:
-        logger.error(f"suggest_next_tasks failed: {e}", exc_info=True)
-        return _handle_mcp_error(e, "suggest_next_tasks")
+        logger.error(f"predict_tasks_from_memory failed: {e}", exc_info=True)
+        return _handle_mcp_error(e, "predict_tasks_from_memory")
 
 
 @mcp.tool()

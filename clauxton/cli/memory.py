@@ -877,7 +877,7 @@ def generate_graph(
         elif format == "mermaid":
             click.echo(
                 click.style(
-                    f"\nInclude in Markdown or view on GitHub/GitLab",
+                    "\nInclude in Markdown or view on GitHub/GitLab",
                     fg="yellow",
                 )
             )
