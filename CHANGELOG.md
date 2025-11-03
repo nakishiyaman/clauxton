@@ -48,12 +48,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `memory_list()` - List with type/category/tag filters
   - `memory_update()` - Update memory fields
   - `memory_find_related()` - Find related memories
-- **Comprehensive Testing**: 183 tests with high coverage
+- **Smart Memory (Phase 2)**: Auto-extraction and relationship detection
+  - `MemoryExtractor` - Extract memories from Git commit history
+    - Decision extraction from commit messages (feat:, refactor:, migration patterns)
+    - Code pattern detection (API, UI, database, test changes)
+    - Confidence scoring (0.5-1.0) for auto-extracted memories
+    - Tag and category auto-assignment
+  - `MemoryLinker` - Auto-detect relationships between memories
+    - Multi-signal similarity: content (40%), tags (30%), category (20%), temporal (10%)
+    - TF-IDF cosine similarity with keyword fallback
+    - Auto-link all memories with configurable threshold
+    - Merge candidate detection for duplicates (>0.8 similarity)
+  - **CLI Extract Commands**: 3 new commands for smart memory features
+    - `clauxton memory extract` - Extract from commits (--since, --commit, --auto-add)
+    - `clauxton memory link` - Auto-link memories (--id, --auto, --threshold)
+    - `clauxton memory suggest-merge` - Find duplicate memories (--threshold, --limit)
+- **Comprehensive Testing**: 257 tests with high coverage
   - Memory Core: 62 tests (82-95% coverage)
   - Backward Compatibility: 40 tests (79-83% coverage)
   - Migration: 17 tests (91% coverage)
-  - CLI: 30 tests (82% coverage)
+  - CLI: 58 tests (54-82% coverage)
   - MCP: 34 tests (90%+ coverage)
+  - Memory Extraction: 25 tests (94% coverage)
+  - Memory Linking: 22 tests (90% coverage)
 
 ### Changed
 - Knowledge Base and Task Management now use unified Memory system internally
@@ -80,6 +97,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Performance
 - Memory.search(): 5-20ms (target: <100ms) ✅ 5-10x faster
 - Memory.add(): 5-10ms (target: <50ms) ✅ 5-10x faster
+- MemoryExtractor.extract_from_commit(): 30-80ms (target: <100ms) ✅
+- MemoryLinker.find_relationships(): ~150ms for 1K entries (target: <200ms) ✅
+- MemoryLinker.auto_link_all(): ~20-25s for 1K entries
 - In-memory caching for repeated operations
 - JSON-based index for fast lookups
 
