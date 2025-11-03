@@ -5,7 +5,6 @@ Tests the MemoryMigrator class and migration functionality for
 converting Knowledge Base and Task data to the Memory System format.
 """
 
-import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -16,7 +15,6 @@ from clauxton.core.memory import Memory
 from clauxton.core.models import KnowledgeBaseEntry, Task
 from clauxton.core.task_manager import TaskManager
 from clauxton.utils.migrate_to_memory import MemoryMigrator, MigrationError
-
 
 # ============================================================================
 # Fixtures
@@ -430,8 +428,8 @@ def test_generate_memory_id_sequence(empty_project: Path) -> None:
 
     # Generate multiple IDs
     id1 = migrator._generate_memory_id()
-    id2 = migrator._generate_memory_id()
-    id3 = migrator._generate_memory_id()
+    _id2 = migrator._generate_memory_id()
+    _id3 = migrator._generate_memory_id()
 
     # Verify format and sequence
     assert id1.startswith("MEM-")

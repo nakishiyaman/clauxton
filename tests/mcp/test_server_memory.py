@@ -16,16 +16,12 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from clauxton.core.memory import MemoryEntry
 from clauxton.mcp.server import (
     kb_add,
-    kb_delete,
     kb_get,
     kb_list,
     kb_search,
-    kb_update,
     memory_add,
     memory_find_related,
     memory_get,
@@ -33,13 +29,10 @@ from clauxton.mcp.server import (
     memory_search,
     memory_update,
     task_add,
-    task_delete,
     task_get,
     task_list,
-    task_next,
     task_update,
 )
-
 
 # ============================================================================
 # memory_add Tests (5 tests)
@@ -224,7 +217,7 @@ def test_memory_search_with_limit(mock_memory_class: MagicMock, tmp_path: Path) 
     mock_memory.search.return_value = []
 
     with patch("clauxton.mcp.server._get_project_root", return_value=tmp_path):
-        results = memory_search("test", limit=5)
+        _results = memory_search("test", limit=5)
 
     mock_memory.search.assert_called_once_with("test", type_filter=None, limit=5)
 
@@ -340,7 +333,7 @@ def test_memory_list_with_type_filter(mock_memory_class: MagicMock, tmp_path: Pa
     mock_memory.list_all.return_value = []
 
     with patch("clauxton.mcp.server._get_project_root", return_value=tmp_path):
-        results = memory_list(type_filter=["knowledge"])
+        _results = memory_list(type_filter=["knowledge"])
 
     mock_memory.list_all.assert_called_once_with(
         type_filter=["knowledge"], category_filter=None, tag_filter=None
@@ -355,7 +348,7 @@ def test_memory_list_with_category_filter(mock_memory_class: MagicMock, tmp_path
     mock_memory.list_all.return_value = []
 
     with patch("clauxton.mcp.server._get_project_root", return_value=tmp_path):
-        results = memory_list(category_filter="architecture")
+        _results = memory_list(category_filter="architecture")
 
     mock_memory.list_all.assert_called_once_with(
         type_filter=None, category_filter="architecture", tag_filter=None

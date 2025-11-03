@@ -22,10 +22,8 @@ from clauxton.core.models import (
     KnowledgeBaseEntry,
     NotFoundError,
     Task,
-    ValidationError,
 )
 from clauxton.core.task_manager_compat import TaskManagerCompat
-
 
 # ============================================================================
 # KnowledgeBaseCompat CRUD Tests (10 tests)
