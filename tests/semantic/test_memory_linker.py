@@ -604,6 +604,7 @@ def test_relationship_ranking(memory_linker: MemoryLinker) -> None:
         assert related_ids[0] == "MEM-20260127-002"
 
 
+@pytest.mark.performance
 def test_performance_large_dataset(memory_linker: MemoryLinker) -> None:
     """Test performance with 1000 memories."""
     now = datetime.now()
@@ -611,7 +612,7 @@ def test_performance_large_dataset(memory_linker: MemoryLinker) -> None:
     # Create 1000 memories
     for i in range(1000):
         mem = MemoryEntry(
-            id=f"MEM-20260127-{i+1:03d}",
+            id=f"MEM-20260127-{i+1:04d}",
             type="knowledge",
             title=f"Memory {i}",
             content=f"Content for memory {i} with some random text",
