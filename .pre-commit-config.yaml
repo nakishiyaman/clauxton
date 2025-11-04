@@ -1,0 +1,128 @@
+# Pre-commit hooks configuration for Clauxton
+#
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+# Skip: git commit --no-verify (use sparingly!)
+#
+# Purpose: Catch issues before they reach GitHub CI
+
+repos:
+  - repo: local
+    hooks:
+      # ====================================================================
+      # 1. Type Checking (Strict Mode)
+      # ====================================================================
+      - id: mypy
+        name: Type check with mypy (strict)
+        entry: mypy
+        language: system
+        types: [python]
+        args: [--strict, clauxton/]
+        pass_filenames: false
+        stages: [commit]
+
+      # ====================================================================
+      # 2. Linting (Auto-fix enabled)
+      # ====================================================================
+      - id: ruff-check
+        name: Lint with ruff
+        entry: ruff check
+        language: system
+        types: [python]
+        args: [--fix]
+        stages: [commit]
+
+      # ====================================================================
+      # 3. Fast Tests Only (No slow/performance tests)
+      # ====================================================================
+      - id: pytest-fast
+        name: Run fast tests
+        entry: pytest
+        language: system
+        types: [python]
+        args:
+          - -m
+          - "not slow and not performance"
+          - --tb=short
+          - -q
+          - --maxfail=3
+        pass_filenames: false
+        stages: [commit]
+
+      # ====================================================================
+      # 4. Security Scan (Low severity and above)
+      # ====================================================================
+      - id: bandit
+        name: Security scan with bandit
+        entry: bandit
+        language: system
+        types: [python]
+        args:
+          - -r
+          - clauxton/
+          - -ll
+          - --quiet
+        pass_filenames: false
+        stages: [commit]
+
+  # ======================================================================
+  # Standard Pre-commit Hooks (Optional but Recommended)
+  # ======================================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      # Check for files that would conflict in case-insensitive filesystems
+      - id: check-case-conflict
+
+      # Check for merge conflict markers
+      - id: check-merge-conflict
+
+      # Check YAML files for syntax errors
+      - id: check-yaml
+        exclude: ^\.claude-plugin$  # Exclude MCP config
+
+      # Check TOML files for syntax errors
+      - id: check-toml
+
+      # Ensure files end with a newline
+      - id: end-of-file-fixer
+        exclude: ^(tests/.*\.txt|\.venv/)
+
+      # Remove trailing whitespace
+      - id: trailing-whitespace
+        exclude: ^(tests/.*\.txt|\.venv/)
+
+      # Detect private keys
+      - id: detect-private-key
+
+      # Check for large files (>500KB)
+      - id: check-added-large-files
+        args: [--maxkb=500]
+
+# ========================================================================
+# Configuration
+# ========================================================================
+default_stages: [commit]
+
+# Exclude patterns
+exclude: |
+  (?x)^(
+      \.venv/|
+      \.git/|
+      \.mypy_cache/|
+      \.pytest_cache/|
+      \.ruff_cache/|
+      __pycache__/|
+      \.egg-info/|
+      build/|
+      dist/|
+      htmlcov/|
+      \.coverage|
+      coverage\.xml
+  )$
+
+# Fail fast on first error
+fail_fast: false
+
+# Minimum pre-commit version
+minimum_pre_commit_version: 3.0.0

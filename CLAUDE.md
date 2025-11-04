@@ -425,7 +425,20 @@ For detailed roadmap, see `docs/ROADMAP.md`.
 4. Run: `pytest tests/mcp/ && mypy clauxton/mcp/`
 
 ### Release Checklist
-1. Update version in `clauxton/__version__.py` and `pyproject.toml`
+
+**📋 IMPORTANT**: Use the automated pre-release script to catch issues before they reach GitHub CI.
+
+```bash
+# Run comprehensive pre-release validation
+./scripts/pre_release_check.sh <version>
+
+# If all checks pass, proceed with release
+git tag -a v<version> -m "Release v<version>"
+git push origin v<version>
+```
+
+**Manual Steps** (if not using script):
+1. Update version in `clauxton/__version__.py`, `pyproject.toml`, and `tests/cli/test_main.py`
 2. Update `CHANGELOG.md` with changes
 3. Run full test suite: `pytest --cov=clauxton`
 4. Run quality checks: `mypy clauxton && ruff check clauxton`
@@ -433,6 +446,8 @@ For detailed roadmap, see `docs/ROADMAP.md`.
 6. Create git tag: `git tag -a v0.X.0 -m "Release v0.X.0"`
 7. Push tag: `git push origin v0.X.0`
 8. Upload to PyPI: `twine upload dist/*`
+
+**See**: `docs/QA_PROCESS_IMPROVED.md` for comprehensive quality assurance process
 
 ## Troubleshooting
 
