@@ -105,7 +105,7 @@ class MemoryEntry(BaseModel):
     # Core identity
     id: str = Field(
         ...,
-        pattern=r"^MEM-\d{8}-\d{3}$",
+        pattern=r"^MEM-\d{8}-\d{3,}$",
         description="Memory ID (e.g., MEM-20260127-001)",
     )
     type: Literal["knowledge", "decision", "code", "task", "pattern"] = Field(
