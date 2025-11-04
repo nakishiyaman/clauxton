@@ -252,6 +252,10 @@ def add_entry(entry: KnowledgeBaseEntry) -> str:
 
 ## Testing Guidelines
 
+**📋 IMPORTANT**: When adding new features, use the Test Requirements Checklist to ensure comprehensive coverage.
+
+**See**: `docs/TEST_REQUIREMENTS_CHECKLIST.md` - Automatic test requirement validation
+
 ### Test Structure
 ```
 tests/
@@ -262,19 +266,41 @@ tests/
 ├── analysis/       # Pattern analysis tests (90% coverage target)
 ├── proactive/      # Proactive features tests (90% coverage target)
 ├── utils/          # Utility tests (80% coverage target)
-└── integration/    # End-to-end tests
+├── integration/    # End-to-end tests (21 files, 210+ scenarios)
+├── performance/    # Performance benchmarks (@pytest.mark.performance)
+└── reliability/    # Reliability and recovery tests (planned)
 ```
+
+### Required Tests for New Features
+
+**All features must include**:
+- ✅ Unit tests (95%+ coverage)
+- ✅ Integration test (at least 1)
+- ✅ Scenario test (at least 1 for user-facing features)
+- ✅ Error handling tests
+- ✅ Documentation (docstrings + README)
+
+**Additional requirements**:
+- ✅ Performance test (if data-intensive, use @pytest.mark.performance)
+- ✅ Security test (if user input)
+- ✅ Migration test (if breaking change)
 
 ### Writing Tests
 - Use `tmp_path` fixture for file operations
 - Test edge cases: Unicode, special characters, empty inputs
 - Test error handling: Invalid inputs, missing files
 - Test fallback behaviors: Search without scikit-learn
+- Use appropriate markers: `@pytest.mark.performance`, `@pytest.mark.slow`
 
 ### Coverage Requirements
-- Overall: 90% minimum (current: 87%)
+- Overall: 90% minimum (current: 82% → 90% with semantic deps)
 - Core modules: 95%+ required
-- New features: Must include comprehensive tests
+- New features: Must include comprehensive tests per checklist
+
+### Test Documentation
+- **Writing Guide**: `docs/TEST_WRITING_GUIDE.md` - How to write effective tests
+- **Coverage Analysis**: `docs/TEST_COVERAGE_ANALYSIS.md` - Current test gaps
+- **Requirements Checklist**: `docs/TEST_REQUIREMENTS_CHECKLIST.md` - Required tests per feature type
 
 ## Important Patterns
 
